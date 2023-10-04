@@ -123,73 +123,32 @@ def bereken_r_straal(r_speler_x, r_speler_y, kolom):
 
 
 def raycast(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
-    d_h = p_speler_x - math.floor(p_speler_x)
-    d_v = p_speler_y - math.floor(p_speler_y)
-    d_x = 100
-    if r_straal_x > 0:
-        v = 1/r_straal_x
-        for i in range(math.floor(x_dim-p_speler_x)):
-            x = math.floor(p_speler_y+i+1)
-            y = p_speler_y+(1-d_h+i)*v*r_straal_y
-            if y < y_dim and 0 < y:
-                if world_map[math.floor(y)][x] == 1:
-                    d_x = ((x-p_speler_x)**2+(y-p_speler_y)**2)**(1/2)
-                    x_f = x
-                    y_f = y
-                    break
-                elif world_map[math.floor(y)][x] == 2:
-                    break
-            else:
-                break
-    elif r_straal_x < 0:
-        v = abs(1/r_straal_x)
-        for i in range(math.floor(p_speler_x)):
-            x = math.floor(p_speler_y-(i+1))
-            y = p_speler_y+(d_h+i)*v*r_straal_y
-            if y < y_dim and 0 < y:
-                if world_map[math.floor(y)][math.floor(x)] == 1:
-                    d_x = ((x-p_speler_x)**2+(y-p_speler_y)**2)**(1/2)
-                    x_f = x
-                    y_f = y
-                    break
-            else:
-                break
-    d_y = 100
-    if r_straal_y > 0:
-        h = 1/r_straal_y
-        for i in range(math.floor(y_dim - p_speler_y)):
-            y = math.floor(p_speler_y+i+1)
-            x = p_speler_x+(1-d_v+i)*h*r_straal_x
-            if x < x_dim and 0 < x:
-                if world_map[y][math.floor(x)] == 1:
-                    d_y = ((x-p_speler_x)**2+(y-p_speler_y)**2)**(1/2)
-                    x_f = x
-                    y_f = y
-                    break
-            else:
-                break
-    elif r_straal_y < 0:
-        h = abs(1/r_straal_y)
-        for i in range(math.floor(p_speler_y)):
-            y = math.floor(p_speler_y-(i+1))
-            x = p_speler_x+(d_v+i)*h*r_straal_x
-            if x < x_dim and 0 < x:
-                if world_map[y][math.floor(x)] == 1:
-                    d_y = ((x-p_speler_x)**2+(y-p_speler_y)**2)**(1/2)
-                    x_f = x
-                    y_f = y
-                    break
-            else:
-                break
-    if d_x < d_y:
-        d = d_x
-        return d, kleuren[2]
-    elif d_y != 100:
-        d = d_y
-        return d, kleuren[1]
+    x, y = 0, 0
+    delta_v = 1/np.abs(r_straal_x)
+    delta_h = 1/np.abs(r_straal_y)
+    p_speler = np.array([p_speler_x, p_speler_y])
+    r_straal = np.array([r_straal_x, r_straal_y])
+    if r_straal_y < 0:
+        d_hor = (p_speler_y - np.floor(p_speler_y)) * delta_h
     else:
-        return 1, kleuren[0]
+        d_hor = (1-p_speler_y + np.floor(p_speler_y)) * delta_h
+    if r_straal_x <0:
+        d_vert = (p_speler_x - np.floor(p_speler_x)) * delta_v
+    else:
+        d_vert = (1-p_speler_x + np.floor(p_speler_x)) * delta_v
 
+    if d_hor + x * delta_h <= d_vert + y * delta_v:
+        i_hor = p_speler + (d_hor + x * delta_h) * r_straal
+        x += 1
+
+    else:
+        i_vert = p_speler + (d_vert + y * delta_v) * r_straal
+        y += 1
+
+    if x > np.shape(world_map)[0] or y > np.shape(world_map):
+        return error
+
+    return d_muur, k_muur
 
 
 def render_kolom(renderer, window, kolom, d_muur, k_muur):
