@@ -114,7 +114,7 @@ def verwerk_input(delta):
 def bereken_r_straal(r_speler_x, r_speler_y, kolom):
     r_straal_x, r_straal_y = 0, 0
     r_speler = np.array([r_speler_x, r_speler_y])
-    r_cameravlak = np.array([r_speler_x, r_speler_y])
+    r_cameravlak = np.array([r_cameravlak_x, r_cameravlak_y]) #CAMERA VLAK dus r_camera_x en y
     r_straal_0 = d_camera * r_speler - r_cameravlak
     r_straal_breedte = d_camera * r_speler + r_cameravlak
     r_straal_kolom = d_camera * r_speler + (-1 + (2*kolom)/BREEDTE) * r_cameravlak
@@ -160,7 +160,7 @@ def main():
     window.show()
 
     # Begin met het uitlezen van input van de muis en vraag om relatieve coordinaten
-    sdl2.SDL_SetRelativeMouseMode(True)
+    sdl2.SDL_SetRelativeMouseMode(False) #Even uitgezet
 
     # Maak een renderer aan zodat we in ons venster kunnen renderen
     renderer = sdl2.ext.Renderer(window)
