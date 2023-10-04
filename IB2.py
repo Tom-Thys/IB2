@@ -51,7 +51,6 @@ kleuren = [
     sdl2.ext.Color(255, 255, 255),  # 7 = Wit
 ]
 
-
 #
 # Verwerkt alle input van het toetsenbord en de muis
 #
@@ -122,8 +121,31 @@ def bereken_r_straal(r_speler_x, r_speler_y, kolom):
 
 
 def raycast(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
-    d_muur = random.randint(1,15)
-    k_muur = kleuren[random.randint(1,4)]
+    x, y = 0, 0
+    delta_v = 1/np.abs(r_straal_x)
+    delta_h = 1/np.abs(r_straal_y)
+    p_speler = np.array([p_speler_x, p_speler_y])
+    r_straal = np.array([r_straal_x, r_straal_y])
+    if r_straal_y < 0:
+        d_hor = (p_speler_y - np.floor(p_speler_y)) * delta_h
+    else:
+        d_hor = (1-p_speler_y + np.floor(p_speler_y)) * delta_h
+    if r_straal_x <0:
+        d_vert = (p_speler_x - np.floor(p_speler_x)) * delta_v
+    else:
+        d_vert = (1-p_speler_x + np.floor(p_speler_x)) * delta_v
+
+    if d_hor + x * delta_h <= d_vert + y * delta_v:
+        i_hor = p_speler + (d_hor + x * delta_h) * r_straal
+        x += 1
+
+    else:
+        i_vert = p_speler + (d_vert + y * delta_v) * r_straal
+        y += 1
+
+    if x > np.shape(world_map)[0] or y > np.shape(world_map):
+        return error
+
     return d_muur, k_muur
 
 
