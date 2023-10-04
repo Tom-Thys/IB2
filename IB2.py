@@ -1,5 +1,6 @@
 import math
 import time
+import numpy as np
 
 import sdl2.ext
 
@@ -23,6 +24,8 @@ r_cameravlak_x, r_cameravlak_y = -1 / math.sqrt(2), -1 / math.sqrt(2)
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
 
+# FOV (FOV slider implementeren of niet?)
+d_camera = 1
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
 world_map = [[2, 2, 2, 2, 2, 2, 2],
@@ -110,6 +113,13 @@ def verwerk_input(delta):
 
 def bereken_r_straal(r_speler_x, r_speler_y, kolom):
     r_straal_x, r_straal_y = 0, 0
+    r_speler = np.array([r_speler_x, r_speler_y])
+    r_cameravlak = np.array([r_speler_x, r_speler_y])
+    r_straal_0 = d_camera * r_speler - r_cameravlak
+    r_straal_breedte = d_camera * r_speler + r_cameravlak
+    r_straal_kolom = d_camera * r_speler + (-1 + (2*kolom)/BREEDTE) * r_cameravlak
+    r_straal = np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom))
+    r_straal_x, r_straal_y = r_straal[0], r_straal[1]
     return r_straal_x, r_straal_y
 
 
