@@ -31,7 +31,7 @@ d_camera = 1
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
 world_map = [[2, 2, 2, 2, 2, 2, 2],
-             [2, 0, 0, 0, 1, 2, 2],
+             [2, 0, 0, 1, 1, 1, 2],
              [2, 0, 0, 0, 0, 1, 2],
              [2, 0, 0, 0, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 2],
@@ -122,7 +122,8 @@ def bereken_r_straal(r_speler_x, r_speler_y, kolom):
     return r_straal
 
 
-def raycast(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
+def raycast(p_speler_x, p_speler_y, r_straal):
+    r_straal_x, r_straal_y = r_straal
     x, y = 0, 0
     delta_v = 1/np.abs(r_straal_x)
     delta_h = 1/np.abs(r_straal_y)
@@ -164,10 +165,11 @@ def raycast(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
         print("Error")
     return d_muur, k_muur
 
-def raycast_2(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
+def raycast_2(p_speler_x, p_speler_y, r_straal):
+    r_straal_x, r_straal_y = r_straal
     d_h = p_speler_x - math.floor(p_speler_x)
     d_v = p_speler_y - math.floor(p_speler_y)
-    d_x = 100
+    d_x = d_y = 100
     if r_straal_x > 0:
         v = 1/r_straal_x
         for i in range(math.floor(x_dim-p_speler_x)):
@@ -196,7 +198,6 @@ def raycast_2(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
                     break
             else:
                 break
-    d_y = 100
     if r_straal_y > 0:
         h = 1/r_straal_y
         for i in range(math.floor(y_dim - p_speler_y)):
@@ -224,15 +225,18 @@ def raycast_2(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
             else:
                 break
     if d_x < d_y:
-        d = d_x
+        d = fish_eye_(d_x,r_straal)
         return d, kleuren[2]
     elif d_y != 100:
-        d = d_y
+        d = fish_eye_(d_y,r_straal)
         return d, kleuren[1]
     else:
         return 1, kleuren[0]
 
-
+def fish_eye_(d,r_straal):
+    r_speler = np.array([r_speler_x,r_speler_y])
+    hoek = np.dot(r_speler,r_straal)/(np.linalg.norm(r_speler)*np.linalg.norm(r_straal))
+    return hoek*d
 
 def render_kolom(renderer, window, kolom, d_muur, k_muur):
     d_muur = d_muur*2
@@ -248,9 +252,9 @@ def show_fps(font, renderer, window):
     while True:
         fps_list.append(1 / (time.time() - loop_time))
         loop_time = time.time()
-        if len(fps_list) == 20:
+        if len(fps_list) == 100:
             fps = sum(fps_list)/len(fps_list)
-            fps_list = []
+            fps_list.pop(0)
         text = sdl2.ext.renderer.Texture(renderer, font.render_text(f'{fps:.2f} fps'))
         renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), 20,
                                      text.size[0], text.size[1]))
@@ -286,8 +290,8 @@ def main():
 
         # Render de huidige frame
         for kolom in range(0, window.size[0]):
-            (r_straal_x, r_straal_y) = bereken_r_straal(r_speler_x, r_speler_y, kolom)
-            (d_muur, k_muur) = raycast_2(p_speler_x, p_speler_y, r_straal_x, r_straal_y)
+            r_straal = bereken_r_straal(r_speler_x, r_speler_y, kolom)
+            (d_muur, k_muur) = raycast_2(p_speler_x, p_speler_y, r_straal)
             render_kolom(renderer, window, kolom, d_muur, k_muur)
 
         delta = time.time() - start_time
