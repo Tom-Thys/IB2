@@ -114,9 +114,7 @@ def verwerk_input(delta):
 def bereken_r_straal(r_speler_x, r_speler_y, kolom):
     r_straal_x, r_straal_y = 0, 0
     r_speler = np.array([r_speler_x, r_speler_y])
-    r_cameravlak = np.array([r_cameravlak_x, r_cameravlak_y]) #CAMERA VLAK dus r_camera_x en y
-    r_straal_0 = d_camera * r_speler - r_cameravlak
-    r_straal_breedte = d_camera * r_speler + r_cameravlak
+    r_cameravlak = np.array([r_cameravlak_x, r_cameravlak_y])
     r_straal_kolom = d_camera * r_speler + (-1 + (2*kolom)/BREEDTE) * r_cameravlak
     r_straal = np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom))
     r_straal_x, r_straal_y = r_straal[0], r_straal[1]
