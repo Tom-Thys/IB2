@@ -124,51 +124,44 @@ def bereken_r_straal(r_speler_x, r_speler_y, kolom):
 
 def raycast(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
     x, y = 0, 0
-    if r_straal_x:
-        delta_v = 1/np.abs(r_straal_x)
-    else:
-        delta_v = 0
-    if r_straal_y:
-        delta_h = 1 / np.abs(r_straal_y)
-    else:
-        delta_h = 0
+    delta_v = 1/np.abs(r_straal_x)
+    delta_h = 1/np.abs(r_straal_y)
     p_speler = np.array([p_speler_x, p_speler_y])
     r_straal = np.array([r_straal_x, r_straal_y])
+    x_nd, y_nd = np.shape(world_map)
     if r_straal_y < 0:
         d_hor = (p_speler_y - np.floor(p_speler_y)) * delta_h
     else:
         d_hor = (1-p_speler_y + np.floor(p_speler_y)) * delta_h
-    if r_straal_x <0:
+    if r_straal_x < 0:
         d_vert = (p_speler_x - np.floor(p_speler_x)) * delta_v
     else:
         d_vert = (1-p_speler_x + np.floor(p_speler_x)) * delta_v
-    while True:
-        if d_hor + x * delta_h <= d_vert + y * delta_v:
-            i_hor = p_speler + (d_hor + x * delta_h) * r_straal
-            x += 1
-            if r_straal_y >= 0:
-                if world_map[x][y-1] != 0:
-                    d_muur = np.linalg.norm([d_hor, d_vert])
-                    k_muur = world_map[x][y-1]
-                    break
-            else:
-                if world_map[x][y+1] != 0:
-                    d_muur = np.linalg.norm([d_hor, d_vert])
-                    k_muur = world_map[x][y+1]
+
+    if d_hor + x * delta_h <= d_vert + y * delta_v:
+        i_hor = p_speler + (d_hor + x * delta_h) * r_straal
+        x += 1
+        if r_straal_y >= 0:
+            if world_map[x][y] != 0:
+                d_muur = np.linalg.norm([d_hor, d_vert])
+                k_muur = world_map[x][y-1]
         else:
-            i_vert = p_speler + (d_vert + y * delta_v) * r_straal
-            y += 1
-            if r_straal_x < 0:
-                if world_map[x-1][y] != 0:
-                    d_muur = np.linalg.norm([d_hor, d_vert])
-                    k_muur = world_map[x-1][y]
-            else:
-                if world_map[x][y] != 0:
-                    d_muur = np.linalg.norm([d_hor, d_vert])
-                    k_muur = world_map[x-1][y]
-        if x > np.shape(world_map)[0] or y > np.shape(world_map)[1]:
-            break
-            print("Error")
+            if world_map[x][y+1] != 0:
+                d_muur = np.linalg.norm([d_hor, d_vert])
+                k_muur = world_map[x][y+1]
+    else:
+        i_vert = p_speler + (d_vert + y * delta_v) * r_straal
+        y += 1
+        if r_straal_x < 0:
+            if world_map[x-1][y] != 0:
+                d_muur = np.linalg.norm([d_hor, d_vert])
+                k_muur = world_map[x-1][y]
+        else:
+            if world_map[x][y] != 0:
+                d_muur = np.linalg.norm([d_hor, d_vert])
+                k_muur = world_map[x-1][y]
+    if x > np.shape(world_map)[0] or y > np.shape(world_map)[1]:
+        print("Error")
     return d_muur, k_muur
 
 def raycast_2(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
