@@ -1,6 +1,8 @@
 import math
+import random
 import time
 import numpy as np
+import random
 
 import sdl2.ext
 
@@ -112,23 +114,22 @@ def verwerk_input(delta):
 
 
 def bereken_r_straal(r_speler_x, r_speler_y, kolom):
-    r_straal_x, r_straal_y = 0, 0
     r_speler = np.array([r_speler_x, r_speler_y])
     r_cameravlak = np.array([r_cameravlak_x, r_cameravlak_y])
     r_straal_kolom = d_camera * r_speler + (-1 + (2*kolom)/BREEDTE) * r_cameravlak
     r_straal = np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom))
-    r_straal_x, r_straal_y = r_straal[0], r_straal[1]
-    return r_straal_x, r_straal_y
+    return r_straal
 
 
 def raycast(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
-    d_muur = 0
-    k_muur = kleuren[0]
+    d_muur = random.randint(1,15)
+    k_muur = kleuren[random.randint(1,4)]
     return d_muur, k_muur
 
 
 def render_kolom(renderer, window, kolom, d_muur, k_muur):
-    renderer.draw_line((kolom, 0, kolom, window.size[1]), kleuren[1])
+    d_muur = d_muur*2
+    renderer.draw_line((kolom, window.size[1]/2-window.size[1]*(1/d_muur), kolom, window.size[1]/2+window.size[1]*(1/d_muur)), k_muur)
     return
 
 
@@ -178,7 +179,7 @@ def main():
 
         # Render de huidige frame
         for kolom in range(0, window.size[0]):
-            r_straal_x, r_straal_y = bereken_r_straal(r_speler_x, r_speler_y, kolom)
+            (r_straal_x, r_straal_y) = bereken_r_straal(r_speler_x, r_speler_y, kolom)
             (d_muur, k_muur) = raycast(p_speler_x, p_speler_y, r_straal_x, r_straal_y)
             render_kolom(renderer, window, kolom, d_muur, k_muur)
 
