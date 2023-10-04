@@ -37,7 +37,8 @@ world_map = [[2, 2, 2, 2, 2, 2, 2],
              [2, 0, 0, 0, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 2],
              [2, 2, 2, 2, 2, 2, 2]]
-
+x_dim = len(world_map[0])
+y_dim = len(world_map)
 
 # Vooraf gedefinieerde kleuren
 kleuren = [
@@ -122,9 +123,73 @@ def bereken_r_straal(r_speler_x, r_speler_y, kolom):
 
 
 def raycast(p_speler_x, p_speler_y, r_straal_x, r_straal_y):
-    d_muur = random.randint(1,15)
-    k_muur = kleuren[random.randint(1,4)]
-    return d_muur, k_muur
+    d_h = p_speler_x - math.floor(p_speler_x)
+    d_v = p_speler_y - math.floor(p_speler_y)
+    d_x = 100
+    if r_straal_x > 0:
+        v = 1/r_straal_x
+        for i in range(math.floor(x_dim-p_speler_x)):
+            x = math.floor(p_speler_y+i+1)
+            y = p_speler_y+(1-d_h+i)*v*r_straal_y
+            if y < y_dim and 0 < y:
+                if world_map[math.floor(y)][x] == 1:
+                    d_x = ((x-p_speler_x)**2+(y-p_speler_y)**2)**(1/2)
+                    x_f = x
+                    y_f = y
+                    break
+                elif world_map[math.floor(y)][x] == 2:
+                    break
+            else:
+                break
+    elif r_straal_x < 0:
+        v = abs(1/r_straal_x)
+        for i in range(math.floor(p_speler_x)):
+            x = math.floor(p_speler_y-(i+1))
+            y = p_speler_y+(d_h+i)*v*r_straal_y
+            if y < y_dim and 0 < y:
+                if world_map[math.floor(y)][math.floor(x)] == 1:
+                    d_x = ((x-p_speler_x)**2+(y-p_speler_y)**2)**(1/2)
+                    x_f = x
+                    y_f = y
+                    break
+            else:
+                break
+    d_y = 100
+    if r_straal_y > 0:
+        h = 1/r_straal_y
+        for i in range(math.floor(y_dim - p_speler_y)):
+            y = math.floor(p_speler_y+i+1)
+            x = p_speler_x+(1-d_v+i)*h*r_straal_x
+            if x < x_dim and 0 < x:
+                if world_map[y][math.floor(x)] == 1:
+                    d_y = ((x-p_speler_x)**2+(y-p_speler_y)**2)**(1/2)
+                    x_f = x
+                    y_f = y
+                    break
+            else:
+                break
+    elif r_straal_y < 0:
+        h = abs(1/r_straal_y)
+        for i in range(math.floor(p_speler_y)):
+            y = math.floor(p_speler_y-(i+1))
+            x = p_speler_x+(d_v+i)*h*r_straal_x
+            if x < x_dim and 0 < x:
+                if world_map[y][math.floor(x)] == 1:
+                    d_y = ((x-p_speler_x)**2+(y-p_speler_y)**2)**(1/2)
+                    x_f = x
+                    y_f = y
+                    break
+            else:
+                break
+    if d_x < d_y:
+        d = d_x
+        return d, kleuren[2]
+    elif d_y != 100:
+        d = d_y
+        return d, kleuren[1]
+    else:
+        return 1, kleuren[0]
+
 
 
 def render_kolom(renderer, window, kolom, d_muur, k_muur):
