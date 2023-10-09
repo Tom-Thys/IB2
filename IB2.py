@@ -11,13 +11,14 @@ HOOGTE = 600
 
 #
 # Globale variabelen
-#
+changes = False
+stralen = []
 
 # positie van de speler
 p_speler_x, p_speler_y = 3 + 1 / math.sqrt(2), 4 - 1 / math.sqrt(2)
 
 # richting waarin de speler kijkt
-r_speler_hoek = math.pi / 4
+r_speler_hoek = -math.pi / 4
 r_speler = np.array([math.cos(r_speler_hoek), math.sin(r_speler_hoek)])
 r_speler_x,r_speler_y = r_speler
 
@@ -112,6 +113,45 @@ def verwerk_input(delta):
 
     if key_states[sdl2.SDL_SCANCODE_ESCAPE]:
         moet_afsluiten = True
+
+def draaien(hoek):
+    """Geef hoek op in radialen, geeft r_straal en r_cameravlak terug"""
+    global r_cameravlak, r_speler, stralen, changes
+    draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
+                             [math.sin(hoek), math.cos(hoek)]])
+    r_speler = np.matmul(draai_matrix, r_speler)
+    r_cameravlak = np.matmul(draai_matrix, r_cameravlak)
+    for i,straal in enumerate(stralen):
+        stralen[i] = np.matmul(draai_matrix,straal)
+    changes = True
+    return r_speler, r_cameravlak
+
+
+def move(dir, stap):
+    """Geef stap, veranderd positie speler volgens r_speler
+    aan muur volgt het slechts vector die niet in de weg zit"""
+    global p_speler_x, p_speler_y, changes
+    x = p_speler_x + dir * stap * r_speler[0]
+    y = p_speler_y + dir * stap * r_speler[1]
+    if world_map[math.floor(y)][math.floor(x)] == 0:
+        p_speler_x = x
+        p_speler_y = y
+        changes = True
+    else:
+        pass
+        # Kan gebruikt worden voor muren die schade aanrichten enzo
+
+def nr_rond(nr, tol=3):
+    p = 10**tol
+    acc = 0.5
+    if 0 < nr < np.inf:
+        return int(nr * p + acc) / p
+    elif nr < 0:
+        return -1
+    elif nr == 0:
+        return 0
+    else:
+        return np.inf
 
 
 def bereken_r_straal(kolom):
@@ -216,58 +256,114 @@ def raycast_2(p_speler_x, p_speler_y, r_straal):
                 break
     if d_x < d_y:
         d = fish_eye_(d_x,r_straal)
-        return d, kleuren[2]
+        return d, 2
     elif d_y != 100:
         d = fish_eye_(d_y,r_straal)
-        return d, kleuren[1]
+        return d, 1
     else:
-        return 1, kleuren[0]
+        return 1, 0
 
 
 def raycast_3(p_speler_x, p_speler_y, r_straal):
-    r_straal_x, r_straal_y = r_straal
-    x, y = 0, 0
-    delta_v = 1 / np.abs(r_straal_x)
-    delta_h = 1 / np.abs(r_straal_y)
+    r_straal_x = (r_straal[0])
+    r_straal_y = (r_straal[1])
+    delta_v = (1 / np.abs(r_straal_x))
+    delta_h = (1 / np.abs(r_straal_y))
     y_nd, x_nd = np.shape(world_map)
     if r_straal_x > 0:
         if r_straal_y > 0:
-            d_v = (1 - (p_speler_x - math.floor(p_speler_x))) * delta_v
-            d_h = (1 - (p_speler_y - math.floor(p_speler_y))) * delta_h + y * delta_h
+            d_v = ((1 - (p_speler_x - math.floor(p_speler_x))) * delta_v)
+            d_h = ((1 - (p_speler_y - math.floor(p_speler_y))) * delta_h)
             while True:
-                if d_v < d_h and p_speler_y + d_v * r_straal_y < y_nd and p_speler_x + d_v * r_straal_x < x_nd:
-                    if world_map[math.floor(p_speler_y + d_v * r_straal_y)][int(p_speler_x + d_v * r_straal_x)] != 0:
-                        return fish_eye_(d_v,r_straal), kleuren[2]
-                    else:
-                        d_v += delta_v
-                elif p_speler_y + d_h * r_straal_y <y_nd and p_speler_x + d_h * r_straal_x < x_nd:
-                    if world_map[int(p_speler_y + d_h * r_straal_y)][math.floor(p_speler_x + d_h * r_straal_x)] != 0:
-                        return fish_eye_(d_h,r_straal), kleuren[1]
-                    else:
-                        d_h += delta_h
+                if d_v < d_h:
+                    x = int(nr_rond(p_speler_x + d_v * r_straal_x))
+                    y = nr_rond(p_speler_y + d_v * r_straal_y)
+                    if y < y_nd and x < x_nd:
+                        if world_map[math.floor(y)][x] != 0:
+                            return fish_eye_(d_v, r_straal), 2
+                        else:
+                            d_v += delta_v
                 else:
-                    return 10,kleuren[0]
+                    x = nr_rond(p_speler_x + d_h * r_straal_x)
+                    y = int(nr_rond(p_speler_y + d_h * r_straal_y))
+                    if y < y_nd and x < x_nd:
+                        if world_map[y][math.floor(x)] != 0:
+                            return fish_eye_(d_h, r_straal), 1
+                        else:
+                            d_h += delta_h
+                    else:
+                        return 10, 0
     if r_straal_x > 0:
         if r_straal_y < 0:
             d_v = (1 - (p_speler_x - math.floor(p_speler_x))) * delta_v
-            d_h = (p_speler_y - math.floor(p_speler_y)) * delta_h + y * delta_h
+            d_h = (p_speler_y - math.floor(p_speler_y)) * delta_h
             while True:
-                if d_v < d_h and p_speler_y + d_v * r_straal_y < y_nd and p_speler_x + d_v * r_straal_x < x_nd:
-                    if world_map[math.floor(p_speler_y + d_v * r_straal_y)][math.floor(p_speler_x + d_v * r_straal_x)] != 0:
-                        return fish_eye_(d_v, r_straal), kleuren[2]
-                    else:
-                        d_v += delta_v
-                elif 0 < p_speler_y + d_h * r_straal_y and p_speler_x + d_h * r_straal_x < x_nd:
-                    if world_map[int(p_speler_y + d_h * r_straal_y)][math.floor(p_speler_x + d_h * r_straal_x)] != 0:
-                        return fish_eye_(d_h, r_straal), kleuren[1]
-                    else:
-                        d_h += delta_h
+                if d_v < d_h:
+                    x = int(nr_rond(p_speler_x + d_v * r_straal_x))
+                    y = nr_rond(p_speler_y + d_v * r_straal_y)
+                    if 0 <= y_nd and x < x_nd:
+                        if world_map[math.floor(y)][x] != 0:
+                            return fish_eye_(d_v, r_straal), 2
+                        else:
+                            d_v += delta_v
                 else:
-                    return 10, kleuren[0]
+                    x = nr_rond(p_speler_x + d_h * r_straal_x)
+                    y = int(nr_rond(p_speler_y + d_h * r_straal_y))
+                    if 0 <= y and x < x_nd:
+                        if world_map[y-1][math.floor(x)] != 0:
+                            return fish_eye_(d_h, r_straal), 1
+                        else:
+                            d_h += delta_h
+                    else:
+                        return 10, 0
+    if r_straal_x < 0:
+        if r_straal_y > 0:
+            d_v = (p_speler_x - math.floor(p_speler_x)) * delta_v
+            d_h = (1 - (p_speler_y - math.floor(p_speler_y))) * delta_h
+            while True:
+                if d_v < d_h:
+                    x = int(nr_rond(p_speler_x + d_v * r_straal_x))
+                    y = nr_rond(p_speler_y + d_v * r_straal_y)
+                    if y < y_nd and 0 <= x:
+                        if world_map[math.floor(y)][x - 1] != 0:
+                            return fish_eye_(d_v, r_straal), 2
+                        else:
+                            d_v += delta_v
+                else:
+                    x = nr_rond(p_speler_x + d_h * r_straal_x)
+                    y = int(nr_rond(p_speler_y + d_h * r_straal_y))
+                    if y < y_nd and 0 <= x:
+                        if world_map[y][math.floor(x)] != 0:
+                            return fish_eye_(d_h, r_straal), 1
+                        else:
+                            d_h += delta_h
+                    else:
+                        return 10, 0
+    if r_straal_x < 0:
+        if r_straal_y < 0:
+            d_v = (p_speler_x - math.floor(p_speler_x)) * delta_v
+            d_h = (p_speler_y - math.floor(p_speler_y)) * delta_h
+            while True:
+                if d_v < d_h:
+                    x = int(nr_rond(p_speler_x + d_v * r_straal_x))
+                    y = nr_rond(p_speler_y + d_v * r_straal_y)
+                    if 0 <= y and 0 <= x:
+                        if world_map[math.floor(y)][math.floor(x - 1)] != 0:
+                            return fish_eye_(d_v, r_straal), 2
+                        else:
+                            d_v += delta_v
+                else:
+                    x = nr_rond(p_speler_x + d_h * r_straal_x)
+                    y = int(nr_rond(p_speler_y + d_h * r_straal_y))
+                    if 0 <= y and 0 <= x:
+                        if world_map[math.floor(y - 1)][math.floor(x)] != 0:
+                            return fish_eye_(d_h, r_straal), 1
+                        else:
+                            d_h += delta_h
+                    else:
+                        return 10, 0
 
-            # print(math.floor(p_speler_y+d_h*r_straal_y)) geeft floor waarde
-    return 1, kleuren[0]
-
+    return 1, 0
 
 
 def fish_eye_(d,r_straal):
@@ -277,7 +373,7 @@ def fish_eye_(d,r_straal):
 
 def render_kolom(renderer, window, kolom, d_muur, k_muur):
     d_muur = d_muur*2
-    renderer.draw_line((kolom, window.size[1]/2-window.size[1]*(1/d_muur), kolom, window.size[1]/2+window.size[1]*(1/d_muur)), k_muur)
+    renderer.draw_line((kolom, window.size[1]/2-window.size[1]*(1/d_muur), kolom, window.size[1]/2+window.size[1]*(1/d_muur)), kleuren[k_muur])
     return
 
 
@@ -289,8 +385,8 @@ def show_fps(font, renderer, window):
     while True:
         fps_list.append(1 / (time.time() - loop_time))
         loop_time = time.time()
+        fps = sum(fps_list) / len(fps_list)
         if len(fps_list) == 100:
-            fps = sum(fps_list)/len(fps_list)
             fps_list.pop(0)
         text = sdl2.ext.renderer.Texture(renderer, font.render_text(f'{fps:.2f} fps'))
         renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), 20,
@@ -326,6 +422,7 @@ def main():
         renderer.clear()
 
         # Render de huidige frame
+        tijd = 0
         for kolom in range(0, window.size[0]):
             r_straal = bereken_r_straal(kolom)
             (d_muur, k_muur) = raycast_3(p_speler_x, p_speler_y, r_straal)
