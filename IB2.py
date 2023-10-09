@@ -187,11 +187,15 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                     d_muur = x * delta_h
                     k_muur = world_map[p_speler_y-1][i_hor_x//1]
                     return d_muur, k_muur
+                else:
+                    x += 1
             else:
                 if world_map[(p_speler_y//1)+1][i_hor_x//1] != 0:
                     d_muur = x * delta_h
                     k_muur = world_map[p_speler_y+1][i_hor_x//1]
                     return d_muur, k_muur
+                else:
+                    x += 1
         else:
             i_vert_y = p_speler + (d_vert + y * delta_v) * r_straal
             if r_straal_x >= 0:
@@ -199,11 +203,15 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                     d_muur = x * delta_h
                     k_muur = world_map[i_vert_y][(p_speler_x//1)+1]
                     return d_muur, k_muur
+                else:
+                    y += 1
             else:
                 if world_map[i_vert_y//1][(p_speler_x//1)-1] != 0:
                     d_muur = x * delta_h
                     k_muur = world_map[i_vert_y][(p_speler_x//1)-1]
                     return d_muur, k_muur
+                else:
+                    y += 1
 
 def raycast_2(p_speler_x, p_speler_y, r_straal):
     r_straal_x, r_straal_y = r_straal
