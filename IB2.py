@@ -161,46 +161,49 @@ def bereken_r_straal(kolom):
 
 
 def raycast(p_speler_x, p_speler_y, r_straal):
+    # stap 0: initialiseer x en y met waarde 0
     r_straal_x, r_straal_y = r_straal
-    x, y = 0, 0
-    delta_v = 1/np.abs(r_straal_x)
-    delta_h = 1/np.abs(r_straal_y)
     p_speler = np.array([p_speler_x, p_speler_y])
     y_nd, x_nd = np.shape(world_map)
-    if r_straal_y < 0:
-        d_hor = (p_speler_y - np.floor(p_speler_y)) * delta_h
-    else:
-        d_hor = (1-p_speler_y + np.floor(p_speler_y)) * delta_h
-    if r_straal_x < 0:
-        d_vert = (p_speler_x - np.floor(p_speler_x)) * delta_v
-    else:
-        d_vert = (1-p_speler_x + np.floor(p_speler_x)) * delta_v
-
-    if d_hor + x * delta_h <= d_vert + y * delta_v:
-        i_hor = p_speler + (d_hor + x * delta_h) * r_straal
-        x += 1
-        if r_straal_y >= 0:
-            if world_map[x][y] != 0:
-                d_muur = np.linalg.norm([d_hor, d_vert])
-                k_muur = world_map[x][y-1]
+    x, y = 0.0, 0.0
+    # stap 1: bereken delta_h en delta_v
+    delta_v = 1/abs(r_straal_x)
+    delta_h = 1/abs(r_straal_y)
+    # stap 2: bereken d_hor en d_vert
+    # d_hor
+    d_hor = (1 - p_speler_y + (p_speler_y//1)) * delta_h if r_straal_y >= 0 else (p_speler_y - (p_speler_y//1)) * delta_h
+    # d_vert
+    d_vert = (1 - p_speler_x + (p_speler_x//1)) * delta_v if r_straal_x >= 0 else (p_speler_x - (p_speler_x//1)) * delta_v
+    # test d_hor + x * delta_h <= d_vert + y * delta_v
+    while True:
+        print(delta_h)
+        print(d_hor)
+        print(d_hor + x * delta_h)
+        print(d_vert + y * delta_v)
+        if d_hor + x * delta_h <= d_vert + y * delta_v:
+            i_hor_x = p_speler + (d_hor + x * delta_h) * r_straal
+            if r_straal_y >= 0:
+                if world_map[(p_speler_y//1)-1][i_hor_x//1] != 0:
+                    d_muur = x * delta_h
+                    k_muur = world_map[p_speler_y-1][i_hor_x//1]
+                    return d_muur, k_muur
+            else:
+                if world_map[(p_speler_y//1)+1][i_hor_x//1] != 0:
+                    d_muur = x * delta_h
+                    k_muur = world_map[p_speler_y+1][i_hor_x//1]
+                    return d_muur, k_muur
         else:
-            if world_map[x][y+1] != 0:
-                d_muur = np.linalg.norm([d_hor, d_vert])
-                k_muur = world_map[x][y+1]
-    else:
-        i_vert = p_speler + (d_vert + y * delta_v) * r_straal
-        y += 1
-        if r_straal_x < 0:
-            if world_map[x-1][y] != 0:
-                d_muur = np.linalg.norm([d_hor, d_vert])
-                k_muur = world_map[x-1][y]
-        else:
-            if world_map[x][y] != 0:
-                d_muur = np.linalg.norm([d_hor, d_vert])
-                k_muur = world_map[x-1][y]
-    if x > np.shape(world_map)[0] or y > np.shape(world_map)[1]:
-        print("Error")
-    return d_muur, k_muur
+            i_vert_y = p_speler + (d_vert + y * delta_v) * r_straal
+            if r_straal_x >= 0:
+                if world_map[i_vert_y//1][(p_speler_x//1)+1] != 0:
+                    d_muur = x * delta_h
+                    k_muur = world_map[i_vert_y][(p_speler_x//1)+1]
+                    return d_muur, k_muur
+            else:
+                if world_map[i_vert_y//1][(p_speler_x//1)-1] != 0:
+                    d_muur = x * delta_h
+                    k_muur = world_map[i_vert_y][(p_speler_x//1)-1]
+                    return d_muur, k_muur
 
 def raycast_2(p_speler_x, p_speler_y, r_straal):
     r_straal_x, r_straal_y = r_straal
@@ -425,7 +428,7 @@ def main():
         tijd = 0
         for kolom in range(0, window.size[0]):
             r_straal = bereken_r_straal(kolom)
-            (d_muur, k_muur) = raycast_3(p_speler_x, p_speler_y, r_straal)
+            (d_muur, k_muur) = raycast(p_speler_x, p_speler_y, r_straal)
             render_kolom(renderer, window, kolom, d_muur, k_muur)
 
         delta = time.time() - start_time
