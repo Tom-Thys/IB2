@@ -194,14 +194,12 @@ def nr_rond(nr, tol=4):
 def raycast(p_speler_x, p_speler_y, r_straal):
     r_straal_x, r_straal_y = r_straal
     x, y = 0, 0
+    # stap 1: bereken delta_h en delta_v
     delta_v = 1 / np.abs(r_straal_x)
     delta_h = 1 / np.abs(r_straal_y)
     p_speler = np.array([p_speler_x, p_speler_y])
     y_nd, x_nd = np.shape(world_map)
     x, y = 0, 0
-    # stap 1: bereken delta_h en delta_v
-    delta_v = 1/abs(r_straal_x)
-    delta_h = 1/abs(r_straal_y)
     # stap 2: bereken d_hor en d_vert
     # d_hor
     d_hor = (1 - p_speler_y + (math.floor(p_speler_y))) * delta_h if r_straal_y >= 0 else (p_speler_y - (math.floor(p_speler_y))) * delta_h
@@ -210,7 +208,7 @@ def raycast(p_speler_x, p_speler_y, r_straal):
     # test d_hor + x * delta_h <= d_vert + y * delta_v
     while True:
         if d_hor <= d_vert:
-            i_hor_x = p_speler + (d_hor + x * delta_h) * r_straal
+            i_hor_x = p_speler_x + (d_hor + x * delta_h) * r_straal_x
             if r_straal_y >= 0:
                 if world_map[(math.floor(p_speler_y))-1][math.floor(i_hor_x)] != 0:
                     d_muur = x * delta_h
@@ -228,7 +226,7 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                     d_hor += delta_h
                     x += 1
         else:
-            i_vert_y = p_speler + (d_vert + y * delta_v) * r_straal
+            i_vert_y = p_speler_y + (d_vert + y * delta_v) * r_straal_y
             if r_straal_x >= 0:
                 if world_map[math.floor(i_vert_y)][(math.floor(p_speler_x))+1] != 0:
                     d_muur = x * delta_h
