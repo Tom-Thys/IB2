@@ -66,12 +66,7 @@ kleuren = [
     sdl2.ext.Color(255, 255, 255),  # 7 = Wit
 ]
 
-# resources inladen
-resources = sdl2.ext.Resources(__file__, "resources")
-# Spritefactory aanmaken
-factory = sdl2.ext.Spritefactory(sdl2.ext.TEXTURE, renderer = renderer)
-# open de afbeeldingen en maak er een sdl2 texture van
-wall_texture = factory.from_image(resources.get_path("muur_test.png"))
+
 
 #
 # Verwerkt alle input van het toetsenbord en de muis
@@ -363,6 +358,13 @@ def main():
 
     # Maak een renderer aan zodat we in ons venster kunnen renderen
     renderer = sdl2.ext.Renderer(window)
+
+    # resources inladen
+    esources = sdl2.ext.Resources(__file__, "resources")
+    # Spritefactory aanmaken
+    factory = sdl2.ext.Spritefactory(sdl2.ext.TEXTURE, renderer = renderer)
+    # open de afbeeldingen en maak er een sdl2 texture van
+    wall_texture = factory.from_image(resources.get_path("muur_test.png"))
 
     # Initialiseer font voor de fps counter
     fps_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
