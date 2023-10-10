@@ -328,15 +328,18 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
 
 def renderen(renderer, window, kolom, d_muur, k_muur,wall_texture):
     #k_muur linken aan textuur
-    d_muur = 10/d_muur
     breedte = wall_texture.size[0]
     rij = kolom % breedte
     hoogte = wall_texture.size[1]
+    if d_muur < 1:
+        d_muur = window.size[1]/hoogte
+    else:
+        d_muur = 10/d_muur
     textuur_x = rij
     textuur_y = 0
     scherm_x = 10
     scherm_y = window.size[1]/2
-    renderer.copy(wall_texture,srcrect = (textuur_x,textuur_y, 1, hoogte),dstrect = (kolom,scherm_y-d_muur, 1, d_muur))
+    renderer.copy(wall_texture,srcrect = (textuur_x,textuur_y, 1, hoogte),dstrect = (kolom,scherm_y-d_muur*hoogte/2, 1, d_muur*hoogte))
 
 def show_fps(font, renderer, window):
     fps_list = [1]
@@ -402,7 +405,7 @@ def main():
         for kolom,d_muur,k_muur in muren:
             #r_straal = bereken_r_straal(kolom)
             #(d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
-            render_kolom(renderer, window, kolom, d_muur, k_muur)
+            #render_kolom(renderer, window, kolom, d_muur, k_muur)
             renderen(renderer, window, kolom, d_muur, k_muur, wall_texture)
 
         delta = time.time() - start_time
