@@ -199,8 +199,6 @@ def raycast(p_speler_x, p_speler_y, r_straal):
     r_straal_y = (r_straal[1])
     delta_v = (1 / np.abs(r_straal_x))
     delta_h = (1 / np.abs(r_straal_y))
-    if x_dim > 20:
-        x_dim =
     if r_straal_x > 0:
         if r_straal_y > 0:
             d_v = ((1 - (p_speler_x - math.floor(p_speler_x))) * delta_v)
@@ -337,8 +335,9 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
                         window.size[1] / 2 + window.size[1] * (1 / d_muur)), kleuren[k_muur])
     return
 
-def renderen(renderer, window, kolom, d_muur, k_muur,wall_texture):
+def renderen(renderer, window, kolom, d_muur, k_muur, soort_muren):
     #k_muur linken aan textuur
+    wall_texture = soort_muren[k_muur-1]
     breedte = wall_texture.size[0]
     rij = kolom % breedte
     hoogte = wall_texture.size[1]
@@ -387,8 +386,12 @@ def main():
     resources = sdl2.ext.Resources(__file__, "resources")
     # Spritefactory aanmaken
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer = renderer)
-    # open de afbeeldingen en maak er een sdl2 texture van
-    wall_texture = factory.from_image(resources.get_path("muur_test.png"))
+    # soorten muren opslaan in sdl2 textures
+    soort_muren = [
+        factory.from_image(resources.get_path("muur_test.png")), # 1
+        factory.from_image(resources.get_path("Red_house.png")), # 2
+        factory.from_image(resources.get_path("Pink_house.png")) # 3
+    ]
 
     # Initialiseer font voor de fps counter
     fps_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
@@ -417,7 +420,7 @@ def main():
             #r_straal = bereken_r_straal(kolom)
             #(d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
             #render_kolom(renderer, window, kolom, d_muur, k_muur)
-            renderen(renderer, window, kolom, d_muur, k_muur, wall_texture)
+            renderen(renderer, window, kolom, d_muur, k_muur, soort_muren)
 
         delta = time.time() - start_time
 
