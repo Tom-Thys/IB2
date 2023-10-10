@@ -103,14 +103,6 @@ def verwerk_input(delta):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
-            if key == sdl2.SDLK_f or key == sdl2.SDLK_RIGHT:
-                draaien(-math.pi / 200)
-            if key == sdl2.SDLK_s or key == sdl2.SDLK_LEFT:
-                draaien(math.pi / 200)
-            if key == sdl2.SDLK_e or key == sdl2.SDLK_UP:
-                move(1, 0.01)
-            if key == sdl2.SDLK_d or key == sdl2.SDLK_DOWN:
-                move(-1, 0.01)
             break
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
