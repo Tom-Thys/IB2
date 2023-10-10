@@ -209,11 +209,7 @@ def raycast(p_speler_x, p_speler_y, r_straal):
     d_vert = (1 - p_speler_x + (math.floor(p_speler_x))) * delta_v if r_straal_x >= 0 else (p_speler_x - (math.floor(p_speler_x))) * delta_v
     # test d_hor + x * delta_h <= d_vert + y * delta_v
     while True:
-        print(delta_h)
-        print(d_hor)
-        print(d_hor + x * delta_h)
-        print(d_vert + y * delta_v)
-        if d_hor + x * delta_h <= d_vert + y * delta_v:
+        if d_hor <= d_vert:
             i_hor_x = p_speler + (d_hor + x * delta_h) * r_straal
             if r_straal_y >= 0:
                 if world_map[(math.floor(p_speler_y))-1][math.floor(i_hor_x)] != 0:
@@ -221,14 +217,14 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                     k_muur = world_map[p_speler_y-1][math.floor(i_hor_x)]
                     return d_muur, k_muur
                 else:
-                    x += 1
+                    d_hor += delta_h
             else:
                 if world_map[(math.floor(p_speler_y))+1][math.floor(i_hor_x)] != 0:
                     d_muur = x * delta_h
                     k_muur = world_map[p_speler_y+1][math.floor(i_hor_x)]
                     return d_muur, k_muur
                 else:
-                    x += 1
+                    d_hor += delta_h
         else:
             i_vert_y = p_speler + (d_vert + y * delta_v) * r_straal
             if r_straal_x >= 0:
@@ -237,14 +233,14 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                     k_muur = world_map[i_vert_y][(p_speler_x//1)+1]
                     return d_muur, k_muur
                 else:
-                    y += 1
+                    d_vert += delta_v
             else:
                 if world_map[math.floor(i_vert_y)][(math.floor(p_speler_x))-1] != 0:
                     d_muur = x * delta_h
                     k_muur = world_map[i_vert_y][(math.floor(p_speler_x))-1]
                     return d_muur, k_muur
                 else:
-                    y += 1
+                    d_vert += delta_v
 
 def raycast_2(p_speler_x, p_speler_y, r_straal):
     r_straal_x, r_straal_y = r_straal
