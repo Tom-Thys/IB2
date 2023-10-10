@@ -198,7 +198,6 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
     r_straal_y = (r_straal[1])
     delta_v = (1 / np.abs(r_straal_x))
     delta_h = (1 / np.abs(r_straal_y))
-    y_nd, x_nd = np.shape(world_map)
     if r_straal_x > 0:
         if r_straal_y > 0:
             d_v = ((1 - (p_speler_x - math.floor(p_speler_x))) * delta_v)
@@ -207,7 +206,7 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
                 if d_v < d_h:
                     x = int(nr_rond(p_speler_x + d_v * r_straal_x))
                     y = nr_rond(p_speler_y + d_v * r_straal_y)
-                    if y < y_nd and x < x_nd:
+                    if y < y_dim and x < x_dim:
                         if world_map[math.floor(y)][x] != 0:
                             return fish_eye_(d_v, r_straal), 2
                         else:
@@ -215,7 +214,7 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = int(nr_rond(p_speler_y + d_h * r_straal_y))
-                    if y < y_nd and x < x_nd:
+                    if y < y_dim and x < x_dim:
                         if world_map[y][math.floor(x)] != 0:
                             return fish_eye_(d_h, r_straal), 1
                         else:
@@ -230,7 +229,7 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
                 if d_v < d_h:
                     x = math.floor(nr_rond(p_speler_x + d_v * r_straal_x))
                     y = nr_rond(p_speler_y + d_v * r_straal_y)
-                    if 0 <= y_nd and x < x_nd:
+                    if 0 <= y_dim and x < x_dim:
                         if world_map[math.floor(y)][x] != 0:
                             return fish_eye_(d_v, r_straal), 2
                         else:
@@ -238,7 +237,7 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
-                    if 0 <= y and x < x_nd:
+                    if 0 <= y and x < x_dim:
                         if world_map[y-1][math.floor(x)] != 0:
                             return fish_eye_(d_h, r_straal), 1
                         else:
@@ -253,7 +252,7 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
                 if d_v < d_h:
                     x = math.floor(nr_rond(p_speler_x + d_v * r_straal_x))
                     y = nr_rond(p_speler_y + d_v * r_straal_y)
-                    if y < y_nd and 0 <= x:
+                    if y < y_dim and 0 <= x:
                         if world_map[math.floor(y)][x - 1] != 0:
                             return fish_eye_(d_v, r_straal), 2
                         else:
@@ -261,7 +260,7 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
-                    if y < y_nd and 0 <= x:
+                    if y < y_dim and 0 <= x:
                         if world_map[y][math.floor(x)] != 0:
                             return fish_eye_(d_h, r_straal), 1
                         else:
