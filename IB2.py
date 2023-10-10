@@ -35,7 +35,7 @@ r_cameravlak = np.array([math.cos(r_speler_hoek - math.pi / 2), math.sin(r_spele
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
 
-# FOV (FOV slider implementeren of niet?)
+# FOV
 d_camera = 1
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
