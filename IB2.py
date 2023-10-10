@@ -79,6 +79,15 @@ def verwerk_input(delta):
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     events = sdl2.ext.get_events()
+    key_states = sdl2.SDL_GetKeyboardState(None)
+    if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
+        move(1, 0.01)
+    if key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]:
+        move(-1, 0.01)
+    if key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]:
+        draaien(-math.pi / 200)
+    if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
+        draaien(math.pi / 200)
     for event in events:
         # Een SDL_QUIT event wordt afgeleverd als de gebruiker de applicatie
         # afsluit door bv op het kruisje te klikken
@@ -94,14 +103,6 @@ def verwerk_input(delta):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
-            if key == sdl2.SDLK_f or key == sdl2.SDLK_RIGHT:
-                draaien(-math.pi / 200)
-            if key == sdl2.SDLK_s or key == sdl2.SDLK_LEFT:
-                draaien(math.pi / 200)
-            if key == sdl2.SDLK_e or key == sdl2.SDLK_UP:
-                move(1, 0.01)
-            if key == sdl2.SDLK_d or key == sdl2.SDLK_DOWN:
-                move(-1, 0.01)
             break
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
