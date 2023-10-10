@@ -335,8 +335,9 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
                         window.size[1] / 2 + window.size[1] * (1 / d_muur)), kleuren[k_muur])
     return
 
+
 def renderen(renderer, window, kolom, d_muur, k_muur, soort_muren):
-    #k_muur linken aan textuur
+    # k_muur linken aan textuur
     wall_texture = soort_muren[k_muur-1]
     breedte = wall_texture.size[0]
     rij = kolom % breedte
@@ -349,7 +350,8 @@ def renderen(renderer, window, kolom, d_muur, k_muur, soort_muren):
     textuur_y = 0
     scherm_x = 10
     scherm_y = window.size[1]/2
-    renderer.copy(wall_texture,srcrect = (textuur_x,textuur_y, 1, hoogte),dstrect = (kolom,scherm_y-d_muur*hoogte/2, 1, d_muur*hoogte))
+    renderer.copy(wall_texture, srcrect=(textuur_x, textuur_y, 1, hoogte), dstrect=(kolom,scherm_y-d_muur*hoogte/2, 1, d_muur*hoogte))
+
 
 def show_fps(font, renderer, window):
     fps_list = [1]
