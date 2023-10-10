@@ -172,6 +172,7 @@ def move(dir, stap):
         p_speler_x = x
         p_speler_y = y
         changes = True
+        return changes
     else:
         pass
         # Kan gebruikt worden voor muren die schade aanrichten enzo
@@ -193,30 +194,34 @@ def fish_eye_(d, r_straal):
     return hoek * d
 
 
-def raycast_3(p_speler_x, p_speler_y, r_straal):
+def raycast(p_speler_x, p_speler_y, r_straal):
     r_straal_x = (r_straal[0])
     r_straal_y = (r_straal[1])
     delta_v = (1 / np.abs(r_straal_x))
     delta_h = (1 / np.abs(r_straal_y))
+    if x_dim > 20:
+        x_dim =
     if r_straal_x > 0:
         if r_straal_y > 0:
             d_v = ((1 - (p_speler_x - math.floor(p_speler_x))) * delta_v)
             d_h = ((1 - (p_speler_y - math.floor(p_speler_y))) * delta_h)
             while True:
                 if d_v < d_h:
-                    x = int(nr_rond(p_speler_x + d_v * r_straal_x))
+                    x = math.floor(nr_rond(p_speler_x + d_v * r_straal_x))
                     y = nr_rond(p_speler_y + d_v * r_straal_y)
                     if y < y_dim and x < x_dim:
-                        if world_map[math.floor(y)][x] != 0:
-                            return fish_eye_(d_v, r_straal), 2
+                        k = world_map[math.floor(y)][x]
+                        if k != 0:
+                            return fish_eye_(d_v, r_straal), k
                         else:
                             d_v += delta_v
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
-                    y = int(nr_rond(p_speler_y + d_h * r_straal_y))
+                    y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
                     if y < y_dim and x < x_dim:
-                        if world_map[y][math.floor(x)] != 0:
-                            return fish_eye_(d_h, r_straal), 1
+                        k = world_map[y][math.floor(x)]
+                        if k != 0:
+                            return fish_eye_(d_h, r_straal), k
                         else:
                             d_h += delta_h
                     else:
@@ -230,16 +235,18 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
                     x = math.floor(nr_rond(p_speler_x + d_v * r_straal_x))
                     y = nr_rond(p_speler_y + d_v * r_straal_y)
                     if 0 <= y_dim and x < x_dim:
-                        if world_map[math.floor(y)][x] != 0:
-                            return fish_eye_(d_v, r_straal), 2
+                        k = world_map[math.floor(y)][x]
+                        if k != 0:
+                            return fish_eye_(d_v, r_straal), k
                         else:
                             d_v += delta_v
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
                     if 0 <= y and x < x_dim:
-                        if world_map[y-1][math.floor(x)] != 0:
-                            return fish_eye_(d_h, r_straal), 1
+                        k = world_map[y-1][math.floor(x)]
+                        if k != 0:
+                            return fish_eye_(d_h, r_straal), k
                         else:
                             d_h += delta_h
                     else:
@@ -253,16 +260,18 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
                     x = math.floor(nr_rond(p_speler_x + d_v * r_straal_x))
                     y = nr_rond(p_speler_y + d_v * r_straal_y)
                     if y < y_dim and 0 <= x:
-                        if world_map[math.floor(y)][x - 1] != 0:
-                            return fish_eye_(d_v, r_straal), 2
+                        k = world_map[math.floor(y)][x - 1]
+                        if k != 0:
+                            return fish_eye_(d_v, r_straal), k
                         else:
                             d_v += delta_v
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
                     if y < y_dim and 0 <= x:
-                        if world_map[y][math.floor(x)] != 0:
-                            return fish_eye_(d_h, r_straal), 1
+                        k = world_map[y][math.floor(x)]
+                        if k != 0:
+                            return fish_eye_(d_h, r_straal), k
                         else:
                             d_h += delta_h
                     else:
@@ -276,16 +285,18 @@ def raycast_3(p_speler_x, p_speler_y, r_straal):
                     x = math.floor(nr_rond(p_speler_x + d_v * r_straal_x))
                     y = nr_rond(p_speler_y + d_v * r_straal_y)
                     if 0 <= y and 0 <= x:
-                        if world_map[math.floor(y)][math.floor(x - 1)] != 0:
-                            return fish_eye_(d_v, r_straal), 2
+                        k = world_map[math.floor(y)][math.floor(x - 1)]
+                        if k != 0:
+                            return fish_eye_(d_v, r_straal), k
                         else:
                             d_v += delta_v
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
                     if 0 <= y and 0 <= x:
-                        if world_map[math.floor(y - 1)][math.floor(x)] != 0:
-                            return fish_eye_(d_h, r_straal), 1
+                        k = world_map[math.floor(y - 1)][math.floor(x)]
+                        if k != 0:
+                            return fish_eye_(d_h, r_straal), k
                         else:
                             d_h += delta_h
                     else:
@@ -300,22 +311,22 @@ def raycasting(p_speler_x, p_speler_y, stralen):
     aantal = 8
     for j, straal in enumerate(stralen):
         if j == 0:
-            d, k = raycast_3(p_speler_x, p_speler_y, straal)
+            d, k = raycast(p_speler_x, p_speler_y, straal)
             muren.append((j, d, k))
         elif j % (aantal+1) == 0:
             d_vorig = muren[-1][1]
-            d, k = raycast_3(p_speler_x, p_speler_y, straal)
+            d, k = raycast(p_speler_x, p_speler_y, straal)
             if muren[-1][2] == k and 0.95 < d_vorig/d < 1.05:
                 for i in range(aantal):
                     muren.append((j - aantal + i, d_vorig + (i+1) * (d - d_vorig) / (aantal+2), k))
                 #muren.append((j-1,(d + muren[-1][1])/2,k))
             else:
                 for i in range(aantal):
-                    d2, k2 = raycast_3(p_speler_x, p_speler_y, stralen[j- aantal+ i])
+                    d2, k2 = raycast(p_speler_x, p_speler_y, stralen[j- aantal+ i])
                     muren.append((j - aantal + i, d2, k2))
             muren.append((j, d, k))
         elif j > BREEDTE-aantal:
-            d, k = raycast_3(p_speler_x, p_speler_y, straal)
+            d, k = raycast(p_speler_x, p_speler_y, straal)
             muren.append((j, d, k))
     return muren
 
