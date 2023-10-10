@@ -66,6 +66,12 @@ kleuren = [
     sdl2.ext.Color(255, 255, 255),  # 7 = Wit
 ]
 
+# resources inladen
+resources = sdl2.ext.Resources(__file__, "resources")
+# Spritefactory aanmaken
+factory = sdl2.ext.Spritefactory(sdl2.ext.TEXTURE, renderer = renderer)
+# open de afbeeldingen en maak er een sdl2 texture van
+wall_texture = factory.from_image(resources.get_path("muur_test.png"))
 
 #
 # Verwerkt alle input van het toetsenbord en de muis
@@ -318,9 +324,6 @@ def raycasting(p_speler_x, p_speler_y, stralen):
             d, k = raycast_3(p_speler_x, p_speler_y, straal)
             muren.append((j, d, k))
     return muren
-
-
-
 
 
 def render_kolom(renderer, window, kolom, d_muur, k_muur):
