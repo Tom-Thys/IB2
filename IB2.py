@@ -362,7 +362,7 @@ def main():
     # resources inladen
     esources = sdl2.ext.Resources(__file__, "resources")
     # Spritefactory aanmaken
-    factory = sdl2.ext.Spritefactory(sdl2.ext.TEXTURE, renderer = renderer)
+    factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer = renderer)
     # open de afbeeldingen en maak er een sdl2 texture van
     wall_texture = factory.from_image(resources.get_path("muur_test.png"))
 
