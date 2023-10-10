@@ -95,9 +95,9 @@ def verwerk_input(delta):
                 moet_afsluiten = True
                 break
             if key == sdl2.SDLK_f or key == sdl2.SDLK_RIGHT:
-                draaien(-math.pi / 200)
-            if key == sdl2.SDLK_s or key == sdl2.SDLK_LEFT:
                 draaien(math.pi / 200)
+            if key == sdl2.SDLK_s or key == sdl2.SDLK_LEFT:
+                draaien(-math.pi / 200)
             if key == sdl2.SDLK_e or key == sdl2.SDLK_UP:
                 move(1, 0.01)
             if key == sdl2.SDLK_d or key == sdl2.SDLK_DOWN:
@@ -179,9 +179,8 @@ def move(dir, stap):
 
 def nr_rond(nr, tol=4):
     p = 10**tol
-    acc = 0.5
     if 0 < nr < np.inf:
-        return int(nr * p + acc) / p
+        return math.ceil(nr * p) / p
     elif nr < 0:
         return -1
     elif nr == 0:
@@ -337,12 +336,11 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
 
 
 def renderen(renderer, window, kolom, d_muur, k_muur, soort_muren):
-    # k_muur linken aan textuur
     wall_texture = soort_muren[k_muur-1]
     breedte = wall_texture.size[0]
     rij = kolom % breedte
     hoogte = wall_texture.size[1]
-    if d_muur < 1:
+    if d_muur < 1.5:
         d_muur = window.size[1]/hoogte
     else:
         d_muur = 10/d_muur
@@ -350,6 +348,7 @@ def renderen(renderer, window, kolom, d_muur, k_muur, soort_muren):
     textuur_y = 0
     scherm_x = 10
     scherm_y = window.size[1]/2
+    kolom = BREEDTE-kolom
     renderer.copy(wall_texture, srcrect=(textuur_x, textuur_y, 1, hoogte), dstrect=(kolom,scherm_y-d_muur*hoogte/2, 1, d_muur*hoogte))
 
 
@@ -388,13 +387,13 @@ def main():
     resources = sdl2.ext.Resources(__file__, "resources")
     # Spritefactory aanmaken
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer = renderer)
+    # open de afbeeldingen en maak er een sdl2 texture van
     # soorten muren opslaan in sdl2 textures
     soort_muren = [
-        factory.from_image(resources.get_path("muur_test.png")), # 1
-        factory.from_image(resources.get_path("Red_house.png")), # 2
-        factory.from_image(resources.get_path("Pink_house.png")) # 3
+        factory.from_image(resources.get_path("muur_test.png")),  # 1
+        factory.from_image(resources.get_path("Red_house.png")),  # 2
+        factory.from_image(resources.get_path("Pink_house.png"))  # 3
     ]
-
     # Initialiseer font voor de fps counter
     fps_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
     fps_generator = show_fps(fps_font, renderer, window)
