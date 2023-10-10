@@ -360,7 +360,7 @@ def main():
     renderer = sdl2.ext.Renderer(window)
 
     # resources inladen
-    esources = sdl2.ext.Resources(__file__, "resources")
+    resources = sdl2.ext.Resources(__file__, "resources")
     # Spritefactory aanmaken
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer = renderer)
     # open de afbeeldingen en maak er een sdl2 texture van
