@@ -171,9 +171,9 @@ def raycast(p_speler_x, p_speler_y, r_straal):
     delta_h = 1/abs(r_straal_y)
     # stap 2: bereken d_hor en d_vert
     # d_hor
-    d_hor = (1 - p_speler_y + (p_speler_y//1)) * delta_h if r_straal_y >= 0 else (p_speler_y - (p_speler_y//1)) * delta_h
+    d_hor = (1 - p_speler_y + (math.floor(p_speler_y))) * delta_h if r_straal_y >= 0 else (p_speler_y - (math.floor(p_speler_y))) * delta_h
     # d_vert
-    d_vert = (1 - p_speler_x + (p_speler_x//1)) * delta_v if r_straal_x >= 0 else (p_speler_x - (p_speler_x//1)) * delta_v
+    d_vert = (1 - p_speler_x + (math.floor(p_speler_x))) * delta_v if r_straal_x >= 0 else (p_speler_x - (math.floor(p_speler_x))) * delta_v
     # test d_hor + x * delta_h <= d_vert + y * delta_v
     while True:
         print(delta_h)
@@ -183,32 +183,32 @@ def raycast(p_speler_x, p_speler_y, r_straal):
         if d_hor + x * delta_h <= d_vert + y * delta_v:
             i_hor_x = p_speler + (d_hor + x * delta_h) * r_straal
             if r_straal_y >= 0:
-                if world_map[(p_speler_y//1)-1][i_hor_x//1] != 0:
+                if world_map[(math.floor(p_speler_y))-1][math.floor(i_hor_x)] != 0:
                     d_muur = x * delta_h
-                    k_muur = world_map[p_speler_y-1][i_hor_x//1]
+                    k_muur = world_map[p_speler_y-1][math.floor(i_hor_x)]
                     return d_muur, k_muur
                 else:
                     x += 1
             else:
-                if world_map[(p_speler_y//1)+1][i_hor_x//1] != 0:
+                if world_map[(math.floor(p_speler_y))+1][math.floor(i_hor_x)] != 0:
                     d_muur = x * delta_h
-                    k_muur = world_map[p_speler_y+1][i_hor_x//1]
+                    k_muur = world_map[p_speler_y+1][math.floor(i_hor_x)]
                     return d_muur, k_muur
                 else:
                     x += 1
         else:
             i_vert_y = p_speler + (d_vert + y * delta_v) * r_straal
             if r_straal_x >= 0:
-                if world_map[i_vert_y//1][(p_speler_x//1)+1] != 0:
+                if world_map[math.floor(i_vert_y)][(math.floor(p_speler_x))+1] != 0:
                     d_muur = x * delta_h
                     k_muur = world_map[i_vert_y][(p_speler_x//1)+1]
                     return d_muur, k_muur
                 else:
                     y += 1
             else:
-                if world_map[i_vert_y//1][(p_speler_x//1)-1] != 0:
+                if world_map[math.floor(i_vert_y)][(math.floor(p_speler_x))-1] != 0:
                     d_muur = x * delta_h
-                    k_muur = world_map[i_vert_y][(p_speler_x//1)-1]
+                    k_muur = world_map[i_vert_y][(math.floor(p_speler_x))-1]
                     return d_muur, k_muur
                 else:
                     y += 1
