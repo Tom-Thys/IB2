@@ -306,7 +306,11 @@ def raycasting(p_speler_x, p_speler_y, stralen):
     global changes
     changes = False
     muren = []
-    aantal = 8
+    for i, straal in enumerate(stralen):
+        d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
+        muren.append((i, d, k, side, side_d))
+
+    """aantal = 8
     for j, straal in enumerate(stralen):
         if j == 0:
             d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
@@ -327,7 +331,7 @@ def raycasting(p_speler_x, p_speler_y, stralen):
             muren.append((j, d, k, side, side_d))
         elif j > BREEDTE-aantal:
             d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
-            muren.append((j, d, k, side, side_d))
+            muren.append((j, d, k, side, side_d))"""
     return muren
 
 
@@ -344,7 +348,8 @@ def renderen(renderer, window, muur, soort_muren):
         return
     wall_texture = soort_muren[k_muur-1]
     breedte = wall_texture.size[0]
-    rij = kolom % breedte
+    #rij = kolom % breedte
+    rij = (unit_d%1)*breedte
     hoogte = wall_texture.size[1]
     if d_muur < 1.5:
         d_muur = window.size[1]/hoogte
