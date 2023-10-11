@@ -4,16 +4,15 @@ import random
 import numpy as np
 
 import sdl2.ext
+import main
 
 # Constanten
 BREEDTE = 800
-HOOGTE = 600
-
+HOOGTE = 800
 
 #
 # Globale variabelen
 #
-
 
 
 # positie van de speler
@@ -24,7 +23,7 @@ r_speler_hoek = math.pi / 4
 r_speler = np.array([math.cos(r_speler_hoek), math.sin(r_speler_hoek)])
 r_speler_x, r_speler_y = r_speler
 
-#alle stralen die vauit de speler vertrekken
+# alle stralen die vauit de speler vertrekken
 stralen = []
 changes = False
 
@@ -36,21 +35,21 @@ r_cameravlak = np.array([math.cos(r_speler_hoek - math.pi / 2), math.sin(r_spele
 moet_afsluiten = False
 
 # FOV
-d_camera = 1
+d_camera = 0.9
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
 world_map = [[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
              [2, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2],
+             [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2],
              [2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2],
-             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]]
+             [2, 2, 2, 4, 2, 3, 2, 4, 2, 5, 2, 2, 2]]
 x_dim = len(world_map[0])
 y_dim = len(world_map)
 
@@ -157,8 +156,8 @@ def draaien(hoek):
                              [math.sin(hoek), math.cos(hoek)]])
     r_speler = np.matmul(draai_matrix, r_speler)
     r_cameravlak = np.matmul(draai_matrix, r_cameravlak)
-    for i,straal in enumerate(stralen):
-        stralen[i] = np.matmul(draai_matrix,straal)
+    for i, straal in enumerate(stralen):
+        stralen[i] = np.matmul(draai_matrix, straal)
     changes = True
     return r_speler, r_cameravlak
 
@@ -178,20 +177,39 @@ def move(dir, stap):
         pass
         # Kan gebruikt worden voor muren die schade aanrichten enzo
 
+
 def nr_rond(nr, tol=4):
-    p = 10**tol
-    if 0 < nr < np.inf:
+    p = 10 ** tol
+    if 0 < nr < 100:
         return math.ceil(nr * p) / p
     elif nr < 0:
         return -1
     elif nr == 0:
         return 0
     else:
-        return np.inf
+        return math.inf
+
+
+def sign(x):
+    if x < 0:
+        return -1
+    else:
+        return 1
+
 
 def fish_eye_(d, r_straal):
     hoek = np.dot(r_speler, r_straal) / (np.linalg.norm(r_speler) * np.linalg.norm(r_straal))
     return hoek * d
+
+
+def afstand(straal1, straal2, straal, d1, d2):
+    cos_alfa = np.dot(straal1, straal2)
+    side = (d1 ** 2 + d2 ** 2 - 2 * d1 * d2 * cos_alfa)
+    yota = math.acos((d1 ** 2 + side - d2 ** 2) / (2 * d1 * side ** (1 / 2)))
+    beta = np.arccos(np.dot(straal1, straal))
+    hoek3 = math.pi / 2 - beta - yota
+    text_dist = d1 / math.sin(hoek3) * math.sin(beta)
+    return text_dist
 
 
 def raycast(p_speler_x, p_speler_y, r_straal):
@@ -210,20 +228,22 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                     if y < y_dim and x < x_dim:
                         k = world_map[math.floor(y)][x]
                         if k != 0:
-                            return fish_eye_(d_v, r_straal), k, 'y' ,y
+                            return fish_eye_(d_v, r_straal), k, 'y', y
                         else:
                             d_v += delta_v
+                    else:
+                        return 10, 0, "b", 0
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
-                    if y < y_dim and x < x_dim:
+                    if 0< y < y_dim and 0 < x < x_dim:
                         k = world_map[y][math.floor(x)]
                         if k != 0:
                             return fish_eye_(d_h, r_straal), k, 'x', x
                         else:
                             d_h += delta_h
                     else:
-                        return 10, 0, "", 0
+                        return 10, 0, "b", 0
     if r_straal_x > 0:
         if r_straal_y < 0:
             d_v = (1 - (p_speler_x - math.floor(p_speler_x))) * delta_v
@@ -232,23 +252,25 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                 if d_v < d_h:
                     x = math.floor(nr_rond(p_speler_x + d_v * r_straal_x))
                     y = nr_rond(p_speler_y + d_v * r_straal_y)
-                    if 0 <= y_dim and x < x_dim:
+                    if 0 <= y < y_dim and 0< x < x_dim:
                         k = world_map[math.floor(y)][x]
                         if k != 0:
-                            return fish_eye_(d_v, r_straal), k, 'y' ,y
+                            return fish_eye_(d_v, r_straal), k, 'y', y
                         else:
                             d_v += delta_v
+                    else:
+                        return 10, 0, "b", 0
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
                     if 0 <= y and x < x_dim:
-                        k = world_map[y-1][math.floor(x)]
+                        k = world_map[y - 1][math.floor(x)]
                         if k != 0:
                             return fish_eye_(d_h, r_straal), k, 'x', x
                         else:
                             d_h += delta_h
                     else:
-                        return 10, 0, "", 0
+                        return 10, 0, "b", 0
     if r_straal_x < 0:
         if r_straal_y > 0:
             d_v = (p_speler_x - math.floor(p_speler_x)) * delta_v
@@ -260,9 +282,11 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                     if y < y_dim and 0 <= x:
                         k = world_map[math.floor(y)][x - 1]
                         if k != 0:
-                            return fish_eye_(d_v, r_straal), k, 'y' ,y
+                            return fish_eye_(d_v, r_straal), k, 'y', y
                         else:
                             d_v += delta_v
+                    else:
+                        return 10, 0, "b", 0
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
@@ -273,7 +297,7 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                         else:
                             d_h += delta_h
                     else:
-                        return 10, 0, "", 0
+                        return 10, 0, "b", 0
     if r_straal_x < 0:
         if r_straal_y < 0:
             d_v = (p_speler_x - math.floor(p_speler_x)) * delta_v
@@ -285,9 +309,11 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                     if 0 <= y and 0 <= x:
                         k = world_map[math.floor(y)][math.floor(x - 1)]
                         if k != 0:
-                            return fish_eye_(d_v, r_straal), k, 'y' ,y
+                            return fish_eye_(d_v, r_straal), k, 'y', y
                         else:
                             d_v += delta_v
+                    else:
+                        return 10, 0, "b", 0
                 else:
                     x = nr_rond(p_speler_x + d_h * r_straal_x)
                     y = math.floor(nr_rond(p_speler_y + d_h * r_straal_y))
@@ -298,37 +324,42 @@ def raycast(p_speler_x, p_speler_y, r_straal):
                         else:
                             d_h += delta_h
                     else:
-                        return 10, 0, "", 0
+                        return 10, 0, "b", 0
 
-    return 1, 0 , "", 0
+    return 1, 0, "b", 0
+
 
 def raycasting(p_speler_x, p_speler_y, stralen):
     global changes
     changes = False
     muren = []
+
     for i, straal in enumerate(stralen):
         d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
         muren.append((i, d, k, side, side_d))
 
-    """aantal = 8
+    """
+    aantal = 2
     for j, straal in enumerate(stralen):
         if j == 0:
             d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
             muren.append((j, d, k, side, side_d))
+            vorige_straal = straal
         elif j % (aantal+1) == 0:
             vorig = muren[-1]
             d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
             if vorig[2] == k and 0.95 < vorig[1]/d < 1.05 and vorig[3] == side:
                 for i in range(aantal):
-                    dist = vorig[1] + (i+1) * (d - vorig[1]) / (aantal+2)
-                    side_dist = vorig[4]+ (i+1) * (d - vorig[4])/ (aantal+2)
-                    muren.append((j - aantal + i, dist, k, side, side_dist))
+                    dist = vorig[1] + (i + 1) * (d - vorig[1]) / (aantal + 2)
+                    side_dist = afstand(vorige_straal, straal, stralen[j-aantal+i],vorig[1],d)
+                    muren.append((j - aantal + i, dist, k, side, vorig[4] + side_dist*sign(vorig[4]-d)))
                     #muren.append((j-1,(d + muren[-1][1])/2,k))
             else:
                 for i in range(aantal):
                     d2, k2, side2, side_d2 = raycast(p_speler_x, p_speler_y, stralen[j- aantal+ i])
                     muren.append((j - aantal + i, d2, k2, side2, side_d2))
             muren.append((j, d, k, side, side_d))
+            vorige_straal = straal
         elif j > BREEDTE-aantal:
             d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
             muren.append((j, d, k, side, side_d))"""
@@ -344,23 +375,28 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
 
 def renderen(renderer, window, muur, soort_muren):
     kolom, d_muur, k_muur, _, unit_d = muur
-    if k_muur == 0:
-        return
-    wall_texture = soort_muren[k_muur-1]
-    breedte = wall_texture.size[0]
-    #rij = kolom % breedte
-    rij = (unit_d%1)*breedte
-    hoogte = wall_texture.size[1]
-    if d_muur < 1.5:
-        d_muur = window.size[1]/hoogte
-    else:
-        d_muur = 10/d_muur
-    textuur_x = rij
-    textuur_y = 0
-    scherm_x = 10
-    scherm_y = window.size[1]/2
-    kolom = BREEDTE-kolom
-    renderer.copy(wall_texture, srcrect=(textuur_x, textuur_y, 1, hoogte), dstrect=(kolom,scherm_y-d_muur*hoogte/2, 1, d_muur*hoogte))
+    if k_muur != 0:
+        wall_texture = soort_muren[k_muur - 1]
+        breedte = wall_texture.size[0]
+        # rij = kolom % breedte
+        rij = (unit_d % 1) * breedte
+        hoogte = wall_texture.size[1]
+        d_muur = 10 / d_muur
+        textuur_x = rij
+        textuur_y = 0
+        scherm_x = 10
+        scherm_y = window.size[1] / 2
+        kolom = BREEDTE - kolom
+        renderer.copy(wall_texture, srcrect=(textuur_x, textuur_y, 1, 100),
+                      dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
+
+
+def draw_nav(renderer, map):
+    global BREEDTE, HOOGTE
+    y_nd, x_nd = np.size(map)
+    for j, row in enumerate(map):
+        for i, val in enumerate(row):
+            renderer.draw_line()
 
 
 def show_fps(font, renderer, window):
@@ -380,7 +416,6 @@ def show_fps(font, renderer, window):
         yield fps
 
 
-
 def main():
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
@@ -398,12 +433,14 @@ def main():
     # resources inladen
     resources = sdl2.ext.Resources(__file__, "resources")
     # Spritefactory aanmaken
-    factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer = renderer)
+    factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
     # soorten muren opslaan in sdl2 textures
     soort_muren = [
-        factory.from_image(resources.get_path("muur_test.png")), # 1
-        factory.from_image(resources.get_path("Red_house.png")), # 2
-        factory.from_image(resources.get_path("Pink_house.png")) # 3
+        factory.from_image(resources.get_path("muur_test.png")),  # 1
+        factory.from_image(resources.get_path("Red_house.png")),  # 2
+        factory.from_image(resources.get_path("Pink_house.png")),  # 3
+        factory.from_image(resources.get_path("yellow_house.png")),  # 4
+        factory.from_image(resources.get_path("Gruis_house.png"))  # 5
     ]
 
     # Initialiseer font voor de fps counter
@@ -412,10 +449,9 @@ def main():
 
     # Blijf frames renderen tot we het signaal krijgen dat we moeten afsluiten
 
-
     for i in range(0, window.size[0]):
         stralen.append(bereken_r_straal(i))
-    muren = raycasting(p_speler_x,p_speler_y,stralen)
+    muren = raycasting(p_speler_x, p_speler_y, stralen)
 
     while not moet_afsluiten:
 
@@ -427,12 +463,12 @@ def main():
 
         # Render de huidige frame
         if changes:
-            muren = raycasting(p_speler_x,p_speler_y,stralen)
+            muren = raycasting(p_speler_x, p_speler_y, stralen)
 
         for muur in muren:
-            #r_straal = bereken_r_straal(kolom)
-            #(d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
-            #render_kolom(renderer, window, kolom, d_muur, k_muur)
+            # r_straal = bereken_r_straal(kolom)
+            # (d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
+            # render_kolom(renderer, window, kolom, d_muur, k_muur)
             renderen(renderer, window, muur, soort_muren)
 
         delta = time.time() - start_time
