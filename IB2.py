@@ -380,6 +380,7 @@ def show_fps(font, renderer, window):
         yield fps
 
 
+
 def main():
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
