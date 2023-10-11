@@ -79,6 +79,15 @@ def verwerk_input(delta):
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     events = sdl2.ext.get_events()
+    key_states = sdl2.SDL_GetKeyboardState(None)
+    if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
+        move(1, 0.01)
+    if key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]:
+        move(-1, 0.01)
+    if key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]:
+        draaien(-math.pi / 200)
+    if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
+        draaien(math.pi / 200)
     for event in events:
         # Een SDL_QUIT event wordt afgeleverd als de gebruiker de applicatie
         # afsluit door bv op het kruisje te klikken
@@ -94,14 +103,6 @@ def verwerk_input(delta):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
-            if key == sdl2.SDLK_f or key == sdl2.SDLK_RIGHT:
-                draaien(math.pi / 200)
-            if key == sdl2.SDLK_s or key == sdl2.SDLK_LEFT:
-                draaien(-math.pi / 200)
-            if key == sdl2.SDLK_e or key == sdl2.SDLK_UP:
-                move(1, 0.01)
-            if key == sdl2.SDLK_d or key == sdl2.SDLK_DOWN:
-                move(-1, 0.01)
             break
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
@@ -343,7 +344,7 @@ def renderen(renderer, window, muur, soort_muren):
         return
     wall_texture = soort_muren[k_muur-1]
     breedte = wall_texture.size[0]
-    rij = ((unit_d % 1))*breedte
+    rij = kolom % breedte
     hoogte = wall_texture.size[1]
     if d_muur < 1.5:
         d_muur = window.size[1]/hoogte
@@ -392,13 +393,13 @@ def main():
     resources = sdl2.ext.Resources(__file__, "resources")
     # Spritefactory aanmaken
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer = renderer)
-    # open de afbeeldingen en maak er een sdl2 texture van
     # soorten muren opslaan in sdl2 textures
     soort_muren = [
-        factory.from_image(resources.get_path("muur_test.png")),  # 1
-        factory.from_image(resources.get_path("Red_house.png")),  # 2
-        factory.from_image(resources.get_path("Pink_house.png"))  # 3
+        factory.from_image(resources.get_path("muur_test.png")), # 1
+        factory.from_image(resources.get_path("Red_house.png")), # 2
+        factory.from_image(resources.get_path("Pink_house.png")) # 3
     ]
+
     # Initialiseer font voor de fps counter
     fps_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
     fps_generator = show_fps(fps_font, renderer, window)
