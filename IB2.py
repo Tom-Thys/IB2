@@ -42,15 +42,15 @@ d_camera = 0.9
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
 world_map = [[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-             [2, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2],
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2],
-             [2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
              [2, 2, 2, 4, 2, 3, 2, 4, 2, 5, 2, 2, 2]]
 x_dim = len(world_map[0])
 y_dim = len(world_map)
@@ -146,7 +146,7 @@ def verwerk_input(delta):
 
 
 def bereken_r_straal(kolom):
-    r_straal_kolom = d_camera * r_speler + (-1 + (2 * kolom) / BREEDTE) * r_cameravlak
+    r_straal_kolom = d_camera * r_speler + (1 - (2 * kolom) / BREEDTE) * r_cameravlak
     r_straal = np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom))
     return r_straal
 
