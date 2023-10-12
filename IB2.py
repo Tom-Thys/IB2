@@ -5,6 +5,7 @@ import numpy as np
 
 import sdl2.ext
 import sdl2.sdlimage
+import sdl2.sdlmixer
 from sdl2 import *
 import main
 
@@ -450,11 +451,16 @@ def show_fps(font, renderer, window):
                                      text.size[0], text.size[1]))
         yield fps
 
+def muziek_spelen():
+    sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
+    liedje = sdl2.sdlmixer.Mix_LoadWAV("muziek/8-Bit Postman Pat.wav".encode())
+    sdl2.sdlmixer.Mix_MasterVolume(64)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassen
+    sdl2.sdlmixer.Mix_PlayChannel(-1, liedje, 0)
 
 def main():
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
-
+    sdl2.sdlmixer.Mix_Init(0)
     # Maak png van wereldmap
     make_world_png(maplijst)
 
@@ -497,7 +503,7 @@ def main():
     for i in range(0, window.size[0]):
         stralen.append(bereken_r_straal(i))
     muren = raycasting(p_speler_x, p_speler_y, stralen)
-
+    muziek_spelen()
     while not moet_afsluiten:
 
         # Onthoud de huidige tijd
