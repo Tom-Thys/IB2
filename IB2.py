@@ -66,6 +66,7 @@ kleuren = [
     sdl2.ext.Color(128, 128, 128),  # 5 = Grijs
     sdl2.ext.Color(192, 192, 192),  # 6 = Licht grijs
     sdl2.ext.Color(255, 255, 255),  # 7 = Wit
+    sdl2.ext.Color(120, 200, 250),  # 8 = Blauw_lucht
 ]
 
 
@@ -422,6 +423,15 @@ def draw_nav(renderer, map_textuur , sprites = [], width = 200):
 
     renderer.draw_rect(((p_speler_x+1)*unit_d, p_speler_x*unit_d, (p_speler_y+1)*unit_d, p_speler_y*unit_d),kleuren[3])
 
+def render_floor_and_sky(renderer, window):
+    # SKY in blauw
+
+    renderer.fill((0, 0, window.size[0], window.size[1] // 2), kleuren[8])
+
+
+    # Floor in grijs
+
+    renderer.fill((0, window.size[1] // 2, window.size[0], window.size[1] // 2), kleuren[5])
 
 def show_fps(font, renderer, window):
     fps_list = [1]
@@ -495,7 +505,7 @@ def main():
 
         # Reset de rendering context
         renderer.clear()
-
+        render_floor_and_sky(renderer, window)
         # Render de huidige frame
         if changes:
             muren = raycasting(p_speler_x, p_speler_y, stralen)
