@@ -1,8 +1,7 @@
 import math
 import numpy as np
-from IB2 import *
 
-def nr_rond(nr, tol=4):
+def nr_rond(nr, tol=5):
     p = 10 ** tol
     if 0 < nr < 100:
         return math.ceil(nr * p) / p
@@ -33,7 +32,8 @@ def cosinusregel(straal1, straal2, d1, d2):
 
 
 
-def raycast(p_speler_x, p_speler_y, r_straal,r_speler):
+def raycast(p_speler_x, p_speler_y, r_straal,r_speler,world_map):
+    y_dim, x_dim = np.shape(world_map)
     r_straal_x = (r_straal[0])
     r_straal_y = (r_straal[1])
     delta_v = (1 / np.abs(r_straal_x))
@@ -204,15 +204,15 @@ def raycast(p_speler_x, p_speler_y, r_straal,r_speler):
 
     return 1, 0, "b", 0
 
-
+"""
 def raycasting(p_speler_x, p_speler_y, stralen, r_speler):
     muren = []
-    """
+    
     for i, straal in enumerate(stralen):
         d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
         muren.append((i, d, k, side, side_d))
 
-    """
+    
     aantal = 1
     for j, straal in enumerate(stralen):
         if j == 0:
@@ -237,4 +237,4 @@ def raycasting(p_speler_x, p_speler_y, stralen, r_speler):
         elif j > BREEDTE-aantal:
             d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal, r_speler)
             muren.append((j, d, k, side, side_d))
-    return muren
+    return muren"""

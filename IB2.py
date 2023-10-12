@@ -9,6 +9,7 @@ import sdl2.sdlmixer
 from sdl2 import *
 from worlds import worldlijst
 from Raycaster import *
+from Classes import *
 
 
 # Constanten
@@ -28,8 +29,13 @@ p_speler_x, p_speler_y = 3 + 1 / math.sqrt(2), 5 + 1 / math.sqrt(2)
 
 # richting waarin de speler kijkt
 r_speler_hoek = math.pi / 4
-r_speler = np.array([math.cos(r_speler_hoek), math.sin(r_speler_hoek)])
-r_speler_x, r_speler_y = r_speler
+# FOV
+d_camera = 1
+#
+#Speler aanmaken
+speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
+speler.aanmaak_r_stralen(BREEDTE, d_camera)
+
 
 # alle stralen die vauit de speler vertrekken
 stralen = []
@@ -44,8 +50,12 @@ moet_afsluiten = False
 
 
 
-# FOV
-d_camera = 0.9
+
+
+
+
+
+
 
 #world
 world_map = worldlijst[0]
@@ -78,14 +88,14 @@ def verwerk_input(delta):
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
-    if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
-        move(1, 0.01)
-    if key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]:
-        move(-1, 0.01)
-    if key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]:
-        draaien(-math.pi / 200)
-    if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
-        draaien(math.pi / 200)
+    if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game:
+        speler.move(1, 0.01,world_map)
+    if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game:
+        speler.move(-1, 0.01,world_map)
+    if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game:
+        speler.draaien(-math.pi / 200)
+    if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game:
+        speler.draaien(math.pi / 200)
     for event in events:
         # Een SDL_QUIT event wordt afgeleverd als de gebruiker de applicatie
         # afsluit door bv op het kruisje te klikken
@@ -126,14 +136,14 @@ def verwerk_input(delta):
         # Wordt afgeleverd als de gebruiker de muis heeft bewogen.
         # Aangezien we relative motion gebruiken zijn alle coordinaten
         # relatief tegenover de laatst gerapporteerde positie van de muis.
-        elif event.type == sdl2.SDL_MOUSEMOTION:
+        elif event.type == sdl2.SDL_MOUSEMOTION and game:
             # Aangezien we in onze game maar 1 as hebben waarover de camera
             # kan roteren zijn we enkel geinteresseerd in bewegingen over de
             # X-as
             draai = event.motion.xrel
-            draaien(-math.pi / 4000 * draai)
+            speler.draaien(-math.pi / 4000 * draai)
             beweging = event.motion.yrel
-            move(1, beweging / 1000)
+            speler.move(1, beweging / 1000, world_map)
             continue
 
     # Polling-gebaseerde input. Dit gebruiken we bij voorkeur om bv het ingedrukt
@@ -317,9 +327,7 @@ def main():
 
 
 
-    for i in range(0, window.size[0]+1):
-        stralen.append(bereken_r_straal(i))
-    muren = raycasting(p_speler_x, p_speler_y, stralen, r_speler)
+    muren = speler.raycasting(world_map)
 
     muziek_spelen(sound)
 
@@ -346,9 +354,9 @@ def main():
             renderer.clear()
             render_floor_and_sky(renderer, window)
             # Render de huidige frame
-            if changes:
-                muren = raycasting(p_speler_x, p_speler_y, stralen, r_speler)
-                changes = 0
+
+            muren = speler.raycasting(world_map, muren)
+
 
             for muur in muren:
                 # r_straal = bereken_r_straal(kolom)
