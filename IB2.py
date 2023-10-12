@@ -4,6 +4,8 @@ import random
 import numpy as np
 
 import sdl2.ext
+import sdl2.sdlimage
+from sdl2 import *
 import main
 
 # Constanten
@@ -202,14 +204,10 @@ def fish_eye_(d, r_straal):
     return hoek * d
 
 
-def afstand(straal1, straal2, straal, d1, d2):
+def cosinusregel(straal1, straal2, d1, d2):
     cos_alfa = np.dot(straal1, straal2)
-    side = (d1 ** 2 + d2 ** 2 - 2 * d1 * d2 * cos_alfa)
-    yota = math.acos((d1 ** 2 + side - d2 ** 2) / (2 * d1 * side ** (1 / 2)))
-    beta = np.arccos(np.dot(straal1, straal))
-    hoek3 = math.pi / 2 - beta - yota
-    text_dist = d1 / math.sin(hoek3) * math.sin(beta)
-    return text_dist
+    side = (d1 ** 2 + d2 ** 2 - 2 * d1 * d2 * cos_alfa)**(1/2)
+    return side
 
 
 def raycast(p_speler_x, p_speler_y, r_straal):
@@ -333,13 +331,13 @@ def raycasting(p_speler_x, p_speler_y, stralen):
     global changes
     changes = False
     muren = []
-
+    """
     for i, straal in enumerate(stralen):
         d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
         muren.append((i, d, k, side, side_d))
 
     """
-    aantal = 2
+    aantal = 1
     for j, straal in enumerate(stralen):
         if j == 0:
             d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
@@ -351,7 +349,7 @@ def raycasting(p_speler_x, p_speler_y, stralen):
             if vorig[2] == k and 0.95 < vorig[1]/d < 1.05 and vorig[3] == side:
                 for i in range(aantal):
                     dist = vorig[1] + (i + 1) * (d - vorig[1]) / (aantal + 2)
-                    side_dist = afstand(vorige_straal, straal, stralen[j-aantal+i],vorig[1],d)
+                    side_dist = cosinusregel(vorige_straal, stralen[j-aantal+i],vorig[1],dist)
                     muren.append((j - aantal + i, dist, k, side, vorig[4] + side_dist*sign(vorig[4]-d)))
                     #muren.append((j-1,(d + muren[-1][1])/2,k))
             else:
@@ -362,7 +360,7 @@ def raycasting(p_speler_x, p_speler_y, stralen):
             vorige_straal = straal
         elif j > BREEDTE-aantal:
             d, k, side, side_d = raycast(p_speler_x, p_speler_y, straal)
-            muren.append((j, d, k, side, side_d))"""
+            muren.append((j, d, k, side, side_d))
     return muren
 
 
@@ -391,12 +389,20 @@ def renderen(renderer, window, muur, soort_muren):
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def draw_nav(renderer, map):
+def draw_nav(map):
     global BREEDTE, HOOGTE
-    y_nd, x_nd = np.size(map)
+    y_nd, x_nd = np.shape(map)
+    unit_d = min(HOOGTE/y_nd,BREEDTE/x_nd) #Bepaal de groote van elk vierkant
+    window = SDL_CreateWindow(b"Wereld map", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, int(unit_d*x_nd), int(unit_d*y_nd),SDL_WINDOW_SHOWN)
+    windowsurface = SDL_GetWindowSurface(window)
+    renderer = sdl2.ext.Renderer(windowsurface)
+    # sdl2.SDL_CreateRGBSurface
     for j, row in enumerate(map):
-        for i, val in enumerate(row):
-            renderer.draw_line()
+        for i, kleur in enumerate(row):
+            renderer.fill((i*unit_d,j*unit_d,(i+1)*unit_d,(j+1)*unit_d),kleuren[kleur])
+    renderer.present()
+    sdl2.sdlimage.IMG_SavePNG(windowsurface,b"map1.png")
+    SDL_DestroyWindow(window)
 
 
 def show_fps(font, renderer, window):
@@ -420,10 +426,13 @@ def main():
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
 
+    # Maak png van wereldmap
+    draw_nav(world_map)
+
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
     window.show()
-
+    #screen = sdl2.ext.surface("Test",size=(BREEDTE,HOOGTE))
     # Begin met het uitlezen van input van de muis en vraag om relatieve coordinaten
     sdl2.SDL_SetRelativeMouseMode(True)
 
@@ -470,7 +479,6 @@ def main():
             # (d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
             # render_kolom(renderer, window, kolom, d_muur, k_muur)
             renderen(renderer, window, muur, soort_muren)
-
         delta = time.time() - start_time
 
         verwerk_input(delta)
