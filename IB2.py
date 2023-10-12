@@ -455,7 +455,7 @@ def muziek_spelen():
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
     liedje = sdl2.sdlmixer.Mix_LoadWAV("muziek/8-Bit Postman Pat.wav".encode())
     sdl2.sdlmixer.Mix_MasterVolume(64)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassen
-    sdl2.sdlmixer.Mix_PlayChannel(-1, liedje, 0)
+    sdl2.sdlmixer.Mix_PlayChannel(-1, liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
 
 def main():
     # Initialiseer de SDL2 bibliotheek
