@@ -146,6 +146,61 @@ def raycast(p_speler_x, p_speler_y, r_straal,r_speler):
                             d_h += delta_h
                     else:
                         return 10, 0, "b", 0
+    if r_straal_y == 0:
+        if r_straal_x < 0:
+            d_v = (p_speler_x - math.floor(p_speler_x)) * delta_v
+            while True:
+                x = math.floor(nr_rond(p_speler_x + d_v * r_straal_x))
+                y = nr_rond(p_speler_y)
+                if 0 <= y and 0 <= x:
+                    k = world_map[math.floor(y)][math.floor(x - 1)]
+                    if k != 0:
+                        return fish_eye_(d_v, r_straal, r_speler), k, 'y', y
+                    else:
+                        d_v += delta_v
+                else:
+                    return 10, 0, "b", 0
+        if r_straal_x > 0:
+            d_v = (1-p_speler_x - math.floor(p_speler_x)) * delta_v
+            while True:
+                x = math.floor(nr_rond(p_speler_x + d_v * r_straal_x))
+                y = nr_rond(p_speler_y)
+                if y < y_dim and x < x_dim:
+                    k = world_map[math.floor(y)][math.floor(x)]
+                    if k != 0:
+                        return fish_eye_(d_v, r_straal, r_speler), k, 'y', y
+                    else:
+                        d_v += delta_v
+                else:
+                    return 10, 0, "b", 0
+    if r_straal_x == 0:
+        if r_straal_y < 0:
+            d_h = (p_speler_y - math.floor(p_speler_y)) * delta_h
+            while True:
+                y = math.floor(nr_rond(p_speler_x + d_h * r_straal_y))
+                x = nr_rond(p_speler_y)
+                if 0 <= y and 0 <= x:
+                    k = world_map[math.floor(y-1)][math.floor(x)]
+                    if k != 0:
+                        return fish_eye_(d_h, r_straal, r_speler), k, 'x', x
+                    else:
+                        d_h += delta_h
+                else:
+                    return 10, 0, "b", 0
+        if r_straal_y > 0:
+            d_h = (1-p_speler_y - math.floor(p_speler_y)) * delta_h
+            while True:
+                y = math.floor(nr_rond(p_speler_x + d_h * r_straal_y))
+                x = nr_rond(p_speler_y)
+                if y < y_dim and x < x_dim:
+                    k = world_map[math.floor(y)][math.floor(x)]
+                    if k != 0:
+                        return fish_eye_(d_h, r_straal, r_speler), k, 'x', x
+                    else:
+                        d_h += delta_h
+                else:
+                    return 10, 0, "b", 0
+
 
     return 1, 0, "b", 0
 

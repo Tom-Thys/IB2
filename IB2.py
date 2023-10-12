@@ -103,6 +103,9 @@ def verwerk_input(delta):
                 break
             if key == sdl2.SDLK_SPACE:
                 game = True
+            if key == sdl2.SDLK_m:
+                game = False
+                garage = False
             break
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
@@ -198,8 +201,8 @@ def renderen(renderer, window, muur, soort_muren):
         textuur_x = rij
         textuur_y = 0
         scherm_x = 10
+        kolom = BREEDTE-kolom
         scherm_y = window.size[1] / 2
-        kolom = BREEDTE - kolom
         renderer.copy(wall_texture, srcrect=(textuur_x, textuur_y, 1, 100),
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
@@ -314,7 +317,7 @@ def main():
 
 
 
-    for i in range(0, window.size[0]):
+    for i in range(0, window.size[0]+1):
         stralen.append(bereken_r_straal(i))
     muren = raycasting(p_speler_x, p_speler_y, stralen, r_speler)
 
