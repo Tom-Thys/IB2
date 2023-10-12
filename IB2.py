@@ -20,7 +20,7 @@ HOOGTE = 700
 #
 game = False
 garage = False
-sound = False
+sound = 0
 
 
 # positie van de speler
@@ -259,13 +259,23 @@ def show_fps(font, renderer, window):
                                      text.size[0], text.size[1]))
         yield fps
 
-def muziek_spelen(toggle):
-    if not toggle:
+def muziek_spelen(geluid, timed = False, dur = 100):
+    volume = 100
+    if geluid == 0:
+        sdl2.sdlmixer.Mix_CloseAudio()
         return
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
-    liedje = sdl2.sdlmixer.Mix_LoadWAV("muziek/8-Bit Postman Pat.wav".encode())
-    sdl2.sdlmixer.Mix_MasterVolume(64)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassen
-    sdl2.sdlmixer.Mix_PlayChannel(-1, liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
+    if sdl2.sdlmixer.Mix_Playing(1):  # controleren of dat muziek al gespeeld wordt
+        return
+    liedje = sdl2.sdlmixer.Mix_LoadWAV(f"muziek/{geluid}.wav".encode())
+    if timed:
+        sdl2.sdlmixer.Mix_PlayChannelTimed(1, liedje, 0, dur)
+    else:
+        sdl2.sdlmixer.Mix_PlayChannel(1, liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
+
+    if geluid == "8-Bit Postman Pat":
+        volume = 64
+    sdl2.sdlmixer.Mix_MasterVolume(volume)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassem
 
 def main():
     global changes, game, garage, BREEDTE
@@ -323,21 +333,24 @@ def main():
 
     muziek_spelen(sound)
 
-
-
+    achtergrond = factory.from_image(resources.get_path("postman.jpg"))
     while not moet_afsluiten:
-
+        muziek_spelen("8-Bit Postman Pat")
         while not game and not moet_afsluiten and not garage:
             start_time = time.time()
             renderer.clear()
+
             delta = time.time() - start_time
             verwerk_input(delta)
-            renderer.fill((0, 0, window.size[0], window.size[1]), kleuren[8])
+            #renderer.fill((0, 0, window.size[0], window.size[1]), kleuren[8])
+            renderer.copy(achtergrond,
+                          srcrect=(0, 0, achtergrond.size[0], achtergrond.size[1]),
+                          dstrect=(0, 0, BREEDTE, HOOGTE))
             renderText(font, renderer, "Menu", 20,50, window)
             renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
-
-
+        muziek_spelen(0)
+        muziek_spelen("arcade_start", True, 200)
         while game and not moet_afsluiten and not garage:
             # Onthoud de huidige tijd
             start_time = time.time()
