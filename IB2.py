@@ -9,8 +9,8 @@ from sdl2 import *
 import main
 
 # Constanten
-BREEDTE = 800
-HOOGTE = 800
+BREEDTE = 1000
+HOOGTE = 700
 
 #
 # Globale variabelen
@@ -52,6 +52,7 @@ world_map = [[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
              [2, 2, 2, 4, 2, 3, 2, 4, 2, 5, 2, 2, 2]]
+maplijst = [world_map]
 x_dim = len(world_map[0])
 y_dim = len(world_map)
 
@@ -170,7 +171,7 @@ def move(dir, stap):
     global p_speler_x, p_speler_y, changes
     x = p_speler_x + dir * stap * r_speler[0]
     y = p_speler_y + dir * stap * r_speler[1]
-    if world_map[math.floor(y)][math.floor(x)] == 0:
+    if world_map[math.floor(y)][math.floor(x)] == 0 and 0<x<x_dim-1 and 0<y<y_dim-1:
         p_speler_x = x
         p_speler_y = y
         changes = True
@@ -389,20 +390,37 @@ def renderen(renderer, window, muur, soort_muren):
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def draw_nav(map):
+def make_world_png(maplijst,unit_d=10):
+    """
     global BREEDTE, HOOGTE
-    y_nd, x_nd = np.shape(map)
-    unit_d = min(HOOGTE/y_nd,BREEDTE/x_nd) #Bepaal de groote van elk vierkant
-    window = SDL_CreateWindow(b"Wereld map", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, int(unit_d*x_nd), int(unit_d*y_nd),SDL_WINDOW_SHOWN)
-    windowsurface = SDL_GetWindowSurface(window)
-    renderer = sdl2.ext.Renderer(windowsurface)
-    # sdl2.SDL_CreateRGBSurface
-    for j, row in enumerate(map):
-        for i, kleur in enumerate(row):
-            renderer.fill((i*unit_d,j*unit_d,(i+1)*unit_d,(j+1)*unit_d),kleuren[kleur])
-    renderer.present()
-    sdl2.sdlimage.IMG_SavePNG(windowsurface,b"map1.png")
-    SDL_DestroyWindow(window)
+    unit_d = min(HOOGTE/y_nd,BREEDTE/x_nd) #Bepaal de groote van elk vierkant"""
+    for id,map in enumerate(maplijst):
+        y_nd, x_nd = np.shape(map)
+        window = SDL_CreateWindow(b"Wereld map", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, int(unit_d*x_nd), int(unit_d*y_nd),SDL_WINDOW_SHOWN)
+        windowsurface = SDL_GetWindowSurface(window)
+        renderer = sdl2.ext.Renderer(windowsurface)
+        # sdl2.SDL_CreateRGBSurface
+        for j, row in enumerate(map):
+            for i, kleur in enumerate(row):
+                renderer.fill((i*unit_d,j*unit_d,(i+1)*unit_d,(j+1)*unit_d),kleuren[kleur])
+        renderer.present()
+        string = b"mappen\map"+str(id).encode('utf-8')+b".png"
+        sdl2.sdlimage.IMG_SavePNG(windowsurface,string)
+        SDL_DestroyWindow(window)
+
+def draw_nav(renderer, map_textuur , sprites = [], width = 200):
+    global p_speler_y, p_speler_x
+    wall_texture = map_textuur
+    breedte = wall_texture.size[0]
+    hoogte = wall_texture.size[1]
+    x = width
+    y = x/breedte*hoogte
+    renderer.copy(wall_texture, srcrect=(0, 0, breedte, hoogte),
+                  dstrect=(0, 0, x, y))
+    unit_d = x/x_dim
+    print(unit_d,(p_speler_x+1)*unit_d,(p_speler_x)*unit_d)
+
+    renderer.draw_rect(((p_speler_x+1)*unit_d, p_speler_x*unit_d, (p_speler_y+1)*unit_d, p_speler_y*unit_d),kleuren[3])
 
 
 def show_fps(font, renderer, window):
@@ -411,7 +429,8 @@ def show_fps(font, renderer, window):
     loop_time = 1
 
     while True:
-        fps_list.append(1 / (time.time() - loop_time))
+        if (time.time() - loop_time) != 0:
+            fps_list.append(1 / (time.time() - loop_time))
         loop_time = time.time()
         fps = sum(fps_list) / len(fps_list)
         if len(fps_list) == 20:
@@ -427,7 +446,7 @@ def main():
     sdl2.ext.init()
 
     # Maak png van wereldmap
-    draw_nav(world_map)
+    make_world_png(maplijst)
 
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
@@ -451,6 +470,13 @@ def main():
         factory.from_image(resources.get_path("yellow_house.png")),  # 4
         factory.from_image(resources.get_path("Gruis_house.png"))  # 5
     ]
+    # Inladen wereld_mappen
+    map_resources = sdl2.ext.Resources(__file__,"mappen")
+    # alle mappen opslaan in sdl2 textures
+    map_textuur = []
+    for i,map in enumerate(maplijst):
+        naam = f"map{i}.png"
+        map_textuur.append(factory.from_image(map_resources.get_path(naam)))
 
     # Initialiseer font voor de fps counter
     fps_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
@@ -479,6 +505,7 @@ def main():
             # (d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
             # render_kolom(renderer, window, kolom, d_muur, k_muur)
             renderen(renderer, window, muur, soort_muren)
+        draw_nav(renderer, map_textuur[0])
         delta = time.time() - start_time
 
         verwerk_input(delta)
