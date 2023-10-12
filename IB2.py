@@ -10,6 +10,7 @@ from sdl2 import *
 from worlds import worldlijst
 from Raycaster import *
 
+
 # Constanten
 BREEDTE = 1000
 HOOGTE = 700
@@ -17,7 +18,9 @@ HOOGTE = 700
 #
 # Globale variabelen
 #
-game = True
+game = False
+garage = False
+sound = False
 
 
 # positie van de speler
@@ -69,7 +72,7 @@ kleuren = [
 # @delta       Tijd in milliseconden sinds de vorige oproep van deze functie
 #
 def verwerk_input(delta):
-    global moet_afsluiten
+    global moet_afsluiten, game, garage
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
@@ -98,6 +101,8 @@ def verwerk_input(delta):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
+            if key == sdl2.SDLK_SPACE:
+                game = True
             break
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
@@ -168,14 +173,9 @@ def move(dir, stap):
         p_speler_x = x
         p_speler_y = y
         changes = True
-        return changes
     else:
         pass
         # Kan gebruikt worden voor muren die schade aanrichten enzo
-
-
-
-
 
 
 
@@ -204,6 +204,14 @@ def renderen(renderer, window, muur, soort_muren):
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
+def renderText(font, renderer, text, x, y, window = 0):
+    text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
+    if window:
+        renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), y, text.size[0], text.size[1]))
+    else:
+        renderer.copy(text, dstrect=(x, y, text.size[0], text.size[1]))
+
+
 def draw_nav(renderer, wall_texture , sprites = [], width = 200):
     """
     Rendert PNG van world map in linkerbovenhoek
@@ -213,7 +221,6 @@ def draw_nav(renderer, wall_texture , sprites = [], width = 200):
     :param width: Geeft aan hoe breed de wereld map standaard is
     """
     global p_speler_y, p_speler_x
-    print(wall_texture)
     breedte = wall_texture.size[0]
     hoogte = wall_texture.size[1]
     x = width
@@ -223,13 +230,14 @@ def draw_nav(renderer, wall_texture , sprites = [], width = 200):
     unit_d = x/x_dim
     renderer.draw_rect((unit_d, unit_d, (x_dim-2)*unit_d, (y_dim-2)*unit_d),kleuren[3])
 
+
 def render_floor_and_sky(renderer, window):
     # SKY in blauw
     renderer.fill((0, 0, window.size[0], window.size[1] // 2), kleuren[8])
-
-
     # Floor in grijs
     renderer.fill((0, window.size[1] // 2, window.size[0], window.size[1] // 2), kleuren[5])
+
+
 
 def show_fps(font, renderer, window):
     fps_list = [1]
@@ -255,7 +263,7 @@ def muziek_spelen():
     sdl2.sdlmixer.Mix_PlayChannel(-1, liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
 
 def main():
-    global changes, game
+    global changes, game, garage, BREEDTE
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
     sdl2.sdlmixer.Mix_Init(0)
@@ -297,8 +305,8 @@ def main():
 
 
     # Initialiseer font voor de fps counter
-    fps_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
-    fps_generator = show_fps(fps_font, renderer, window)
+    font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
+    fps_generator = show_fps(font, renderer, window)
 
     # Blijf frames renderen tot we het signaal krijgen dat we moeten afsluiten
 
@@ -308,17 +316,25 @@ def main():
         stralen.append(bereken_r_straal(i))
     muren = raycasting(p_speler_x, p_speler_y, stralen, r_speler)
 
-
-    muziek_spelen()
+    if sound:
+        muziek_spelen()
 
 
 
     while not moet_afsluiten:
 
-        while not game and not moet_afsluiten:
-            game = True
+        while not game and not moet_afsluiten and not garage:
+            start_time = time.time()
+            renderer.clear()
+            delta = time.time() - start_time
+            verwerk_input(delta)
+            renderer.fill((0, 0, window.size[0], window.size[1]), kleuren[8])
+            renderText(font, renderer, "Menu", 20,50, window)
+            renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
+            renderer.present()
 
-        while game and not moet_afsluiten:
+
+        while game and not moet_afsluiten and not garage:
             # Onthoud de huidige tijd
             start_time = time.time()
 
