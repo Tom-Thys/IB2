@@ -256,7 +256,9 @@ def show_fps(font, renderer, window):
                                      text.size[0], text.size[1]))
         yield fps
 
-def muziek_spelen():
+def muziek_spelen(toggle):
+    if not toggle:
+        return
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
     liedje = sdl2.sdlmixer.Mix_LoadWAV("muziek/8-Bit Postman Pat.wav".encode())
     sdl2.sdlmixer.Mix_MasterVolume(64)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassen
@@ -316,8 +318,7 @@ def main():
         stralen.append(bereken_r_straal(i))
     muren = raycasting(p_speler_x, p_speler_y, stralen, r_speler)
 
-    if sound:
-        muziek_spelen()
+    muziek_spelen(sound)
 
 
 
