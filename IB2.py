@@ -358,7 +358,8 @@ def main():
             renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
         muziek_spelen(0)
-        #muziek_spelen("arcade_start")
+
+
         while game and not moet_afsluiten and not garage:
             # Onthoud de huidige tijd
             start_time = time.time()
