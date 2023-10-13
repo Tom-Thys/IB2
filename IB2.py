@@ -269,19 +269,19 @@ def show_fps(font, renderer, window):
                                      text.size[0], text.size[1]))
         yield fps
 
-def muziek_spelen(geluid, timed = False, dur = 100):
+def muziek_spelen(geluid):
     volume = 100
     if geluid == 0:
+        sdl2.sdlmixer.Mix_FadeOutMusic(500)
         sdl2.sdlmixer.Mix_CloseAudio()
         return
-    sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
-    if sdl2.sdlmixer.Mix_Playing(1):  # controleren of dat muziek al gespeeld wordt
+    if sdl2.sdlmixer.Mix_PlayingMusic():  # controleren of dat muziek al gespeeld word
         return
-    liedje = sdl2.sdlmixer.Mix_LoadWAV(f"muziek/{geluid}.wav".encode())
-    if timed:
-        sdl2.sdlmixer.Mix_PlayChannelTimed(1, liedje, 0, dur)
     else:
-        sdl2.sdlmixer.Mix_PlayChannel(1, liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
+        sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
+        liedje = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/{geluid}.wav".encode())
+
+        sdl2.sdlmixer.Mix_PlayMusic(liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
 
     if geluid == "8-Bit Postman Pat":
         volume = 64
@@ -338,7 +338,7 @@ def main():
 
 
     muren = speler.raycasting(world_map)
-
+    sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
     muziek_spelen(sound)
 
     achtergrond = factory.from_image(resources.get_path("postman.jpg"))
@@ -347,7 +347,7 @@ def main():
         while not game and not moet_afsluiten and not garage:
             start_time = time.time()
             renderer.clear()
-
+            muziek_spelen("8-Bit Postman Pat")
             delta = time.time() - start_time
             verwerk_input(delta)
             #renderer.fill((0, 0, window.size[0], window.size[1]), kleuren[8])
@@ -358,7 +358,7 @@ def main():
             renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
         muziek_spelen(0)
-        muziek_spelen("arcade_start", True, 200)
+        #muziek_spelen("arcade_start")
         while game and not moet_afsluiten and not garage:
             # Onthoud de huidige tijd
             start_time = time.time()
