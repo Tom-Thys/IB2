@@ -111,7 +111,7 @@ def verwerk_input(delta):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
-            if key == sdl2.SDLK_SPACE:
+            if key == sdl2.SDLK_SPACE and not game:
                 game = True
             if key == sdl2.SDLK_m:
                 game = False
@@ -269,7 +269,7 @@ def show_fps(font, renderer, window):
                                      text.size[0], text.size[1]))
         yield fps
 
-def muziek_spelen(geluid):
+def muziek_spelen(geluid, looped = False):
     volume = 100
     if geluid == 0:
         sdl2.sdlmixer.Mix_FadeOutMusic(500)
@@ -280,9 +280,10 @@ def muziek_spelen(geluid):
 
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
     liedje = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/{geluid}.wav".encode())
-
-    sdl2.sdlmixer.Mix_PlayMusic(liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
-
+    if not looped:
+        sdl2.sdlmixer.Mix_PlayMusic(liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
+    else:
+        sdl2.sdlmixer.Mix_PlayMusic(liedje, 0)
     if geluid == "8-Bit Postman Pat":
         volume = 64
     sdl2.sdlmixer.Mix_MasterVolume(volume)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassem
@@ -358,12 +359,10 @@ def main():
             renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
         muziek_spelen(0)
-
-
+        muziek_spelen("arcade_start", True)
         while game and not moet_afsluiten and not garage:
             # Onthoud de huidige tijd
             start_time = time.time()
-            muziek_spelen("8-Bit Postman Pat")
             # Reset de rendering context
             renderer.clear()
             render_floor_and_sky(renderer, window)
