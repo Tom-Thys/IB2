@@ -9,15 +9,16 @@ class Player():
         self.p_y = y
         self.hoek = hoek
         self.r_speler = np.array([math.cos(hoek), math.sin(hoek)])
-        self.r_stralen = []
+        self.r_stralen = np.zeros((breedte,2))
+        self.breedte = breedte
         self.car = 0
         self.changes = True
 
     def aanmaak_r_stralen(self, breedte, d_camera):
         cameravlak = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
-        for i in range(breedte+1): #+1 anders mis je buitenste waarde op renderer
+        for i in range(breedte): #+1 anders mis je buitenste waarde op renderer
             r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / breedte) * cameravlak
-            self.r_stralen.append(np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom)))
+            self.r_stralen[i] = (np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom)))
 
     def move(self, richting, stap, world_map):
         y_dim, x_dim = np.shape(world_map)
@@ -50,6 +51,8 @@ class Player():
         draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
                                  [math.sin(hoek), math.cos(hoek)]])
         self.r_speler = np.matmul(draai_matrix, self.r_speler)
+        #self.r_stralen = np.matmul(draai_matrix,self.r_stralen[:])
+
         for i,straal in enumerate(self.r_stralen):
             self.r_stralen[i] = np.matmul(draai_matrix, straal)
         if self.car != 0:
@@ -60,11 +63,12 @@ class Player():
         if not self.changes:
             return muren
         muren = []
+
         for i, straal in enumerate(self.r_stralen):
             d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
             muren.append((i, d, k, side, side_d))
         """
-        aantal = 1
+        aantal = 0
         for j, straal in enumerate(self.r_stralen):
             if j == 0:
                 d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
@@ -87,9 +91,18 @@ class Player():
                 vorige_straal = straal
             elif j > len(self.r_stralen) - 3*aantal:
                 d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
-                muren.append((j, d, k, side, side_d))"""
-        self.changes = False
+                muren.append((j, d, k, side, side_d))
+        self.changes = False"""
         return muren
+
+    def n_raycasting(self, world_map):
+        kolom = np.arange(self.breedte)
+        d_muur, d_muur_vlak, kleuren = numpy_raycaster(self.p_x, self.p_y, self.r_stralen, world_map, self.breedte)
+        d = []
+        for i,dist in enumerate(d_muur):
+            d.append(fish_eye_(dist, self.r_speler, self.r_stralen[i]))
+        #print(d[:], d_muur_vlak[:], kleuren[:])
+        return kolom[:], d[:], d_muur_vlak[:], kleuren[:]
 
 
 
