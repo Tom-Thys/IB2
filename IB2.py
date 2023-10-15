@@ -19,7 +19,7 @@ HOOGTE = 700
 #
 # Globale variabelen
 #
-game = False
+game = True
 garage = False
 sound = 0
 
@@ -199,8 +199,8 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
     return
 
 
-def renderen(renderer, window, muur, soort_muren):
-    kolom, d_muur, k_muur, _, unit_d = muur
+def renderen(renderer, window, kolom, d_muur, unit_d, k_muur, soort_muren):
+
     if k_muur != 0:
         wall_texture = soort_muren[k_muur - 1]
         breedte = wall_texture.size[0]
@@ -337,13 +337,15 @@ def main():
 
 
 
-    muren = speler.raycasting(world_map)
+    #muren = speler.raycasting(world_map)
+    #(k, d,v,kl) = speler.n_raycasting(world_map)
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
     muziek_spelen(sound)
 
     achtergrond = factory.from_image(resources.get_path("postman.jpg"))
     while not moet_afsluiten:
         muziek_spelen("8-Bit Postman Pat")
+        sdl2.SDL_SetRelativeMouseMode(False)
         while not game and not moet_afsluiten and not garage:
             start_time = time.time()
             renderer.clear()
@@ -357,9 +359,11 @@ def main():
             renderText(font, renderer, "Menu", 20,50, window)
             renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
+
+
         muziek_spelen(0)
 
-
+        sdl2.SDL_SetRelativeMouseMode(True)
         while game and not moet_afsluiten and not garage:
             # Onthoud de huidige tijd
             start_time = time.time()
@@ -369,14 +373,15 @@ def main():
             render_floor_and_sky(renderer, window)
             # Render de huidige frame
 
-            muren = speler.raycasting(world_map, muren)
+            #muren = speler.raycasting(world_map, muren)
+            (k, d, v, kl) = speler.n_raycasting(world_map)
+            #print(k, d, v, kl)
 
-
-            for muur in muren:
+            for i in k:
                 # r_straal = bereken_r_straal(kolom)
                 # (d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
                 # render_kolom(renderer, window, kolom, d_muur, k_muur)
-                renderen(renderer, window, muur, soort_muren)
+                renderen(renderer, window, i, d[i], v[i], kl[i], soort_muren)
             draw_nav(renderer, map_textuur[0])
             delta = time.time() - start_time
 
