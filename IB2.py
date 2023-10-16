@@ -21,7 +21,7 @@ HOOGTE = 700
 #
 game = False
 garage = False
-sound = 0
+sound = True
 
 
 # positie van de speler
@@ -217,7 +217,7 @@ def renderen(renderer, window, muur, soort_muren):
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def renderText(font, renderer, text, x, y, window = 0):
+def renderText(font: object, renderer: object, text: object, x: object, y: object, window: object = 0) -> object:
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     if window:
         renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), y, text.size[0], text.size[1]))
@@ -269,24 +269,28 @@ def show_fps(font, renderer, window):
                                      text.size[0], text.size[1]))
         yield fps
 
+
 def muziek_spelen(geluid, looped = False):
     volume = 100
-    if geluid == 0:
-        sdl2.sdlmixer.Mix_FadeOutMusic(500)
-        sdl2.sdlmixer.Mix_CloseAudio()
+    if not sound:
         return
-    if sdl2.sdlmixer.Mix_PlayingMusic():  # controleren of dat muziek al gespeeld word
-        return
-
-    sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
-    liedje = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/{geluid}.wav".encode())
-    if not looped:
-        sdl2.sdlmixer.Mix_PlayMusic(liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
     else:
-        sdl2.sdlmixer.Mix_PlayMusic(liedje, 0)
-    if geluid == "8-Bit Postman Pat":
-        volume = 64
-    sdl2.sdlmixer.Mix_MasterVolume(volume)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassem
+        if geluid == 0:
+            sdl2.sdlmixer.Mix_FadeOutMusic(500)
+            sdl2.sdlmixer.Mix_CloseAudio()
+            return
+        if sdl2.sdlmixer.Mix_PlayingMusic():  # controleren of dat muziek al gespeeld word
+            return
+
+        sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
+        liedje = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/{geluid}.wav".encode())
+        if not looped:
+            sdl2.sdlmixer.Mix_PlayMusic(liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
+        else:
+            sdl2.sdlmixer.Mix_PlayMusic(liedje, 0)
+        if geluid == "8-Bit Postman Pat":
+            volume = 64
+        sdl2.sdlmixer.Mix_MasterVolume(volume)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassen
 
 def main():
     global changes, game, garage, BREEDTE
@@ -340,9 +344,8 @@ def main():
 
     muren = speler.raycasting(world_map)
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
-    muziek_spelen(sound)
 
-    achtergrond = factory.from_image(resources.get_path("postman.jpg"))
+    achtergrond = factory.from_image(resources.get_path("8-bit postman pat background.jpg"))
     while not moet_afsluiten:
         muziek_spelen("8-Bit Postman Pat")
         while not game and not moet_afsluiten and not garage:
@@ -355,7 +358,7 @@ def main():
             renderer.copy(achtergrond,
                           srcrect=(0, 0, achtergrond.size[0], achtergrond.size[1]),
                           dstrect=(0, 0, BREEDTE, HOOGTE))
-            renderText(font, renderer, "Menu", 20,50, window)
+            renderText(font, renderer, "Menu", 20, 50, window)
             renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
         muziek_spelen(0)
