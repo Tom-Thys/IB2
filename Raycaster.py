@@ -207,10 +207,10 @@ def raycast(p_speler_x, p_speler_y, r_straal, r_speler, world_map):
 def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
     #variabelen
     y_dim, x_dim = np.shape(world_map)
-    l = min(20, 1.5 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2)) #maximale lengte die geraycast wordt
+    l = min(60, 3 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2)) #maximale lengte die geraycast wordt
 
     #Aanmaak numpy arrays die terug gestuurd worden
-    kleuren = np.zeros(breedte)
+    kleuren = np.zeros(breedte,dtype='int')
     d_muur = np.zeros(breedte)
     d_muur_vlak = np.zeros(breedte)
 
@@ -245,11 +245,20 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         #Als op alle plekken break_cond == 0 return dan de bekomen waardes
         if np.all(~break_cond):
             #kleuren astype int want numpy maakt er float64 van :(
-            return d_muur, d_muur_vlak, kleuren.astype(int)
+            return d_muur, d_muur_vlak, kleuren
 
         #x en y berekenen adhv gegeven d_v of d_h en afronden op 3-8 zodat astype(int) niet afrond naar beneden terwijl het naar boven zou moeten
         x = np.round(p_x + least_distance * r_stralen[:, 0], 5)
         y = np.round(p_y + least_distance * r_stralen[:, 1], 5)
+
+        counts = 0
+        while counts < 3:
+            counts += 1
+            x = np.where(x < 0, x + x_dim, x)
+            y = np.where(y < 0, y + y_dim, y)
+            x = np.where(x > x_dim, x - x_dim, x)
+            y = np.where(y > y_dim, y - y_dim, y)
+
 
         #World map neemt enkel int dus afronden naar beneden via astype(int) enkel als d_v genomen is moet correctie toegevoegd worden bij x
         x_f = np.where(dist_cond, (x + richting_x).astype(int), x.astype(int))

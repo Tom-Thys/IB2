@@ -8,7 +8,6 @@ import sdl2.sdlimage
 import sdl2.sdlmixer
 from sdl2 import *
 from worlds import worldlijst
-from Raycaster import *
 from Classes import *
 
 
@@ -22,9 +21,9 @@ POSITIE_QUIT_GAME = [420, 572]
 #
 # Globale variabelen
 #
-game = False
+game = True
 garage = False
-sound = True
+sound = False
 index = 0
 positie = [0,0]
 
@@ -240,17 +239,25 @@ def renderText(font, renderer, text, x, y, window = 0):
         renderer.copy(text, dstrect=(x, y, text.size[0], text.size[1]))
 
 
-def draw_nav(renderer, wall_texture , sprites = [], width = 200):
+def draw_nav(renderer, wall_texture, speler, sprites = [], width = 200, height = 150, b_w = 10):
     """
     Rendert PNG van world map in linkerbovenhoek
     Speler is zichtbaar in het midden
     Sprites worden door een kleur aangegeven op de map
     Navigatie naar volgende doel wordt via een lijn aangegeven op de map
     :param width: Geeft aan hoe breed de wereld map standaard is
+    :param height: Geeft aan hoe hoog de wereld map standaard is
+    :param b_w: Aantal blokken links en rechts van speler op map worden getoond
     """
-    global p_speler_y, p_speler_x
     breedte = wall_texture.size[0]
     hoogte = wall_texture.size[1]
+    if speler.p_x - b_w < 0:
+        pass
+
+
+
+
+
     x = width
     y = x/breedte*hoogte
     renderer.copy(wall_texture, srcrect=(0, 0, breedte, hoogte),
@@ -421,7 +428,7 @@ def main():
                 # (d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
                 # render_kolom(renderer, window, kolom, d_muur, k_muur)
                 renderen(renderer, window, i, d[i], v[i], kl[i], soort_muren)
-            draw_nav(renderer, map_textuur[0])
+            draw_nav(renderer, map_textuur[0], speler)
             delta = time.time() - start_time
 
             verwerk_input(delta)
