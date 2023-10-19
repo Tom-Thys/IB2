@@ -34,7 +34,7 @@ d_camera = 1
 #
 #Speler aanmaken
 speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
-speler.aanmaak_r_stralen(BREEDTE, d_camera)
+speler.aanmaak_r_stralen()
 
 
 # alle stralen die vauit de speler vertrekken
@@ -199,8 +199,8 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
     return
 
 
-def renderen(renderer, window, muur, soort_muren):
-    kolom, d_muur, k_muur, _, unit_d = muur
+def renderen(renderer, window, kolom, d_muur, unit_d, k_muur, soort_muren):
+
     if k_muur != 0:
         wall_texture = soort_muren[k_muur - 1]
         breedte = wall_texture.size[0]
@@ -217,7 +217,7 @@ def renderen(renderer, window, muur, soort_muren):
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def renderText(font: object, renderer: object, text: object, x: object, y: object, window: object = 0) -> object:
+def renderText(font, renderer, text, x, y, window = 0):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     if window:
         renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), y, text.size[0], text.size[1]))
@@ -262,7 +262,7 @@ def show_fps(font, renderer, window):
             fps_list.append(1 / (time.time() - loop_time))
         loop_time = time.time()
         fps = sum(fps_list) / len(fps_list)
-        if len(fps_list) == 20:
+        if len(fps_list) == 100:
             fps_list.pop(0)
         text = sdl2.ext.renderer.Texture(renderer, font.render_text(f'{fps:.2f} fps'))
         renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), 20,
@@ -342,12 +342,14 @@ def main():
 
 
 
-    muren = speler.raycasting(world_map)
+    #muren = speler.raycasting(world_map)
+    #(k, d,v,kl) = speler.n_raycasting(world_map)
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
 
     achtergrond = factory.from_image(resources.get_path("8-bit postman pat background.jpg"))
     while not moet_afsluiten:
         muziek_spelen("8-Bit Postman Pat")
+        sdl2.SDL_SetRelativeMouseMode(False)
         while not game and not moet_afsluiten and not garage:
             start_time = time.time()
             renderer.clear()
@@ -361,7 +363,11 @@ def main():
             renderText(font, renderer, "Menu", 20, 50, window)
             renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
+
+
         muziek_spelen(0)
+
+        sdl2.SDL_SetRelativeMouseMode(True)
         muziek_spelen("arcade_start", True)
         while game and not moet_afsluiten and not garage:
             # Onthoud de huidige tijd
@@ -371,14 +377,15 @@ def main():
             render_floor_and_sky(renderer, window)
             # Render de huidige frame
 
-            muren = speler.raycasting(world_map, muren)
+            #muren = speler.raycasting(world_map, muren)
+            (k, d, v, kl) = speler.n_raycasting(world_map)
+            #print(k, d, v, kl)
 
-
-            for muur in muren:
+            for i in k:
                 # r_straal = bereken_r_straal(kolom)
                 # (d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
                 # render_kolom(renderer, window, kolom, d_muur, k_muur)
-                renderen(renderer, window, muur, soort_muren)
+                renderen(renderer, window, i, d[i], v[i], kl[i], soort_muren)
             draw_nav(renderer, map_textuur[0])
             delta = time.time() - start_time
 

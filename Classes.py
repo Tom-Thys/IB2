@@ -9,15 +9,16 @@ class Player():
         self.p_y = y
         self.hoek = hoek
         self.r_speler = np.array([math.cos(hoek), math.sin(hoek)])
-        self.r_stralen = []
+        self.r_stralen = np.zeros((breedte,2))
+        self.breedte = breedte
         self.car = 0
         self.changes = True
 
-    def aanmaak_r_stralen(self, breedte, d_camera):
+    def aanmaak_r_stralen(self, d_camera=1):
         cameravlak = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
-        for i in range(breedte+1): #+1 anders mis je buitenste waarde op renderer
-            r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / breedte) * cameravlak
-            self.r_stralen.append(np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom)))
+        for i in range(self.breedte): #+1 anders mis je buitenste waarde op renderer
+            r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / self.breedte) * cameravlak
+            self.r_stralen[i] = (np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom)))
 
     def move(self, richting, stap, world_map):
         y_dim, x_dim = np.shape(world_map)
@@ -45,56 +46,32 @@ class Player():
                 self.p_y = y
                 self.changes = True
 
+            if world_map[math.floor(y)][math.floor(self.p_x)] == 0 and world_map[math.floor(y+atm*richting)][math.floor(self.p_x+atm*richting)] == 0:
+                self.p_y = y
+                self.changes = True
+            if world_map[math.floor(self.p_y)][math.floor(x)] == 0 and world_map[math.floor(self.p_y + atm * richting)][math.floor(x + atm * richting)] == 0:
+                self.p_x = x
+                self.changes = True
+
+
     def draaien(self,hoek):
         self.hoek += hoek
         draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
                                  [math.sin(hoek), math.cos(hoek)]])
         self.r_speler = np.matmul(draai_matrix, self.r_speler)
+        #self.r_stralen = np.matmul(draai_matrix,self.r_stralen[:])
+
         for i,straal in enumerate(self.r_stralen):
             self.r_stralen[i] = np.matmul(draai_matrix, straal)
         if self.car != 0:
             self.car.draaien(hoek,draai_matrix)
         self.changes = True
 
-    def raycasting(self, world_map, muren=[]):
-        if not self.changes:
-            return muren
-        muren = []
-        for i, straal in enumerate(self.r_stralen):
-            d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
-            muren.append((i, d, k, side, side_d))
-        """
-        aantal = 1
-        for j, straal in enumerate(self.r_stralen):
-            if j == 0:
-                d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
-                muren.append((j, d, k, side, side_d))
-                vorige_straal = straal
-            elif j % (aantal + 1) == 0:
-                vorig = muren[-1]
-                d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
-                if vorig[2] == k and 0.95 < vorig[1] / d < 1.05 and vorig[3] == side:
-                    for i in range(aantal):
-                        dist = vorig[1] + (i + 1) * (d - vorig[1]) / (aantal + 2)
-                        side_dist = cosinusregel(vorige_straal, self.r_stralen[j - aantal + i], vorig[1], dist)
-                        muren.append((j - aantal + i, dist, k, side, vorig[4] + side_dist * sign(vorig[4] - d)))
-                        # muren.append((j-1,(d + muren[-1][1])/2,k))
-                else:
-                    for i in range(aantal):
-                        d2, k2, side2, side_d2 = raycast(self.p_x, self.p_y, self.r_stralen[j - aantal + i], self.r_speler, world_map)
-                        muren.append((j - aantal + i, d2, k2, side2, side_d2))
-                muren.append((j, d, k, side, side_d))
-                vorige_straal = straal
-            elif j > len(self.r_stralen) - 3*aantal:
-                d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
-                muren.append((j, d, k, side, side_d))"""
-        self.changes = False
-        return muren
-
-
-
-
-
+    def n_raycasting(self, world_map):
+        self.aanmaak_r_stralen()
+        kolom = np.arange(self.breedte)
+        d, v, kl = numpy_raycaster(self.p_x, self.p_y, self.r_stralen, self.r_speler, self.breedte, world_map)
+        return kolom, d, v, kl
 
 
 
