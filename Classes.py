@@ -46,6 +46,14 @@ class Player():
                 self.p_y = y
                 self.changes = True
 
+            if world_map[math.floor(y)][math.floor(self.p_x)] == 0 and world_map[math.floor(y+atm*richting)][math.floor(self.p_x+atm*richting)] == 0:
+                self.p_y = y
+                self.changes = True
+            if world_map[math.floor(self.p_y)][math.floor(x)] == 0 and world_map[math.floor(self.p_y + atm * richting)][math.floor(x + atm * richting)] == 0:
+                self.p_x = x
+                self.changes = True
+
+
     def draaien(self,hoek):
         self.hoek += hoek
         draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
@@ -97,13 +105,8 @@ class Player():
 
     def n_raycasting(self, world_map):
         kolom = np.arange(self.breedte)
-        d_muur, d_muur_vlak, kleuren = numpy_raycaster(self.p_x, self.p_y, self.r_stralen, world_map, self.breedte)
-        d = []
-        for i,dist in enumerate(d_muur):
-            d.append(fish_eye_(dist, self.r_speler, self.r_stralen[i]))
-        #print(d[:], d_muur_vlak[:], kleuren[:])
-        return kolom[:], d[:], d_muur_vlak[:], kleuren[:]
-
+        d, v, kl = numpy_raycaster(self.p_x, self.p_y, self.r_stralen, self.r_speler, self.breedte, world_map)
+        return kolom, d, kolom/800, kl
 
 
 
