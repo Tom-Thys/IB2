@@ -16,12 +16,17 @@ from Classes import *
 BREEDTE = 1000
 HOOGTE = 700
 
+POSITIE_START_GAME = [365, 253]
+POSITIE_SETTINGS = [300, 401]
+POSITIE_QUIT_GAME = [420, 572]
 #
 # Globale variabelen
 #
-game = True
+game = False
 garage = False
-sound = False
+sound = True
+index = 0
+positie = [0,0]
 
 
 # positie van de speler
@@ -82,7 +87,7 @@ kleuren = [
 # @delta       Tijd in milliseconden sinds de vorige oproep van deze functie
 #
 def verwerk_input(delta):
-    global moet_afsluiten, game, garage
+    global moet_afsluiten, game, garage, index
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
@@ -111,11 +116,21 @@ def verwerk_input(delta):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
-            if key == sdl2.SDLK_SPACE and not game:
-                game = True
-            if key == sdl2.SDLK_m:
-                game = False
-                garage = False
+            if not moet_afsluiten and not game:
+                if key == sdl2.SDLK_DOWN:
+                    index += 1
+                if key == sdl2.SDLK_UP:
+                    index -= 1
+                if key == sdl2.SDLK_SPACE and index == 0:
+                    game = True
+                if key == sdl2.SDLK_SPACE and index == 1:
+                    break
+                if key == sdl2.SDLK_SPACE and index == 2:
+                    moet_afsluiten = True
+                    break
+            if not moet_afsluiten:
+                if key == sdl2.SDLK_m:
+                    game = False
             break
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
@@ -293,6 +308,22 @@ def muziek_spelen(geluid, looped = False):
             volume = 64
         sdl2.sdlmixer.Mix_MasterVolume(volume)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassen
 
+def main_menu_nav():
+    global index, positie
+    if index == 0:
+        positie = POSITIE_START_GAME
+        return
+    elif index == 1:
+        positie = POSITIE_SETTINGS
+        return
+    elif index == 2:
+        positie = POSITIE_QUIT_GAME
+        return
+    if index > 2:
+        index = 2
+    if index <0:
+        index = 0
+
 def main():
     global changes, game, garage, BREEDTE
     # Initialiseer de SDL2 bibliotheek
@@ -346,7 +377,6 @@ def main():
     #muren = speler.raycasting(world_map)
     #(k, d,v,kl) = speler.n_raycasting(world_map)
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
-
     achtergrond = factory.from_image(resources.get_path("game_main_menu.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     while not moet_afsluiten:
@@ -358,13 +388,14 @@ def main():
             muziek_spelen("8-Bit Postman Pat")
             delta = time.time() - start_time
             verwerk_input(delta)
+            main_menu_nav()
             #renderer.fill((0, 0, window.size[0], window.size[1]), kleuren[8])
             renderer.copy(achtergrond,
                           srcrect=(0, 0, achtergrond.size[0], achtergrond.size[1]),
                           dstrect=(0, 0, BREEDTE, HOOGTE))
             renderer.copy(menu_pointer,
                           srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
-                          dstrect=(365, 253, 80, 50))
+                          dstrect=(positie[0], positie[1], 80, 50))
             renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
 
