@@ -67,42 +67,6 @@ class Player():
             self.car.draaien(hoek,draai_matrix)
         self.changes = True
 
-    def raycasting(self, world_map, muren=[]):
-        if not self.changes:
-            return muren
-        muren = []
-
-        for i, straal in enumerate(self.r_stralen):
-            d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
-            muren.append((i, d, k, side, side_d))
-        """
-        aantal = 0
-        for j, straal in enumerate(self.r_stralen):
-            if j == 0:
-                d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
-                muren.append((j, d, k, side, side_d))
-                vorige_straal = straal
-            elif j % (aantal + 1) == 0:
-                vorig = muren[-1]
-                d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
-                if vorig[2] == k and 0.95 < vorig[1] / d < 1.05 and vorig[3] == side:
-                    for i in range(aantal):
-                        dist = vorig[1] + (i + 1) * (d - vorig[1]) / (aantal + 2)
-                        side_dist = cosinusregel(vorige_straal, self.r_stralen[j - aantal + i], vorig[1], dist)
-                        muren.append((j - aantal + i, dist, k, side, vorig[4] + side_dist * sign(vorig[4] - d)))
-                        # muren.append((j-1,(d + muren[-1][1])/2,k))
-                else:
-                    for i in range(aantal):
-                        d2, k2, side2, side_d2 = raycast(self.p_x, self.p_y, self.r_stralen[j - aantal + i], self.r_speler, world_map)
-                        muren.append((j - aantal + i, d2, k2, side2, side_d2))
-                muren.append((j, d, k, side, side_d))
-                vorige_straal = straal
-            elif j > len(self.r_stralen) - 3*aantal:
-                d, k, side, side_d = raycast(self.p_x, self.p_y, straal, self.r_speler, world_map)
-                muren.append((j, d, k, side, side_d))
-        self.changes = False"""
-        return muren
-
     def n_raycasting(self, world_map):
         kolom = np.arange(self.breedte)
         d, v, kl = numpy_raycaster(self.p_x, self.p_y, self.r_stralen, self.r_speler, self.breedte, world_map)
