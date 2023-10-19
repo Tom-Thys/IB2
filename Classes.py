@@ -106,11 +106,7 @@ class Player():
     def n_raycasting(self, world_map):
         kolom = np.arange(self.breedte)
         d, v, kl = numpy_raycaster(self.p_x, self.p_y, self.r_stralen, self.r_speler, self.breedte, world_map)
-        return kolom, d, kolom/800, kl
-
-
-
-
+        return kolom, d, v, kl
 
 
 

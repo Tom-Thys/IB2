@@ -205,7 +205,6 @@ def raycast(p_speler_x, p_speler_y, r_straal, r_speler, world_map):
 
 
 def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
-    print(r_speler)
     y_dim, x_dim = np.shape(world_map)
     l = max(20, (x_dim ** 2 + y_dim ** 2) ** (1 / 2))
 
@@ -216,8 +215,8 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
     delta_x = 1 / np.abs(r_stralen[:, 0])
     delta_y = 1 / np.abs(r_stralen[:, 1])
 
-    richting_x = np.where(r_stralen[:, 0] >= 0, 1, 0)
-    richting_y = np.where(r_stralen[:, 1] >= 0, 1, 0)
+    richting_x = np.where(r_stralen[:, 0] >= 0, 0, -1)
+    richting_y = np.where(r_stralen[:, 1] >= 0, 0, -1)
 
     d_v = np.where(r_stralen[:, 0] >= 0, (1 - (p_x - math.floor(p_x))) * delta_x, (p_x - math.floor(p_x)) * delta_x)
     d_h = np.where(r_stralen[:, 1] >= 0, (1 - (p_y - math.floor(p_y))) * delta_y, (p_y - math.floor(p_y)) * delta_y)
@@ -242,17 +241,12 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         x = np.round(p_x + least_distance * r_stralen[:, 0], 5)
         y = np.round(p_y + least_distance * r_stralen[:, 1], 5)
 
-        x_f = x.astype(int)#           np.where(richting_x * ~dist_cond, (x).astype(int), (x-1).astype(int))
-        y_f = y.astype(int)#          np.where(~richting_y * dist_cond, (y + 1).astype(int), (y).astype(int))
+        x_f = np.where(dist_cond, (x + richting_x).astype(int), x.astype(int))
+        y_f = np.where(~dist_cond, (y + richting_y).astype(int), y.astype(int))
 
-
-
-        valid = ((np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map)))))
+        valid = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map)))
         valid_indices = valid * break_cond
-
-
         muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]], True, False)
-
 
         kleuren[muren_check] += world_map[y_f[muren_check], x_f[muren_check]]
         d_muur += np.where(break_cond * muren_check, least_distance, 0)
