@@ -271,7 +271,7 @@ def show_fps(font, renderer, window):
 
 
 def muziek_spelen(geluid, looped = False):
-    volume = 100
+    volume = 80
     if not sound:
         return
     else:
@@ -346,7 +346,8 @@ def main():
     #(k, d,v,kl) = speler.n_raycasting(world_map)
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
 
-    achtergrond = factory.from_image(resources.get_path("8-bit postman pat background.jpg"))
+    achtergrond = factory.from_image(resources.get_path("game_main_menu.png"))
+    menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     while not moet_afsluiten:
         muziek_spelen("8-Bit Postman Pat")
         sdl2.SDL_SetRelativeMouseMode(False)
@@ -360,7 +361,9 @@ def main():
             renderer.copy(achtergrond,
                           srcrect=(0, 0, achtergrond.size[0], achtergrond.size[1]),
                           dstrect=(0, 0, BREEDTE, HOOGTE))
-            renderText(font, renderer, "Menu", 20, 50, window)
+            renderer.copy(menu_pointer,
+                          srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
+                          dstrect=(365, 253, 80, 50))
             renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
 
