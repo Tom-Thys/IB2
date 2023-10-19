@@ -14,10 +14,10 @@ class Player():
         self.car = 0
         self.changes = True
 
-    def aanmaak_r_stralen(self, breedte, d_camera):
+    def aanmaak_r_stralen(self, d_camera=1):
         cameravlak = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
-        for i in range(breedte): #+1 anders mis je buitenste waarde op renderer
-            r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / breedte) * cameravlak
+        for i in range(self.breedte): #+1 anders mis je buitenste waarde op renderer
+            r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / self.breedte) * cameravlak
             self.r_stralen[i] = (np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom)))
 
     def move(self, richting, stap, world_map):
@@ -68,6 +68,7 @@ class Player():
         self.changes = True
 
     def n_raycasting(self, world_map):
+        self.aanmaak_r_stralen()
         kolom = np.arange(self.breedte)
         d, v, kl = numpy_raycaster(self.p_x, self.p_y, self.r_stralen, self.r_speler, self.breedte, world_map)
         return kolom, d, v, kl

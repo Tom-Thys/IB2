@@ -34,7 +34,7 @@ d_camera = 1
 #
 #Speler aanmaken
 speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
-speler.aanmaak_r_stralen(BREEDTE, d_camera)
+speler.aanmaak_r_stralen()
 
 
 # alle stralen die vauit de speler vertrekken
@@ -262,7 +262,7 @@ def show_fps(font, renderer, window):
             fps_list.append(1 / (time.time() - loop_time))
         loop_time = time.time()
         fps = sum(fps_list) / len(fps_list)
-        if len(fps_list) == 20:
+        if len(fps_list) == 100:
             fps_list.pop(0)
         text = sdl2.ext.renderer.Texture(renderer, font.render_text(f'{fps:.2f} fps'))
         renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), 20,

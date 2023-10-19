@@ -233,10 +233,7 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         break_cond = (dist_cond * break_1 + ~dist_cond * break_2) * break_3
 
         if np.all(~break_cond):
-            d = []
-            for i, dist in enumerate(d_muur):
-                d.append(fish_eye_(dist, r_speler, r_stralen[i]))
-            return d, d_muur_vlak, kleuren.astype(int)
+            return d_muur, d_muur_vlak, kleuren.astype(int)
 
         x = np.round(p_x + least_distance * r_stralen[:, 0], 5)
         y = np.round(p_y + least_distance * r_stralen[:, 1], 5)
@@ -249,7 +246,7 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]], True, False)
 
         kleuren[muren_check] += world_map[y_f[muren_check], x_f[muren_check]]
-        d_muur += np.where(break_cond * muren_check, least_distance, 0)
+        d_muur += np.where(break_cond * muren_check, least_distance*(r_stralen[:,0]*r_speler[0]+r_stralen[:,1]*r_speler[1]), 0)
         d_muur_vlak += np.where(muren_check * break_cond * dist_cond, y, 0)
         d_muur_vlak += np.where(muren_check * break_cond * ~dist_cond, x, 0)
 
