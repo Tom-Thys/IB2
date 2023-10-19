@@ -17,8 +17,8 @@ world_map = np.array([[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2],
-             [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
-             [2, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 2],
+             [2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 2],
+             [3, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
              [2, 2, 2, 4, 2, 3, 2, 4, 2, 5, 2, 2, 2]])
@@ -59,8 +59,7 @@ def make_world_png(worldlijst,unit_d=30):
         # sdl2.SDL_CreateRGBSurface
         for j, row in enumerate(map):
             for i, kleur in enumerate(row):
-                if kleur > len(kleuren):
-                    kleur = 0
+                kleur = kleur % len(kleuren)
                 renderer.fill((i*unit_d,j*unit_d,(i+1)*unit_d,(j+1)*unit_d),kleuren[kleur])
         renderer.present()
         string = b"mappen\map"+str(id).encode('utf-8')+b".png"

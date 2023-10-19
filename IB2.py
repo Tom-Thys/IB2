@@ -270,7 +270,8 @@ def show_fps(font, renderer, window):
         yield fps
 
 def muziek_spelen(geluid):
-    volume = 100
+    return
+    volume = 0
     if geluid == 0:
         sdl2.sdlmixer.Mix_FadeOutMusic(500)
         sdl2.sdlmixer.Mix_CloseAudio()
