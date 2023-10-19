@@ -205,9 +205,11 @@ def raycast(p_speler_x, p_speler_y, r_straal, r_speler, world_map):
 
 
 def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
+    #variabelen
     y_dim, x_dim = np.shape(world_map)
-    l = max(20, (x_dim ** 2 + y_dim ** 2) ** (1 / 2))
+    l = min(20, 1.5 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2)) #maximale lengte die geraycast wordt
 
+    #Aanmaak numpy arrays die terug gestuurd worden
     kleuren = np.zeros(breedte)
     d_muur = np.zeros(breedte)
     d_muur_vlak = np.zeros(breedte)
@@ -215,42 +217,60 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
     delta_x = 1 / np.abs(r_stralen[:, 0])
     delta_y = 1 / np.abs(r_stralen[:, 1])
 
+    #Bij negatieve R_straal moeten we op de wereldmap 1 positie meer naar 0 toe schuiven.
     richting_x = np.where(r_stralen[:, 0] >= 0, 0, -1)
     richting_y = np.where(r_stralen[:, 1] >= 0, 0, -1)
 
+    #initiele afstand berekenen
     d_v = np.where(r_stralen[:, 0] >= 0, (1 - (p_x - math.floor(p_x))) * delta_x, (p_x - math.floor(p_x)) * delta_x)
     d_h = np.where(r_stralen[:, 1] >= 0, (1 - (p_y - math.floor(p_y))) * delta_y, (p_y - math.floor(p_y)) * delta_y)
 
     while True:
+        #reset van muren_check vormt plekken waarop we muren raken
         muren_check = np.full(breedte, False)
 
+        #kijken of we d_v of d_h nodig hebben deze loop
         dist_cond = d_v < d_h
         least_distance = np.where(dist_cond, d_v, d_h)
 
+        #Mogen enkel muren checken die nog niet geraakt zijn en binnen de afstand liggen
         break_1 = d_v < l
         break_2 = d_h < l
         break_3 = kleuren == 0
         break_cond = (dist_cond * break_1 + ~dist_cond * break_2) * break_3
+        #Break 1 enkel tellen als we met d_v werken en d_h enkel als we met d_h werken
+        #Binair vermenigvuldigen als break3 = 0 dan wordt break_cond op die plek 0
 
+
+        #Als op alle plekken break_cond == 0 return dan de bekomen waardes
         if np.all(~break_cond):
+            #kleuren astype int want numpy maakt er float64 van :(
             return d_muur, d_muur_vlak, kleuren.astype(int)
 
+        #x en y berekenen adhv gegeven d_v of d_h en afronden op 3-8 zodat astype(int) niet afrond naar beneden terwijl het naar boven zou moeten
         x = np.round(p_x + least_distance * r_stralen[:, 0], 5)
         y = np.round(p_y + least_distance * r_stralen[:, 1], 5)
 
+        #World map neemt enkel int dus afronden naar beneden via astype(int) enkel als d_v genomen is moet correctie toegevoegd worden bij x
         x_f = np.where(dist_cond, (x + richting_x).astype(int), x.astype(int))
         y_f = np.where(~dist_cond, (y + richting_y).astype(int), y.astype(int))
 
+        #Logica: x_f moet tussen 0 en x_dim blijven en y_f tussen 0 en y_dim
+        #Deze tellen ook enkel maar als de break conditie niet telt
         valid = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map)))
         valid_indices = valid * break_cond
         muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]], True, False)
+        #op de plekken waar logica correct is kijken of we een muur raken
 
+        #We raken op muren_check = True muren en we slaan die data op in de gecreeerde arrays
         kleuren[muren_check] += world_map[y_f[muren_check], x_f[muren_check]]
+        #r_straal*r_speler voor fish eye eruit te halen
         d_muur += np.where(break_cond * muren_check, least_distance*(r_stralen[:,0]*r_speler[0]+r_stralen[:,1]*r_speler[1]), 0)
-        d_muur_vlak += np.where(muren_check * break_cond * dist_cond, y, 0)
-        d_muur_vlak += np.where(muren_check * break_cond * ~dist_cond, x, 0)
+        #Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
+        d_muur_vlak += np.where(muren_check * dist_cond, y, 0)
+        d_muur_vlak += np.where(muren_check * ~dist_cond, x, 0)
 
-        # incrementeren
+        # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
         d_v += dist_cond * delta_x
         d_h += (~dist_cond) * delta_y
 
