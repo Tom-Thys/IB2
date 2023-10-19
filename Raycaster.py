@@ -251,13 +251,14 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         x = np.round(p_x + least_distance * r_stralen[:, 0], 5)
         y = np.round(p_y + least_distance * r_stralen[:, 1], 5)
 
-        counts = 0
-        while counts < 3:
-            counts += 1
+        while np.any(np.logical_and.reduce((-4*x_dim < x, x < 0))):
             x = np.where(x < 0, x + x_dim, x)
+        while np.any(np.logical_and.reduce((-4 * y_dim < y, y < 0))):
             y = np.where(y < 0, y + y_dim, y)
-            x = np.where(x > x_dim, x - x_dim, x)
+        while np.any(np.logical_and.reduce((y_dim < y, y < 5*y_dim))):
             y = np.where(y > y_dim, y - y_dim, y)
+        while np.any(np.logical_and.reduce((x_dim < x, x < 5*x_dim))):
+            x = np.where(x > x_dim, x - x_dim, x)
 
 
         #World map neemt enkel int dus afronden naar beneden via astype(int) enkel als d_v genomen is moet correctie toegevoegd worden bij x
