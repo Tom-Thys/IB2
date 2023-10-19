@@ -19,9 +19,9 @@ HOOGTE = 700
 #
 # Globale variabelen
 #
-game = False
+game = True
 garage = False
-sound = True
+sound = False
 
 
 # positie van de speler
@@ -254,15 +254,16 @@ def render_floor_and_sky(renderer, window):
 
 def show_fps(font, renderer, window):
     fps_list = [1]
-    fps = 0
-    loop_time = 1
+    loop_time = 0
 
     while True:
         if (time.time() - loop_time) != 0:
             fps_list.append(1 / (time.time() - loop_time))
-        loop_time = time.time()
+            #print(min(fps_list))
+            loop_time = time.time()
+
         fps = sum(fps_list) / len(fps_list)
-        if len(fps_list) == 100:
+        if len(fps_list) == 200:
             fps_list.pop(0)
         text = sdl2.ext.renderer.Texture(renderer, font.render_text(f'{fps:.2f} fps'))
         renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), 20,
