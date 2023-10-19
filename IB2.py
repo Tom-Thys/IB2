@@ -21,9 +21,9 @@ POSITIE_QUIT_GAME = [420, 572]
 #
 # Globale variabelen
 #
-game = True
+game = False
 garage = False
-sound = False
+sound = True
 index = 0
 positie = [0,0]
 
