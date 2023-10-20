@@ -26,6 +26,8 @@ garage = False
 sound = True
 index = 0
 positie = [0,0]
+# wordt op True gezet als het spel afgesloten moet worden
+moet_afsluiten = False
 
 
 # positie van de speler
@@ -38,31 +40,12 @@ d_camera = 1
 #
 #Speler aanmaken
 speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
-speler.aanmaak_r_stralen()
-
-
-# alle stralen die vauit de speler vertrekken
-stralen = []
-changes = False
-
-# cameravlak
-r_cameravlak_x, r_cameravlak_y = -1 / math.sqrt(2), -1 / math.sqrt(2)
-r_cameravlak = np.array([math.cos(r_speler_hoek - math.pi / 2), math.sin(r_speler_hoek - math.pi / 2)])
-
-# wordt op True gezet als het spel afgesloten moet worden
-moet_afsluiten = False
-
-
-
-
-
-
-
+speler.aanmaak_r_stralen(d_camera=d_camera)
 
 
 
 #world
-world_map = worldlijst[0]
+world_map = worldlijst[1]
 y_dim, x_dim = np.shape(world_map)
 
 # Vooraf gedefinieerde kleuren
@@ -93,9 +76,9 @@ def verwerk_input(delta):
     events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game:
-        speler.move(1, 0.01,world_map)
+        speler.move(1, 0.1,world_map)
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game:
-        speler.move(-1, 0.01,world_map)
+        speler.move(-1, 0.1,world_map)
     if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game:
         speler.draaien(-math.pi / 200)
     if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game:
@@ -176,34 +159,32 @@ def bereken_r_straal(kolom):
     r_straal = np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom))
     return r_straal
 
-
+""" STAAT NU IN class Player
 def draaien(hoek):
-    """Geef hoek op in radialen, geeft r_straal en r_cameravlak terug"""
-    global r_cameravlak, r_speler, stralen, changes
+    
+    global r_cameravlak, r_speler, stralen
     draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
                              [math.sin(hoek), math.cos(hoek)]])
     r_speler = np.matmul(draai_matrix, r_speler)
     r_cameravlak = np.matmul(draai_matrix, r_cameravlak)
     for i, straal in enumerate(stralen):
         stralen[i] = np.matmul(draai_matrix, straal)
-    changes = True
     return r_speler, r_cameravlak
 
 
 def move(dir, stap):
-    """Geef stap, veranderd positie speler volgens r_speler
-    aan muur volgt het slechts vector die niet in de weg zit"""
-    global p_speler_x, p_speler_y, changes
+    Geef stap, veranderd positie speler volgens r_speler
+    aan muur volgt het slechts vector die niet in de weg zit
+    global p_speler_x, p_speler_y
     x = p_speler_x + dir * stap * r_speler[0]
     y = p_speler_y + dir * stap * r_speler[1]
     if world_map[math.floor(y)][math.floor(x)] == 0 and 0<x<x_dim-1 and 0<y<y_dim-1:
         p_speler_x = x
         p_speler_y = y
-        changes = True
     else:
         pass
         # Kan gebruikt worden voor muren die schade aanrichten enzo
-
+"""
 
 
 def render_kolom(renderer, window, kolom, d_muur, k_muur):
@@ -285,7 +266,7 @@ def show_fps(font, renderer, window):
             loop_time = time.time()
 
         fps = sum(fps_list) / len(fps_list)
-        if len(fps_list) == 200:
+        if len(fps_list) == 20:
             fps_list.pop(0)
         text = sdl2.ext.renderer.Texture(renderer, font.render_text(f'{fps:.2f} fps'))
         renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), 20,
@@ -332,7 +313,7 @@ def main_menu_nav():
         index = 0
 
 def main():
-    global changes, game, garage, BREEDTE
+    global game, garage, BREEDTE
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
     sdl2.sdlmixer.Mix_Init(0)

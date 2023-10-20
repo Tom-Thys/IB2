@@ -251,19 +251,22 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         x = np.round(p_x + least_distance * r_stralen[:, 0], 5)
         y = np.round(p_y + least_distance * r_stralen[:, 1], 5)
 
-        while np.any(np.logical_and.reduce((-4*x_dim < x, x < 0))):
-            x = np.where(x < 0, x + x_dim, x)
-        while np.any(np.logical_and.reduce((-4 * y_dim < y, y < 0))):
-            y = np.where(y < 0, y + y_dim, y)
+        while np.any(np.logical_and.reduce((-4*x_dim < x, x <= 0))):
+            x = np.where(x <= 0, x + x_dim, x)
+        while np.any(np.logical_and.reduce((-4 * y_dim < y, y <= 0))):
+            y = np.where(y <= 0, y + y_dim, y)
         while np.any(np.logical_and.reduce((y_dim < y, y < 5*y_dim))):
-            y = np.where(y > y_dim, y - y_dim, y)
+            y = np.where(y >= y_dim, y - y_dim, y)
         while np.any(np.logical_and.reduce((x_dim < x, x < 5*x_dim))):
-            x = np.where(x > x_dim, x - x_dim, x)
+            x = np.where(x >= x_dim, x - x_dim, x)
 
 
         #World map neemt enkel int dus afronden naar beneden via astype(int) enkel als d_v genomen is moet correctie toegevoegd worden bij x
         x_f = np.where(dist_cond, (x + richting_x).astype(int), x.astype(int))
         y_f = np.where(~dist_cond, (y + richting_y).astype(int), y.astype(int))
+        """
+        x_f = x_f%x_dim
+        y_f = y_f%y_dim"""
 
         #Logica: x_f moet tussen 0 en x_dim blijven en y_f tussen 0 en y_dim
         #Deze tellen ook enkel maar als de break conditie niet telt
