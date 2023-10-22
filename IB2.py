@@ -13,8 +13,8 @@ from rendering import *
 
 
 # Constanten
-BREEDTE = 800
-HOOGTE = 600
+BREEDTE = 1000
+HOOGTE = 700
 
 POSITIE_START_GAME = [365, 253]
 POSITIE_SETTINGS = [300, 401]
