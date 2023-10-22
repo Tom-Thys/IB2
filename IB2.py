@@ -24,9 +24,10 @@ POSITIE_QUIT_GAME = [420, 572]
 #
 game = False
 garage = False
-sound = False
+sound = True
 index = 0
 positie = [0,0]
+stapgeluid = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/concrete-footsteps.wav".encode())
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
 
@@ -86,6 +87,7 @@ def verwerk_input(delta):
         speler.draaien(-math.pi / 200)
     if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game:
         speler.draaien(math.pi / 200)
+
     for event in events:
         # Een SDL_QUIT event wordt afgeleverd als de gebruiker de applicatie
         # afsluit door bv op het kruisje te klikken
@@ -113,7 +115,7 @@ def verwerk_input(delta):
                 if key == sdl2.SDLK_SPACE and index == 2:
                     moet_afsluiten = True
                     break
-            if not moet_afsluiten:
+            if not moet_afsluiten and game:
                 if key == sdl2.SDLK_m:
                     game = False
             break
@@ -251,18 +253,20 @@ def show_fps(font, renderer, window):
 
 
 def muziek_spelen(geluid, looped = False):
-    volume = 80
+    global stapgeluid
     if not sound:
         return
     else:
+        volume = 80
         if geluid == 0:
             sdl2.sdlmixer.Mix_FadeOutMusic(500)
             sdl2.sdlmixer.Mix_CloseAudio()
             return
         if sdl2.sdlmixer.Mix_PlayingMusic():  # controleren of dat muziek al gespeeld word
             return
-
         sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
+        if geluid == "concrete-footsteps":
+            sdl2.sdlmixer.Mix_PlayMusic(stapgeluid, -1)
         liedje = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/{geluid}.wav".encode())
         if not looped:
             sdl2.sdlmixer.Mix_PlayMusic(liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
@@ -285,7 +289,7 @@ def main_menu_nav():
         return
     if index > 2:
         index = 2
-    if index <0:
+    if index < 0:
         index = 0
 
 def main():
@@ -353,14 +357,12 @@ def main():
             delta = time.time() - start_time
             verwerk_input(delta)
             main_menu_nav()
-            #renderer.fill((0, 0, window.size[0], window.size[1]), kleuren[8])
             renderer.copy(achtergrond,
                           srcrect=(0, 0, achtergrond.size[0], achtergrond.size[1]),
                           dstrect=(0, 0, BREEDTE, HOOGTE))
             renderer.copy(menu_pointer,
                           srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
                           dstrect=(positie[0], positie[1], 80, 50))
-            renderText(font, renderer, "HIT SPACE TO CONTINUE", 20, HOOGTE-100, window)
             renderer.present()
 
 

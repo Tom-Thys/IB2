@@ -1,8 +1,8 @@
 import math
 import numpy as np
 from sdl2 import *
-from Raycaster import *
 
+from Raycaster import *
 
 class Player():
     def __init__(self, x, y, hoek, breedte=800):
@@ -38,8 +38,6 @@ class Player():
             atm = 0.3  # afstand_tot_muur zelfde bij auto
             x_2 = (x + atm * richting * self.r_speler[0])%x_dim
             y_2 = (y + atm * richting * self.r_speler[1])%y_dim
-
-
 
             if world_map[math.floor(y)][math.floor(x)] == 0 and \
                     world_map[math.floor(y_2)][math.floor(x_2)] == 0:
