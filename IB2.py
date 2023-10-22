@@ -9,11 +9,12 @@ import sdl2.sdlmixer
 from sdl2 import *
 from worlds import worldlijst
 from Classes import *
+from rendering import *
 
 
 # Constanten
-BREEDTE = 1000
-HOOGTE = 700
+BREEDTE = 800
+HOOGTE = 600
 
 POSITIE_START_GAME = [365, 253]
 POSITIE_SETTINGS = [300, 401]
@@ -23,7 +24,7 @@ POSITIE_QUIT_GAME = [420, 572]
 #
 game = False
 garage = False
-sound = True
+sound = False
 index = 0
 positie = [0,0]
 # wordt op True gezet als het spel afgesloten moet worden
@@ -45,8 +46,9 @@ speler.aanmaak_r_stralen(d_camera=d_camera)
 
 
 #world
-world_map = worldlijst[1]
-y_dim, x_dim = np.shape(world_map)
+wereld_nr = 0
+world_map = worldlijst[wereld_nr]
+#y_dim, x_dim = np.shape(world_map)
 
 # Vooraf gedefinieerde kleuren
 kleuren = [
@@ -59,6 +61,7 @@ kleuren = [
     sdl2.ext.Color(192, 192, 192),  # 6 = Licht grijs
     sdl2.ext.Color(255, 255, 255),  # 7 = Wit
     sdl2.ext.Color(120, 200, 250),  # 8 = Blauw_lucht
+    sdl2.ext.Color(106, 13, 173)    #9 = Purple
 ]
 
 
@@ -153,13 +156,13 @@ def verwerk_input(delta):
     if key_states[sdl2.SDL_SCANCODE_ESCAPE]:
         moet_afsluiten = True
 
-
+""" STAAT NU IN class Player
 def bereken_r_straal(kolom):
     r_straal_kolom = d_camera * r_speler + (1 - (2 * kolom) / BREEDTE) * r_cameravlak
     r_straal = np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom))
     return r_straal
 
-""" STAAT NU IN class Player
+
 def draaien(hoek):
     
     global r_cameravlak, r_speler, stralen
@@ -218,33 +221,6 @@ def renderText(font, renderer, text, x, y, window = 0):
         renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), y, text.size[0], text.size[1]))
     else:
         renderer.copy(text, dstrect=(x, y, text.size[0], text.size[1]))
-
-
-def draw_nav(renderer, wall_texture, speler, sprites = [], width = 200, height = 150, b_w = 10):
-    """
-    Rendert PNG van world map in linkerbovenhoek
-    Speler is zichtbaar in het midden
-    Sprites worden door een kleur aangegeven op de map
-    Navigatie naar volgende doel wordt via een lijn aangegeven op de map
-    :param width: Geeft aan hoe breed de wereld map standaard is
-    :param height: Geeft aan hoe hoog de wereld map standaard is
-    :param b_w: Aantal blokken links en rechts van speler op map worden getoond
-    """
-    breedte = wall_texture.size[0]
-    hoogte = wall_texture.size[1]
-    if speler.p_x - b_w < 0:
-        pass
-
-
-
-
-
-    x = width
-    y = x/breedte*hoogte
-    renderer.copy(wall_texture, srcrect=(0, 0, breedte, hoogte),
-                  dstrect=(0, 0, x, y))
-    unit_d = x/x_dim
-    renderer.draw_rect((unit_d, unit_d, (x_dim-2)*unit_d, (y_dim-2)*unit_d),kleuren[3])
 
 
 def render_floor_and_sky(renderer, window):
@@ -409,7 +385,7 @@ def main():
                 # (d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
                 # render_kolom(renderer, window, kolom, d_muur, k_muur)
                 renderen(renderer, window, i, d[i], v[i], kl[i], soort_muren)
-            draw_nav(renderer, map_textuur[0], speler)
+            draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             delta = time.time() - start_time
 
             verwerk_input(delta)

@@ -33,31 +33,24 @@ class Player():
             else:
                 self.car.brake()
         else:
-            x = self.p_x + richting * stap * self.r_speler[0]
-            y = self.p_y + richting * stap * self.r_speler[1]
+            x = (self.p_x + richting * stap * self.r_speler[0])%x_dim
+            y = (self.p_y + richting * stap * self.r_speler[1])%y_dim
             atm = 0.3  # afstand_tot_muur zelfde bij auto
-            if x < 0:
-                x += x_dim
-            elif x > x_dim:
-                x -= x_dim
-            if y < 0:
-                y += y_dim
-            elif y > y_dim:
-                y -= y_dim
+            x_2 = (x + atm * richting * self.r_speler[0])%x_dim
+            y_2 = (y + atm * richting * self.r_speler[1])%y_dim
+
+
 
             if world_map[math.floor(y)][math.floor(x)] == 0 and \
-                    world_map[math.floor(y + atm * richting * self.r_speler[1])][
-                        math.floor(x + atm * richting * self.r_speler[0])] == 0:
+                    world_map[math.floor(y_2)][math.floor(x_2)] == 0:
                 self.p_x = x
                 self.p_y = y
 
             if world_map[math.floor(y)][math.floor(self.p_x)] == 0 and \
-                    world_map[math.floor(y + atm * richting * self.r_speler[1])][
-                        math.floor(self.p_x + atm * richting * self.r_speler[0])] == 0:
+                    world_map[math.floor(y_2)][math.floor(self.p_x)] == 0:
                 self.p_y = y
             if world_map[math.floor(self.p_y)][math.floor(x)] == 0 and \
-                    world_map[math.floor(self.p_y + atm * richting * self.r_speler[1])][
-                        math.floor(x + atm * richting * self.r_speler[0])] == 0:
+                    world_map[math.floor(self.p_y)][math.floor(x_2)] == 0:
                 self.p_x = x
 
     def draaien(self, hoek):
@@ -82,11 +75,11 @@ class Player():
 
 
 class Auto():
-    def __init__(self, p_x, p_y, type=0, hitpoits=20, Player=0):
+    def __init__(self, p_x, p_y, type=0, hp=20, Player=0):
         self.p_x = p_x
         self.p_y = p_y
         self.type = type
-        self.hitpoints = hitpoits
+        self.hp = hp
         self.speed = 0
         self.vector = np.array([0, 0])
         self.afrem = 0.1

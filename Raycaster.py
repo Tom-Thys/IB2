@@ -218,8 +218,8 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
     delta_y = 1 / np.abs(r_stralen[:, 1])
 
     #Bij negatieve R_straal moeten we op de wereldmap 1 positie meer naar 0 toe schuiven.
-    richting_x = np.where(r_stralen[:, 0] >= 0, 0, -1)
-    richting_y = np.where(r_stralen[:, 1] >= 0, 0, -1)
+    richting_x = np.where(r_stralen[:, 0] >= 0, 0, 1)
+    richting_y = np.where(r_stralen[:, 1] >= 0, 0, 1)
 
     #initiele afstand berekenen
     d_v = np.where(r_stralen[:, 0] >= 0, (1 - (p_x - math.floor(p_x))) * delta_x, (p_x - math.floor(p_x)) * delta_x)
@@ -244,26 +244,27 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
 
         #Als op alle plekken break_cond == 0 return dan de bekomen waardes
         if np.all(~break_cond):
-            #kleuren astype int want numpy maakt er float64 van :(
             return d_muur, d_muur_vlak, kleuren
 
         #x en y berekenen adhv gegeven d_v of d_h en afronden op 3-8 zodat astype(int) niet afrond naar beneden terwijl het naar boven zou moeten
-        x = np.round(p_x + least_distance * r_stralen[:, 0], 5)
-        y = np.round(p_y + least_distance * r_stralen[:, 1], 5)
+        x = (p_x + least_distance * r_stralen[:, 0]).astype('float32')
+        y = (p_y + least_distance * r_stralen[:, 1]).astype('float32')
 
-        while np.any(np.logical_and.reduce((-4*x_dim < x, x <= 0))):
+        #infinity world
+        """while np.any(np.logical_and.reduce((-4 * x_dim < x, x <= 0))):
             x = np.where(x <= 0, x + x_dim, x)
-        while np.any(np.logical_and.reduce((-4 * y_dim < y, y <= 0))):
+        while np.any(np.logical_and.reduce((-4 * y_dim <= y, y <= 0))):
             y = np.where(y <= 0, y + y_dim, y)
-        while np.any(np.logical_and.reduce((y_dim < y, y < 5*y_dim))):
+        while np.any(np.logical_and.reduce((y_dim <= y, y < 5*y_dim))):
             y = np.where(y >= y_dim, y - y_dim, y)
+
         while np.any(np.logical_and.reduce((x_dim < x, x < 5*x_dim))):
-            x = np.where(x >= x_dim, x - x_dim, x)
+            x = np.where(x >= x_dim, x - x_dim, x)"""
 
 
         #World map neemt enkel int dus afronden naar beneden via astype(int) enkel als d_v genomen is moet correctie toegevoegd worden bij x
-        x_f = np.where(dist_cond, (x + richting_x).astype(int), x.astype(int))
-        y_f = np.where(~dist_cond, (y + richting_y).astype(int), y.astype(int))
+        x_f = np.where(dist_cond, (x - richting_x).astype(int), x.astype(int))
+        y_f = np.where(~dist_cond, (y - richting_y).astype(int), y.astype(int))
         """
         x_f = x_f%x_dim
         y_f = y_f%y_dim"""
@@ -284,6 +285,6 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         d_muur_vlak += np.where(muren_check * ~dist_cond, x, 0)
 
         # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
-        d_v += dist_cond * delta_x
-        d_h += (~dist_cond) * delta_y
+        d_v += dist_cond * ~muren_check * delta_x
+        d_h += (~dist_cond) * ~muren_check * delta_y
 
