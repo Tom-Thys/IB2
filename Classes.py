@@ -5,7 +5,7 @@ from sdl2 import *
 from Raycaster import *
 
 
-class Sprite:
+class Sprite():
     def __init__(self, image, x, y):
         self.image = image  # The image of the sprite
         self.x = x  # The x-coordinate of the sprite

@@ -238,11 +238,28 @@ def wheelSprite(renderer,window,sprite):
     y_pos = window_height - 230
     renderer.copy(sprite,dstrect=(x_pos,y_pos,250,250))
 
-def render_sprites(renderer,sprites,window):
+"""def render_sprites(renderer, sprites, player, camera_direction):
+    sprites.sort(key=lambda sprite: np.linalg.norm(sprite.position - player.position))#Sorteren op afstand
+
     for sprite in sprites:
+        # Bereken de richting van de sprite vanuit de speler
+        sprite_direction = sprite.position - player.position
+        sprite_distance = np.linalg.norm(sprite_direction)
+
+        # Bereken de grootte van de sprite op basis van de afstand
+        sprite_size = max(1, min(64, int(HOOGTE / sprite_distance)))
+
+        # Bereken de hoek tussen de kijkrichting van de speler en de sprite
+        sprite_angle = math.atan2(sprite_direction[1], sprite_direction[0]) - camera_direction
 
 
-        renderer.copy(sprite.image, dstrect=(sprite.x, sprite.y, sprite.image.size[0], sprite.image.size[1]))
+        screen_x = int((BREEDTE / 2) * (1 + sprite_angle / (70 / BREEDTE)))#Met 70 als field of view
+        screen_y = int(HOOGTE / 2)#wordt in het midden gezet
+
+        renderer.copy(sprite.texture, srcrect=(0, 0, sprite.texture.size[0], sprite.texture.size[1]),
+                dstrect=(screen_x - sprite_size // 2, screen_y - sprite_size // 2, sprite_size, sprite_size))
+"""
+
 def show_fps(font, renderer, window):
     fps_list = [1]
     loop_time = 0
@@ -342,8 +359,7 @@ def main():
         naam = f"map{i}.png"
         map_textuur.append(factory.from_image(map_resources.get_path(naam)))
 
-    sprites = []
-    sprites.append(Sprite(image=resources.get_path("Tree.png"), x=2, y=2))
+
 
 
 
@@ -360,6 +376,9 @@ def main():
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
     achtergrond = factory.from_image(resources.get_path("game_main_menu.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
+    wheel = factory.from_image(resources.get_path("Wheel.png"))
+    sprites = []
+    sprites.append(Sprite(image=resources.get_path("Tree.png"), x=2, y=2))
     while not moet_afsluiten:
         muziek_spelen("8-Bit Postman Pat")
         sdl2.SDL_SetRelativeMouseMode(False)
@@ -384,7 +403,7 @@ def main():
         sdl2.SDL_SetRelativeMouseMode(True)
         muziek_spelen("arcade_start", True)
 
-        sprite1 = factory.from_image(resources.get_path("Wheel.png"))
+
 
 
 
@@ -413,7 +432,7 @@ def main():
 
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler,sprites)
             delta = time.time() - start_time
-            wheelSprite(renderer,window,sprite1)
+            wheelSprite(renderer,window,wheel)
             verwerk_input(delta)
 
             # Toon de fps
