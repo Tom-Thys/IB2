@@ -242,14 +242,14 @@ def wheelSprite(renderer,window,sprite):
     sprites.sort(key=lambda sprite: np.linalg.norm(sprite.position - player.position))#Sorteren op afstand
 
     for sprite in sprites:
-        # Bereken de richting van de sprite vanuit de speler
+        # richting
         sprite_direction = sprite.position - player.position
         sprite_distance = np.linalg.norm(sprite_direction)
 
-        # Bereken de grootte van de sprite op basis van de afstand
+        # grootte
         sprite_size = max(1, min(64, int(HOOGTE / sprite_distance)))
 
-        # Bereken de hoek tussen de kijkrichting van de speler en de sprite
+        # hoek
         sprite_angle = math.atan2(sprite_direction[1], sprite_direction[0]) - camera_direction
 
 
