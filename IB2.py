@@ -233,16 +233,14 @@ def render_floor_and_sky(renderer, window):
 
 
 def wheelSprite(renderer,window,sprite):
-    window_width, window_height = window.size  # Get the window size
-    x_pos = (window_width - 250) // 2  # Calculate X position to center horizontally
+    window_width, window_height = window.size
+    x_pos = (window_width - 250) // 2
     y_pos = window_height - 230
     renderer.copy(sprite,dstrect=(x_pos,y_pos,250,250))
+
 def render_sprites(renderer,sprites,window):
     for sprite in sprites:
-        # Hier wordt 'sprite' verwacht als een object met de volgende eigenschappen:
-        # sprite.image: de afbeelding van de sprite
-        # sprite.x: de x-positie van de sprite op het scherm
-        # sprite.y: de y-positie van de sprite op het scherm
+
 
         renderer.copy(sprite.image, dstrect=(sprite.x, sprite.y, sprite.image.size[0], sprite.image.size[1]))
 def show_fps(font, renderer, window):
