@@ -232,7 +232,19 @@ def render_floor_and_sky(renderer, window):
     renderer.fill((0, window.size[1] // 2, window.size[0], window.size[1] // 2), kleuren[5])
 
 
+def wheelSprite(renderer,window,sprite):
+    window_width, window_height = window.size  # Get the window size
+    x_pos = (window_width - 250) // 2  # Calculate X position to center horizontally
+    y_pos = window_height - 230
+    renderer.copy(sprite,dstrect=(x_pos,y_pos,250,250))
+def render_sprites(renderer,sprites,window):
+    for sprite in sprites:
+        # Hier wordt 'sprite' verwacht als een object met de volgende eigenschappen:
+        # sprite.image: de afbeelding van de sprite
+        # sprite.x: de x-positie van de sprite op het scherm
+        # sprite.y: de y-positie van de sprite op het scherm
 
+        renderer.copy(sprite.image, dstrect=(sprite.x, sprite.y, sprite.image.size[0], sprite.image.size[1]))
 def show_fps(font, renderer, window):
     fps_list = [1]
     loop_time = 0
@@ -332,6 +344,9 @@ def main():
         naam = f"map{i}.png"
         map_textuur.append(factory.from_image(map_resources.get_path(naam)))
 
+    sprites = []
+    sprites.append(Sprite(image=resources.get_path("Tree.png"), x=2, y=2))
+
 
 
     # Initialiseer font voor de fps counter
@@ -370,13 +385,22 @@ def main():
 
         sdl2.SDL_SetRelativeMouseMode(True)
         muziek_spelen("arcade_start", True)
+
+        sprite1 = factory.from_image(resources.get_path("Wheel.png"))
+
+
+
         while game and not moet_afsluiten and not garage:
             # Onthoud de huidige tijd
             start_time = time.time()
             # Reset de rendering context
             renderer.clear()
             render_floor_and_sky(renderer, window)
+            #render_sprites(renderer,sprites,window)
             # Render de huidige frame
+
+
+
 
             #muren = speler.raycasting(world_map, muren)
             (k, d, v, kl) = speler.n_raycasting(world_map)
@@ -387,9 +411,11 @@ def main():
                 # (d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
                 # render_kolom(renderer, window, kolom, d_muur, k_muur)
                 renderen(renderer, window, i, d[i], v[i], kl[i], soort_muren)
-            draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
-            delta = time.time() - start_time
 
+
+            draw_nav(renderer, world_map, map_textuur[wereld_nr], speler,sprites)
+            delta = time.time() - start_time
+            wheelSprite(renderer,window,sprite1)
             verwerk_input(delta)
 
             # Toon de fps

@@ -2,7 +2,7 @@ import numpy as np
 from IB2 import kleuren
 import math
 
-def draw_nav(renderer, map, plattegrond, speler, sprites=[], b_w=3):
+def draw_nav(renderer, map, plattegrond, speler, sprites, b_w=3):
     """
     Rendert PNG van world map in linkerbovenhoek
     Speler is zichtbaar in het midden
@@ -52,3 +52,5 @@ def draw_nav(renderer, map, plattegrond, speler, sprites=[], b_w=3):
                   dstrect=(0, 0, x, y))
     unit_d = x/x_dim
     renderer.fill(((speler.p_x-0.25)*unit_d,(speler.p_y-0.25)*unit_d,unit_d/2,unit_d/2),kleuren[9])
+    #for sprite in sprites:
+       #renderer.copy(sprite.image, dstrect=(int(sprite.x), int(sprite.y), sprite.image.size[0], sprite.image.size[1]))
