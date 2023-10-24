@@ -1,9 +1,6 @@
 import numpy as np
 from IB2 import kleuren
 
-import cv2
-import argparse
-
 
 
 import math
