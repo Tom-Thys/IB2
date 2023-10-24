@@ -11,6 +11,8 @@ class Sprite():
         self.x = x  # The x-coordinate of the sprite
         self.y = y  # The y-coordinate of the sprite
         self.position = (x,y)
+        self.breedte = image.size[0]
+        self.hoogte = image.size[1]
 
 
 
