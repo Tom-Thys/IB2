@@ -10,6 +10,8 @@ class Sprite():
         self.image = image  # The image of the sprite
         self.x = x  # The x-coordinate of the sprite
         self.y = y  # The y-coordinate of the sprite
+        self.position = (x,y)
+
 
 
 class Player():
@@ -24,7 +26,7 @@ class Player():
         self.r_stralen = np.zeros((breedte, 2))
         self.breedte = breedte
         self.car = 0
-        self.in_auto = True
+        self.in_auto = False
 
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""

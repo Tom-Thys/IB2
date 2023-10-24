@@ -216,23 +216,23 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def renderText(font, renderer, text, x, y, window = 0):
+def renderText(font, renderer, text, x, y, midden = False):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
-    if window:
-        renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), y, text.size[0], text.size[1]))
+    if midden:
+        renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), y, text.size[0], text.size[1]))
     else:
         renderer.copy(text, dstrect=(x, y, text.size[0], text.size[1]))
 
 
 def render_floor_and_sky(renderer, window):
     # SKY in blauw
-    renderer.fill((0, 0, window.size[0], window.size[1] // 2), kleuren[8])
+    renderer.fill((0, 0, BREEDTE, HOOGTE // 2), kleuren[8])
     # Floor in grijs
-    renderer.fill((0, window.size[1] // 2, window.size[0], window.size[1] // 2), kleuren[5])
+    renderer.fill((0, HOOGTE // 2, BREEDTE, HOOGTE // 2), kleuren[5])
 
 
-def wheelSprite(renderer,window,sprite):
-    window_width, window_height = window.size
+def wheelSprite(renderer,sprite):
+    window_width, window_height = BREEDTE, HOOGTE
     x_pos = (window_width - 250) // 2
     y_pos = window_height - 230
     renderer.copy(sprite,dstrect=(x_pos,y_pos,250,250))
@@ -428,7 +428,7 @@ def main():
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             delta = time.time() - start_time
             if speler.in_auto:
-                wheelSprite(renderer,window,wheel)
+                wheelSprite(renderer, wheel)
 
             verwerk_input(delta)
 
