@@ -251,10 +251,9 @@ def render_sprites(renderer, sprites, player):
 
         # hoek        
         sprite_direction = (sprite.x-player.p_x,sprite.y-player.p_y)
-        sprite_angle = math.atan2(sprite_direction[1], sprite_direction[0]) - speler.hoek
 
 
-        screen_x = int(((BREEDTE -sprite_size_breedte) / 2) * (1 + sprite_angle / (90 / BREEDTE)))
+        screen_x = int((BREEDTE -sprite_size_breedte)/2)
         screen_y = int((HOOGTE - sprite_size_hoogte) / 2)#wordt in het midden gezet
 
         renderer.copy(sprite.image,dstrect=(screen_x,screen_y, sprite_size_breedte,sprite_size_hoogte))
