@@ -1,3 +1,7 @@
+#import cProfile
+#import pstats
+#from line_profiler_pycharm import profile
+
 import math
 import time
 import random
@@ -24,10 +28,15 @@ POSITIE_QUIT_GAME = [420, 572]
 #
 game = False
 garage = False
-sound = False
+sound = True
 index = 0
 positie = [0,0]
-stapgeluid = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/concrete-footsteps.wav".encode())
+geluiden = [
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),
+    sdl2.sdlmixer.Mix_LoadWAV("muziek/arcade_select.wav".encode()),
+    sdl2.sdlmixer.Mix_LoadWAV("muziek/arcade_start.wav".encode()),
+    sdl2.sdlmixer.Mix_LoadWAV("muziek/concrete-footsteps.wav".encode())
+]
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
 
@@ -72,6 +81,7 @@ kleuren = [
 # Argumenten:
 # @delta       Tijd in milliseconden sinds de vorige oproep van deze functie
 #
+
 def verwerk_input(delta):
     global moet_afsluiten, game, garage, index
 
@@ -216,7 +226,7 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def renderText(font, renderer, text, x, y, midden = False):
+def renderText(font, renderer, text, x, y, window = 0):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     if midden:
         renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), y, text.size[0], text.size[1]))
@@ -281,29 +291,20 @@ def show_fps(font, renderer):
         yield fps
 
 
-def muziek_spelen(geluid, looped = False):
-    global stapgeluid
+def muziek_spelen(geluid, looped=False):
+    global geluiden
     if not sound:
         return
-    else:
-        volume = 80
-        if geluid == 0:
-            sdl2.sdlmixer.Mix_FadeOutMusic(500)
-            sdl2.sdlmixer.Mix_CloseAudio()
-            return
-        if sdl2.sdlmixer.Mix_PlayingMusic():  # controleren of dat muziek al gespeeld word
-            return
-        sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
-        if geluid == "concrete-footsteps":
-            sdl2.sdlmixer.Mix_PlayMusic(stapgeluid, -1)
-        liedje = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/{geluid}.wav".encode())
-        if not looped:
-            sdl2.sdlmixer.Mix_PlayMusic(liedje, -1)  # channel, chunk, loops: channel = -1(channel maakt niet uit), chunk = Mix_LoadWAV(moet WAV zijn), loops = -1: oneindig lang
-        else:
-            sdl2.sdlmixer.Mix_PlayMusic(liedje, 0)
-        if geluid == "8-Bit Postman Pat":
-            volume = 64
-        sdl2.sdlmixer.Mix_MasterVolume(volume)  # volume 0-127, we kunnen nog slider implementen / afhankelijk van welk geluid het volume aanpassen
+    liedjes = {
+        "main menu": geluiden[0],
+        "main menu select": geluiden[1],
+        "game start": geluiden[2],
+        "footsteps": geluiden[3]
+    }
+    print(liedjes[geluid])
+    sdl2.sdlmixer.Mix_PlayChannel(1, liedjes[geluid], -1)
+    print(sdl2.sdlmixer.Mix_AllocateChannels(-1))
+
 
 def main_menu_nav():
     global index, positie
@@ -377,7 +378,10 @@ def main():
 
 
     #Start  audio
-    sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
+    sdl2.sdlmixer.Mix_OpenAudioDevice(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024, None, SDL_AUDIO_ALLOW_ANY_CHANGE)
+    sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
+    #sdl2.sdlmixer.Mix_AllocateChannels(4)
+    #sdl2.sdlmixer.Mix_MasterVolume(80)
     achtergrond = factory.from_image(resources.get_path("game_main_menu.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
 
@@ -385,12 +389,12 @@ def main():
     t = []
 
     while not moet_afsluiten:
-        muziek_spelen("8-Bit Postman Pat")
+        muziek_spelen("main menu")
         sdl2.SDL_SetRelativeMouseMode(False)
         while not game and not moet_afsluiten and not garage:
             start_time = time.time()
             renderer.clear()
-            muziek_spelen("8-Bit Postman Pat")
+            #muziek_spelen("main menu")
             delta = time.time() - start_time
             verwerk_input(delta)
             main_menu_nav()
@@ -403,10 +407,10 @@ def main():
             renderer.present()
 
 
-        muziek_spelen(0)
+        #muziek_spelen(0)
 
         sdl2.SDL_SetRelativeMouseMode(True)
-        muziek_spelen("arcade_start", True)
+        #muziek_spelen("arcade_start", True)
 
 
 
@@ -446,4 +450,9 @@ def main():
 
 
 if __name__ == '__main__':
+    #profiler = cProfile.Profile()
+    #profiler.enable()
     main()
+    #profiler.disable()
+    #stats = pstats.Stats(profiler)
+    #stats.dump_stats('data.prof')
