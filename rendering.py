@@ -24,7 +24,7 @@ def draw_nav(renderer, map, plattegrond, speler, sprites = [], b_w=3):
     blok_d = breedte / x_dim  # = hoogte/y_dim
     unit_d = width / x_dim
     # Check welk type wereld getoond moet worden
-    if x_dim < 2 * b_w:
+    """if x_dim < 2 * b_w:
         b_h = x_dim * height / width
         print(b_h)
         if y_dim < 2 * b_h:
@@ -38,8 +38,8 @@ def draw_nav(renderer, map, plattegrond, speler, sprites = [], b_w=3):
             h_max = speler.p_y + b_h
             renderer.copy(plattegrond, srcrect=(0, h_min * blok_d, breedte, scherm_h*hoogte),
                           dstrect=(0, height - scherm_h*height, width, scherm_h*height))
-            """renderer.copy(plattegrond, srcrect=(0, 0, breedte, h_max * blok_d),
-                          dstrect=(0, 0, width, height - scherm_h))"""
+            renderer.copy(plattegrond, srcrect=(0, 0, breedte, h_max * blok_d),
+                          dstrect=(0, 0, width, height - scherm_h))
         elif speler.p_y > y_dim - b_h:
             pass
         else:
@@ -47,7 +47,7 @@ def draw_nav(renderer, map, plattegrond, speler, sprites = [], b_w=3):
     else:
         b_h = b_w * height / width
 
-        pass
+        pass"""
 
     x = width
     y = x/breedte*hoogte

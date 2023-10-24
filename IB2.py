@@ -201,7 +201,7 @@ def move(dir, stap):
 def render_kolom(renderer, window, kolom, d_muur, k_muur):
     d_muur = d_muur * 2
     renderer.draw_line((kolom, window.size[1] / 2 - window.size[1] * (1 / d_muur), kolom,
-                        window.size[1] / 2 + window.size[1] * (1 / d_muur)), kleuren[k_muur])
+                        window.size[1] / 2 + [1] * (1 / d_muur)), kleuren[k_muur])
     return
 
 
@@ -221,29 +221,29 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
+def renderText(font, renderer, text, x, y, midden = False):
 
 def renderText(font, renderer, text, x, y, window = 0):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
-    if window:
-        renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), y, text.size[0], text.size[1]))
+    if midden:
+        renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), y, text.size[0], text.size[1]))
     else:
         renderer.copy(text, dstrect=(x, y, text.size[0], text.size[1]))
 
 
-def render_floor_and_sky(renderer, window):
+def render_floor_and_sky(renderer):
     # SKY in blauw
-    renderer.fill((0, 0, window.size[0], window.size[1] // 2), kleuren[8])
+    renderer.fill((0, 0, BREEDTE, HOOGTE // 2), kleuren[8])
     # Floor in grijs
-    renderer.fill((0, window.size[1] // 2, window.size[0], window.size[1] // 2), kleuren[5])
+    renderer.fill((0, HOOGTE // 2, BREEDTE, HOOGTE // 2), kleuren[5])
 
 
-def wheelSprite(renderer,window,sprite):
-    window_width, window_height = window.size
-    x_pos = (window_width - 250) // 2
-    y_pos = window_height - 230
+def wheelSprite(renderer,sprite):
+    x_pos = (BREEDTE - 250) // 2
+    y_pos = HOOGTE - 230
     renderer.copy(sprite,dstrect=(x_pos,y_pos,250,250))
 
-"""def render_sprites(renderer, sprites, player, camera_direction):
+def render_sprites(renderer, sprites, player, camera_direction):
     sprites.sort(key=lambda sprite: np.linalg.norm(sprite.position - player.position))#Sorteren op afstand
 
     for sprite in sprites:
@@ -263,9 +263,9 @@ def wheelSprite(renderer,window,sprite):
 
         renderer.copy(sprite.texture, srcrect=(0, 0, sprite.texture.size[0], sprite.texture.size[1]),
                 dstrect=(screen_x - sprite_size // 2, screen_y - sprite_size // 2, sprite_size, sprite_size))
-"""
 
-def show_fps(font, renderer, window):
+
+def show_fps(font, renderer):
     fps_list = [1]
     loop_time = 0
 
@@ -282,10 +282,9 @@ def show_fps(font, renderer, window):
         if len(fps_list) == 20:
             fps_list.pop(0)
         text = sdl2.ext.renderer.Texture(renderer, font.render_text(f'{fps:.2f} fps'))
-        renderer.copy(text, dstrect=(int((window.size[0] - text.size[0]) / 2), 20,
+        renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), 20,
                                      text.size[0], text.size[1]))
         yield fps
-
 
 
 def muziek_spelen(geluid, looped = False):
@@ -378,7 +377,7 @@ def main():
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
-    fps_generator = show_fps(font, renderer, window)
+    fps_generator = show_fps(font, renderer)
 
 
     #Start  audio
@@ -422,7 +421,7 @@ def main():
             start_time = time.time()
             # Reset de rendering context
             renderer.clear()
-            render_floor_and_sky(renderer, window)
+            render_floor_and_sky(renderer)
             # Render de huidige frame
 
             (d, v, kl) = speler.n_raycasting(world_map)
@@ -434,7 +433,7 @@ def main():
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             delta = time.time() - start_time
             if speler.in_auto:
-                wheelSprite(renderer,window,wheel)
+                wheelSprite(renderer, wheel)
 
             verwerk_input(delta)
 
