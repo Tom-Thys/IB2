@@ -1,8 +1,14 @@
 import numpy as np
 from IB2 import kleuren
+
+import cv2
+import argparse
+
+
+
 import math
 
-def draw_nav(renderer, map, plattegrond, speler, sprites, b_w=3):
+def draw_nav(renderer, map, plattegrond, speler, sprites = [], b_w=3):
     """
     Rendert PNG van world map in linkerbovenhoek
     Speler is zichtbaar in het midden

@@ -16,6 +16,7 @@ class Player():
     def __init__(self, x, y, hoek, breedte=800):
         """Player is gedefinieerd door zijn start x-, y-coördinaten (floats), kijkhoek (rad) en
          de breedte (int) van het scherm dat hij opneemt"""
+        self.position = (x, y)
         self.p_x = x
         self.p_y = y
         self.hoek = hoek
@@ -23,6 +24,7 @@ class Player():
         self.r_stralen = np.zeros((breedte, 2))
         self.breedte = breedte
         self.car = 0
+        self.in_auto = True
 
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""
@@ -34,7 +36,6 @@ class Player():
     def move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
-        # print(self.r_speler,[self.p_x,self.p_y])
         if type(self.car) != int:
             if richting == 1:
                 self.car.accelerate(world_map)
@@ -51,13 +52,16 @@ class Player():
                     world_map[math.floor(y_2)][math.floor(x_2)] == 0:
                 self.p_x = x
                 self.p_y = y
+                self.position = (x,y)
 
             if world_map[math.floor(y)][math.floor(self.p_x)] == 0 and \
                     world_map[math.floor(y_2)][math.floor(self.p_x)] == 0:
                 self.p_y = y
+                self.position = (self.p_x,y)
             if world_map[math.floor(self.p_y)][math.floor(x)] == 0 and \
                     world_map[math.floor(self.p_y)][math.floor(x_2)] == 0:
                 self.p_x = x
+                self.position = (x,self.p_y)
 
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""
@@ -72,16 +76,17 @@ class Player():
         if self.car != 0:
             self.car.draaien(hoek, draai_matrix)
 
+
     def n_raycasting(self, world_map):
         """Gebruik maken van de numpy raycaster om de afstanden en kleuren van muren te bepalen
         Neemt world map in zodat er gemakkelijk van map kan gewisseld worden"""
-        kolom = np.arange(self.breedte)
-        d, v, kl = numpy_raycaster(self.p_x, self.p_y, self.r_stralen, self.r_speler, self.breedte, world_map)
-        return kolom, d, v, kl
+        return numpy_raycaster(self.p_x, self.p_y, self.r_stralen, self.r_speler, self.breedte, world_map)
+
 
 
 class Auto():
     def __init__(self, p_x, p_y, type=0, hp=20, Player=0):
+        self.position = (p_x,p_y)
         self.p_x = p_x
         self.p_y = p_y
         self.type = type
@@ -113,7 +118,7 @@ class Auto():
             if self.player_inside:
                 self.Player.p_x = x
                 self.Player.p_y = y
-                self.Player.changes = True
+                self.Player.position = (x,y)
 
     def brake(self):
         if self.speed > self.afrem:
@@ -148,3 +153,4 @@ class Auto():
 
     def hitting(self, object):
         self.hitpoints -= 1
+

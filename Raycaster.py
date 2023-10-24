@@ -244,13 +244,14 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
 
         #Als op alle plekken break_cond == 0 return dan de bekomen waardes
         if np.all(~break_cond):
-            return d_muur, d_muur_vlak, kleuren
+            return (10 / d_muur), (d_muur_vlak % 1), (kleuren-1)
 
         #x en y berekenen adhv gegeven d_v of d_h en afronden op 3-8 zodat astype(int) niet afrond naar beneden terwijl het naar boven zou moeten
+        #AANPASSING: Zolang we geen modulo doen rond float 32 ook perfect af naar boven als het moet en is sneller
         x = (p_x + least_distance * r_stralen[:, 0]).astype('float32')
         y = (p_y + least_distance * r_stralen[:, 1]).astype('float32')
 
-        #infinity world
+        #infinity world try-out
         """while np.any(np.logical_and.reduce((-4 * x_dim < x, x <= 0))):
             x = np.where(x <= 0, x + x_dim, x)
         while np.any(np.logical_and.reduce((-4 * y_dim <= y, y <= 0))):
@@ -265,14 +266,16 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         #World map neemt enkel int dus afronden naar beneden via astype(int) enkel als d_v genomen is moet correctie toegevoegd worden bij x
         x_f = np.where(dist_cond, (x - richting_x).astype(int), x.astype(int))
         y_f = np.where(~dist_cond, (y - richting_y).astype(int), y.astype(int))
-        """
-        x_f = x_f%x_dim
-        y_f = y_f%y_dim"""
+
 
         #Logica: x_f moet tussen 0 en x_dim blijven en y_f tussen 0 en y_dim
         #Deze tellen ook enkel maar als de break conditie niet telt
-        valid = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map)))
-        valid_indices = valid * break_cond
+        valid_indices = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map),break_cond))
+
+
+        """HIER LOGICA INVOEGEN VOOR ALS EEN RAY OUT OF BOUND GAAT --> Map herwerken"""
+
+
         muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]], True, False)
         #op de plekken waar logica correct is kijken of we een muur raken
 
@@ -285,6 +288,6 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         d_muur_vlak += np.where(muren_check * ~dist_cond, x, 0)
 
         # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
-        d_v += dist_cond * ~muren_check * delta_x
-        d_h += (~dist_cond) * ~muren_check * delta_y
+        d_v += dist_cond * delta_x
+        d_h += (~dist_cond) * delta_y
 

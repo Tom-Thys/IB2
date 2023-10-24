@@ -24,7 +24,7 @@ POSITIE_QUIT_GAME = [420, 572]
 #
 game = False
 garage = False
-sound = True
+sound = False
 index = 0
 positie = [0,0]
 stapgeluid = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/concrete-footsteps.wav".encode())
@@ -108,13 +108,14 @@ def verwerk_input(delta):
                     index += 1
                 if key == sdl2.SDLK_UP:
                     index -= 1
-                if key == sdl2.SDLK_SPACE and index == 0:
-                    game = True
-                if key == sdl2.SDLK_SPACE and index == 1:
-                    break
-                if key == sdl2.SDLK_SPACE and index == 2:
-                    moet_afsluiten = True
-                    break
+                if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
+                    if index ==0:
+                        game = True
+                    if index == 1:
+                        pass
+                    if index == 2:
+                        moet_afsluiten = True
+                        break
             if not moet_afsluiten and game:
                 if key == sdl2.SDLK_m:
                     game = False
@@ -199,22 +200,20 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
     return
 
 
-def renderen(renderer, window, kolom, d_muur, unit_d, k_muur, soort_muren):
-
-    if k_muur != 0:
-        wall_texture = soort_muren[k_muur - 1]
-        breedte = wall_texture.size[0]
-        # rij = kolom % breedte
-        rij = (unit_d % 1) * breedte
-        hoogte = wall_texture.size[1]
-        d_muur = 10 / d_muur
-        textuur_x = rij
-        textuur_y = 0
-        scherm_x = 10
-        kolom = BREEDTE-kolom
-        scherm_y = window.size[1] / 2
-        renderer.copy(wall_texture, srcrect=(textuur_x, textuur_y, 1, 100),
-                      dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
+def renderen(renderer, d, d_v, k, soort_muren, muren_info):
+    for kolom in range(BREEDTE):
+        d_muur = d[kolom]
+        unit_d = d_v[kolom]
+        k_muur = k[kolom]
+        if k_muur >= 0:
+            wall_texture = soort_muren[k_muur]
+            breedte, hoogte = muren_info[k_muur]
+            rij = unit_d * breedte
+            #d_muur = 10 / d_muur
+            kolom = BREEDTE-kolom
+            scherm_y = HOOGTE / 2
+            renderer.copy(wall_texture, srcrect=(rij, 0, 1, 100),
+                          dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
 def renderText(font, renderer, text, x, y, window = 0):
@@ -265,10 +264,13 @@ def show_fps(font, renderer, window):
     loop_time = 0
 
     while True:
-        if (time.time() - loop_time) != 0:
+        fps_list.append(1 / (time.time() - loop_time))
+        """if fps_list[-1] > 190:
+            print(fps_list[-1])"""
+        """if (time.time() - loop_time) != 0:
             fps_list.append(1 / (time.time() - loop_time))
-            #print(min(fps_list))
-            loop_time = time.time()
+            #print(min(fps_list))"""
+        loop_time = time.time()
 
         fps = sum(fps_list) / len(fps_list)
         if len(fps_list) == 20:
@@ -326,7 +328,6 @@ def main():
     sdl2.sdlmixer.Mix_Init(0)
 
 
-
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
     window.show()
@@ -351,6 +352,11 @@ def main():
         factory.from_image(resources.get_path("yellow_house.png")),  # 4
         factory.from_image(resources.get_path("Gruis_house.png"))  # 5
     ]
+    muren_info = []
+    for i,muur in enumerate(soort_muren):
+        muren_info.append((muur.size[0], muur.size[1]))
+
+
     # Inladen wereld_mappen
     map_resources = sdl2.ext.Resources(__file__,"mappen")
     # alle mappen opslaan in sdl2 textures
@@ -359,26 +365,24 @@ def main():
         naam = f"map{i}.png"
         map_textuur.append(factory.from_image(map_resources.get_path(naam)))
 
-
-
-
+    #Inladen sprites
+    wheel = factory.from_image(resources.get_path("Wheel.png"))
+    sprites = []
+    sprites.append(Sprite(image=resources.get_path("Tree.png"), x=2, y=2))
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
     fps_generator = show_fps(font, renderer, window)
 
-    # Blijf frames renderen tot we het signaal krijgen dat we moeten afsluiten
 
-
-
-    #muren = speler.raycasting(world_map)
-    #(k, d,v,kl) = speler.n_raycasting(world_map)
+    #Start  audio
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 1, 1024)  # 44100 = 16 bit, cd kwaliteit
     achtergrond = factory.from_image(resources.get_path("game_main_menu.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
-    wheel = factory.from_image(resources.get_path("Wheel.png"))
-    sprites = []
-    sprites.append(Sprite(image=resources.get_path("Tree.png"), x=2, y=2))
+
+    #Test Variable
+    t = []
+
     while not moet_afsluiten:
         muziek_spelen("8-Bit Postman Pat")
         sdl2.SDL_SetRelativeMouseMode(False)
@@ -413,26 +417,19 @@ def main():
             # Reset de rendering context
             renderer.clear()
             render_floor_and_sky(renderer, window)
-            #render_sprites(renderer,sprites,window)
             # Render de huidige frame
 
+            (d, v, kl) = speler.n_raycasting(world_map)
 
+            t1 = time.time()
+            renderen(renderer, d, v, kl, soort_muren, muren_info)
 
-
-            #muren = speler.raycasting(world_map, muren)
-            (k, d, v, kl) = speler.n_raycasting(world_map)
-            #print(k, d, v, kl)
-
-            for i in k:
-                # r_straal = bereken_r_straal(kolom)
-                # (d_muur, k_muur) = raycast_4(p_speler_x, p_speler_y, r_straal)
-                # render_kolom(renderer, window, kolom, d_muur, k_muur)
-                renderen(renderer, window, i, d[i], v[i], kl[i], soort_muren)
-
-
-            draw_nav(renderer, world_map, map_textuur[wereld_nr], speler,sprites)
+            #t.append(time.time()-t1)
+            draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             delta = time.time() - start_time
-            wheelSprite(renderer,window,wheel)
+            if speler.in_auto:
+                wheelSprite(renderer,window,wheel)
+
             verwerk_input(delta)
 
             # Toon de fps
@@ -440,6 +437,7 @@ def main():
 
             # Verwissel de rendering context met de frame buffer
             renderer.present()
+            #print(sum(t)/len(t))
 
     # Sluit SDL2 af
     sdl2.ext.quit()
