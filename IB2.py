@@ -1,3 +1,7 @@
+#import cProfile
+#import pstats
+#from line_profiler_pycharm import profile
+
 import math
 import time
 import random
@@ -22,9 +26,9 @@ POSITIE_QUIT_GAME = [420, 572]
 #
 # Globale variabelen
 #
-game = False
+game = True
 garage = False
-sound = False
+sound = True
 index = 0
 positie = [0,0]
 stapgeluid = sdl2.sdlmixer.Mix_LoadMUS(f"muziek/concrete-footsteps.wav".encode())
@@ -72,6 +76,7 @@ kleuren = [
 # Argumenten:
 # @delta       Tijd in milliseconden sinds de vorige oproep van deze functie
 #
+
 def verwerk_input(delta):
     global moet_afsluiten, game, garage, index
 
@@ -216,6 +221,7 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
+
 def renderText(font, renderer, text, x, y, window = 0):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     if window:
@@ -281,6 +287,7 @@ def show_fps(font, renderer, window):
         yield fps
 
 
+
 def muziek_spelen(geluid, looped = False):
     global stapgeluid
     if not sound:
@@ -288,7 +295,6 @@ def muziek_spelen(geluid, looped = False):
     else:
         volume = 80
         if geluid == 0:
-            sdl2.sdlmixer.Mix_FadeOutMusic(500)
             sdl2.sdlmixer.Mix_CloseAudio()
             return
         if sdl2.sdlmixer.Mix_PlayingMusic():  # controleren of dat muziek al gespeeld word
@@ -444,4 +450,9 @@ def main():
 
 
 if __name__ == '__main__':
+    #profiler = cProfile.Profile()
+    #profiler.enable()
     main()
+    #profiler.disable()
+    #stats = pstats.Stats(profiler)
+    #stats.dump_stats('data.prof')
