@@ -246,26 +246,27 @@ def wheelSprite(renderer,sprite):
     y_pos = HOOGTE - 230
     renderer.copy(sprite,dstrect=(x_pos,y_pos,250,250))
 
-def render_sprites(renderer, sprites, player, camera_direction):
-    sprites.sort(key=lambda sprite: np.linalg.norm(sprite.position - player.position))#Sorteren op afstand
+def render_sprites(renderer, sprites, player):
+    sprites.sort(reverse=True, key=lambda sprite: np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2))#Sorteren op afstand
 
     for sprite in sprites:
         # richting
-        sprite_direction = sprite.position - player.position
-        sprite_distance = np.linalg.norm(sprite_direction)
+        sprite_distance = np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2)
 
+
+        if sprite_distance >= 60:continue;
         # grootte
-        sprite_size = max(1, min(64, int(HOOGTE / sprite_distance)))
+        sprite_size_breedte = sprite.breedte/sprite_distance*10
+        sprite_size_hoogte = sprite.hoogte/sprite_distance*10
 
-        # hoek
-        sprite_angle = math.atan2(sprite_direction[1], sprite_direction[0]) - camera_direction
+        # hoek        
+        sprite_direction = (sprite.x-player.p_x,sprite.y-player.p_y)
 
 
-        screen_x = int((BREEDTE / 2) * (1 + sprite_angle / (70 / BREEDTE)))#Met 70 als field of view
-        screen_y = int(HOOGTE / 2)#wordt in het midden gezet
+        screen_x = int((BREEDTE -sprite_size_breedte)/2)
+        screen_y = int((HOOGTE - sprite_size_hoogte) / 2)#wordt in het midden gezet
 
-        renderer.copy(sprite.texture, srcrect=(0, 0, sprite.texture.size[0], sprite.texture.size[1]),
-                dstrect=(screen_x - sprite_size // 2, screen_y - sprite_size // 2, sprite_size, sprite_size))
+        renderer.copy(sprite.image,dstrect=(screen_x,screen_y, sprite_size_breedte,sprite_size_hoogte))
 
 
 def show_fps(font, renderer):
@@ -368,7 +369,8 @@ def main():
     #Inladen sprites
     wheel = factory.from_image(resources.get_path("Wheel.png"))
     sprites = []
-    sprites.append(Sprite(image=resources.get_path("Tree.png"), x=2, y=2))
+    tree = factory.from_image(resources.get_path("Tree.png"))
+    sprites.append(Sprite(tree, x=2, y=2))
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
@@ -427,6 +429,7 @@ def main():
             t1 = time.time()
             renderen(renderer, d, v, kl, soort_muren, muren_info)
 
+            render_sprites(renderer, sprites, speler)
             #t.append(time.time()-t1)
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             delta = time.time() - start_time
