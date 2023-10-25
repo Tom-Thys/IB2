@@ -31,12 +31,7 @@ garage = False
 sound = True
 index = 0
 positie = [0,0]
-geluiden = [
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),
-    sdl2.sdlmixer.Mix_LoadWAV("muziek/arcade_select.wav".encode()),
-    sdl2.sdlmixer.Mix_LoadWAV("muziek/arcade_start.wav".encode()),
-    sdl2.sdlmixer.Mix_LoadWAV("muziek/concrete-footsteps.wav".encode())
-]
+
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
 
@@ -116,8 +111,10 @@ def verwerk_input(delta):
             if not moet_afsluiten and not game:
                 if key == sdl2.SDLK_DOWN:
                     index += 1
+                    #muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_UP:
                     index -= 1
+                    #muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if index ==0:
                         game = True
@@ -133,6 +130,8 @@ def verwerk_input(delta):
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
+                pass
+            if not moet_afsluiten and game:
                 pass
         # Analoog aan SDL_KEYDOWN. Dit event wordt afgeleverd wanneer de
         # gebruiker een muisknop indrukt
@@ -259,7 +258,7 @@ def render_sprites(renderer, sprites, player):
         sprite_size_breedte = sprite.breedte/sprite_distance*10
         sprite_size_hoogte = sprite.hoogte/sprite_distance*10
 
-        # hoek        
+        # hoek
 
 
 
@@ -291,19 +290,32 @@ def show_fps(font, renderer):
         yield fps
 
 
-def muziek_spelen(geluid, looped=False):
-    global geluiden
+def muziek_spelen(geluid, looped=False, channel = 1):
     if not sound:
         return
-    liedjes = {
-        "main menu": geluiden[0],
-        "main menu select": geluiden[1],
-        "game start": geluiden[2],
-        "footsteps": geluiden[3]
-    }
-    print(liedjes[geluid])
-    sdl2.sdlmixer.Mix_PlayChannel(1, liedjes[geluid], -1)
-    print(sdl2.sdlmixer.Mix_AllocateChannels(-1))
+    if geluid == 0:
+        sdl2.sdlmixer.Mix_HaltChannel(channel)
+    else:
+        if sdl2.sdlmixer.Mix_Playing(channel) == 1:
+            return
+        geluiden = [
+            sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),
+            sdl2.sdlmixer.Mix_LoadWAV("muziek/arcade_select.wav".encode()),
+            sdl2.sdlmixer.Mix_LoadWAV("muziek/arcade_start.wav".encode()),
+            sdl2.sdlmixer.Mix_LoadWAV("muziek/concrete-footsteps.wav".encode())
+        ]
+        liedjes = {
+            "main menu": geluiden[0],
+            "main menu select": geluiden[1],
+            "game start": geluiden[2],
+            "footsteps": geluiden[3]
+        }
+        if looped == False:
+            sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
+        else:
+            sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], -1)
+        #test = sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8"))
+        #sdl2.sdlmixer.Mix_PlayChannel(1, test, -1)
 
 
 def main_menu_nav():
@@ -378,7 +390,7 @@ def main():
 
 
     #Start  audio
-    sdl2.sdlmixer.Mix_OpenAudioDevice(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024, None, SDL_AUDIO_ALLOW_ANY_CHANGE)
+    #sdl2.sdlmixer.Mix_OpenAudioDevice(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024, None, SDL_AUDIO_ALLOW_ANY_CHANGE)
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
     #sdl2.sdlmixer.Mix_AllocateChannels(4)
     #sdl2.sdlmixer.Mix_MasterVolume(80)
@@ -389,12 +401,11 @@ def main():
     t = []
 
     while not moet_afsluiten:
-        muziek_spelen("main menu")
+        muziek_spelen("main menu", True)
         sdl2.SDL_SetRelativeMouseMode(False)
         while not game and not moet_afsluiten and not garage:
             start_time = time.time()
             renderer.clear()
-            #muziek_spelen("main menu")
             delta = time.time() - start_time
             verwerk_input(delta)
             main_menu_nav()
@@ -407,10 +418,10 @@ def main():
             renderer.present()
 
 
-        #muziek_spelen(0)
+        muziek_spelen(0)
 
         sdl2.SDL_SetRelativeMouseMode(True)
-        #muziek_spelen("arcade_start", True)
+        muziek_spelen("game start")
 
 
 

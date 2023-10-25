@@ -4,6 +4,7 @@ from sdl2 import *
 
 from Raycaster import *
 
+moving_stappen = False
 
 class Sprite():
     def __init__(self, image, x, y):
@@ -17,6 +18,7 @@ class Sprite():
 
 
 class Player():
+    global moving_stappen
     def __init__(self, x, y, hoek, breedte=800):
         """Player is gedefinieerd door zijn start x-, y-coördinaten (floats), kijkhoek (rad) en
          de breedte (int) van het scherm dat hij opneemt"""
@@ -40,6 +42,8 @@ class Player():
     def move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
+        # print(self.r_speler,[self.p_x,self.p_y])
+        moving_stappen = False
         if type(self.car) != int:
             if richting == 1:
                 self.car.accelerate(world_map)
@@ -52,6 +56,7 @@ class Player():
             x_2 = (x + atm * richting * self.r_speler[0])%x_dim
             y_2 = (y + atm * richting * self.r_speler[1])%y_dim
 
+            moving_stappen = True
             if world_map[math.floor(y)][math.floor(x)] == 0 and \
                     world_map[math.floor(y_2)][math.floor(x_2)] == 0:
                 self.p_x = x
