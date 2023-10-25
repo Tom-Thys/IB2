@@ -11,7 +11,7 @@ import sdl2.ext
 import sdl2.sdlimage
 import sdl2.sdlmixer
 from sdl2 import *
-from worlds import worldlijst
+from worlds import worldlijst, world_generation
 from Classes import *
 from rendering import *
 
@@ -42,7 +42,7 @@ moet_afsluiten = False
 
 
 # positie van de speler
-p_speler_x, p_speler_y = 3 + 1 / math.sqrt(2), 5 + 1 / math.sqrt(2)
+p_speler_x, p_speler_y = 4,4
 
 # richting waarin de speler kijkt
 r_speler_hoek = math.pi / 4
@@ -250,8 +250,10 @@ def render_sprites(renderer, sprites, player):
     sprites.sort(reverse=True, key=lambda sprite: np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2))#Sorteren op afstand
 
     for sprite in sprites:
+        sprite_rel = (sprite.x - player.p_x, sprite.y - player.p_y)
         # richting
-        sprite_distance = np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2)
+        sprite_distance = np.sqrt((sprite_rel[0]) ** 2 + (sprite_rel[1]) ** 2)
+
 
 
         if sprite_distance >= 60:continue;
@@ -259,7 +261,9 @@ def render_sprites(renderer, sprites, player):
         sprite_size_breedte = sprite.breedte/sprite_distance*10
         sprite_size_hoogte = sprite.hoogte/sprite_distance*10
 
-        # hoek        
+        # hoek
+        h = math.atan(sprite_rel[0]/sprite_rel[1])
+        print(h)
 
 
 
@@ -323,7 +327,7 @@ def main_menu_nav():
         index = 0
 
 def main():
-    global game, garage, BREEDTE
+    global game, garage, BREEDTE, wereld_nr, world_map, worldlijst
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
     sdl2.sdlmixer.Mix_Init(0)
@@ -387,6 +391,8 @@ def main():
 
     #Test Variable
     t = []
+    worldlijst.append(world_generation())
+    world_map = worldlijst[-1]
 
     while not moet_afsluiten:
         muziek_spelen("main menu")
@@ -415,7 +421,6 @@ def main():
 
 
 
-
         while game and not moet_afsluiten and not garage:
             # Onthoud de huidige tijd
             start_time = time.time()
@@ -426,10 +431,10 @@ def main():
 
             (d, v, kl) = speler.n_raycasting(world_map)
 
-            t1 = time.time()
+            #t1 = time.time()
             renderen(renderer, d, v, kl, soort_muren, muren_info)
 
-            render_sprites(renderer, sprites, speler)
+            #render_sprites(renderer, sprites, speler)
             #t.append(time.time()-t1)
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             delta = time.time() - start_time

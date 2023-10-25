@@ -3,7 +3,7 @@ import numpy as np
 from sdl2 import *
 
 from Raycaster import *
-
+from line_profiler_pycharm import profile
 
 class Sprite():
     def __init__(self, image, x, y):
@@ -66,7 +66,6 @@ class Player():
                     world_map[math.floor(self.p_y)][math.floor(x_2)] == 0:
                 self.p_x = x
                 self.position = (x,self.p_y)
-
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""
         self.hoek += hoek
@@ -84,8 +83,8 @@ class Player():
     def n_raycasting(self, world_map):
         """Gebruik maken van de numpy raycaster om de afstanden en kleuren van muren te bepalen
         Neemt world map in zodat er gemakkelijk van map kan gewisseld worden"""
+        print(self.r_speler)
         return numpy_raycaster(self.p_x, self.p_y, self.r_stralen, self.r_speler, self.breedte, world_map)
-
 
 
 class Auto():

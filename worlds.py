@@ -4,7 +4,7 @@ import random
 import numpy as np
 import sdl2.ext
 from sdl2 import *
-
+from random import randint
 
 
 
@@ -81,6 +81,55 @@ def main():
 
     # Maak png van wereldmap
     make_world_png(worldlijst)
+
+def world_generation(openingen = []):
+    z = {1:(2,-4,0,2), 2: (0,2,2,-4), 3:(2,-4,-4,-1), 4:(-4,-1,2,-4)} #KANTEN voor map locaties invullen gaten
+    openingen = []
+    map = np.zeros((9, 9),dtype='int32')
+    kleur = randint(2,5)
+    map[:2,:2] = kleur
+    kleur = randint(2,5)
+    map[-4:-1,-4:-1] = kleur
+    kleur = randint(2,5)
+    map[-4:-1,:2] = kleur
+    kleur = randint(2,5)
+    map[:2,-4:-1] = kleur
+    if len(openingen) == 4:
+        return map
+    else:
+        extra_openingen = randint(0, 4-len(openingen)) #Extra openingen
+        for i in range(extra_openingen):
+            while True:
+                opening = randint(1,5)
+                if opening not in openingen:
+                    openingen.append(opening)
+                    break
+        for i in range(1,5):
+            if i not in openingen:
+                kleur = randint(2, 5)
+                map[z[i][0]:z[i][1],z[i][2]:z[i][3]] = kleur
+    return map
+    kleur = randint(2, 5)
+
+
+
+
+class Tiles():
+    def __init__(self, map, openingen, png=0):
+        self.map = map
+        self.png = png
+        self.openingen = openingen
+        self.surrounding = []
+        self.full = False
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,5 +1,7 @@
 import math
+import numba
 import numpy as np
+from numba import jit
 
 
 def nr_rond(nr, tol=5):
@@ -202,7 +204,6 @@ def raycast(p_speler_x, p_speler_y, r_straal, r_speler, world_map):
                     return 10, 0, "b", 0
 
     return 1, 0, "b", 0
-
 
 def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
     #variabelen
