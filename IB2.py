@@ -26,8 +26,7 @@ POSITIE_QUIT_GAME = [420, 572]
 #
 # Globale variabelen
 #
-game = False
-garage = False
+game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
 index = 0
 positie = [0,0]
@@ -78,19 +77,19 @@ kleuren = [
 #
 
 def verwerk_input(delta):
-    global moet_afsluiten, game, garage, index
+    global moet_afsluiten,game_state, index
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
-    if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game:
+    if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2:
         speler.move(1, 0.1,world_map)
-    if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game:
+    if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2:
         speler.move(-1, 0.1,world_map)
-    if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game:
+    if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2:
         speler.draaien(-math.pi / 200)
-    if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game:
+    if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2:
         speler.draaien(math.pi / 200)
 
     for event in events:
@@ -108,7 +107,7 @@ def verwerk_input(delta):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
-            if not moet_afsluiten and not game:
+            if not moet_afsluiten and game_state == 0:
                 if key == sdl2.SDLK_DOWN:
                     index += 1
                     #muziek_spelen("main menu select", False, 2)
@@ -117,21 +116,25 @@ def verwerk_input(delta):
                     #muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if index ==0:
-                        game = True
+                        game_state = 2
                     if index == 1:
+                        game_state = 1
                         pass
                     if index == 2:
                         moet_afsluiten = True
                         break
-            if not moet_afsluiten and game:
+            if not moet_afsluiten and game_state == 1:
                 if key == sdl2.SDLK_m:
-                    game = False
-            break
+                    game_state = 0
+            if not moet_afsluiten and game_state == 2:
+                if key == sdl2.SDLK_m:
+                    game_state = 0
+
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
                 pass
-            if not moet_afsluiten and game:
+            if not moet_afsluiten and game_state == 2:
                 pass
         # Analoog aan SDL_KEYDOWN. Dit event wordt afgeleverd wanneer de
         # gebruiker een muisknop indrukt
@@ -148,7 +151,7 @@ def verwerk_input(delta):
         # Wordt afgeleverd als de gebruiker de muis heeft bewogen.
         # Aangezien we relative motion gebruiken zijn alle coordinaten
         # relatief tegenover de laatst gerapporteerde positie van de muis.
-        elif event.type == sdl2.SDL_MOUSEMOTION and game:
+        elif event.type == sdl2.SDL_MOUSEMOTION and game_state == 2:
             # Aangezien we in onze game maar 1 as hebben waarover de camera
             # kan roteren zijn we enkel geinteresseerd in bewegingen over de
             # X-as
@@ -333,7 +336,7 @@ def main_menu_nav():
         index = 0
 
 def main():
-    global game, garage, BREEDTE
+    global game_state, BREEDTE
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
     sdl2.sdlmixer.Mix_Init(0)
@@ -401,7 +404,7 @@ def main():
     while not moet_afsluiten:
         muziek_spelen("main menu", True)
         sdl2.SDL_SetRelativeMouseMode(False)
-        while not game and not moet_afsluiten and not garage:
+        while game_state == 0 and not moet_afsluiten:
             start_time = time.time()
             renderer.clear()
             delta = time.time() - start_time
@@ -417,12 +420,20 @@ def main():
 
 
         muziek_spelen(0)
+        while game_state == 1:
+            start_time = time.time()
+            renderer.clear()
+            delta = time.time() - start_time
+            verwerk_input(delta)
+            renderer.fill((0, 0, BREEDTE, HOOGTE), kleuren[4])
+            renderer.present()
+
 
         sdl2.SDL_SetRelativeMouseMode(True)
-        muziek_spelen("game start")
+        muziek_spelen("game start", False, 3)
 
 
-        while game and not moet_afsluiten and not garage:
+        while game_state == 2 and not moet_afsluiten:
             # Onthoud de huidige tijd
             start_time = time.time()
             # Reset de rendering context
