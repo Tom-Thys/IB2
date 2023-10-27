@@ -254,6 +254,7 @@ def render_sprites(renderer, sprites, player):
     for sprite in sprites:
         # richting
         sprite_distance = np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2)
+        sprite_distance += np.pi
 
 
         if sprite_distance >= 60:continue;
@@ -263,10 +264,27 @@ def render_sprites(renderer, sprites, player):
 
         # hoek
 
+        hoek_sprite = np.arctan((sprite.y-player.p_y)/(sprite.x-player.p_x))
 
 
-        screen_x = int((BREEDTE -sprite_size_breedte) / 2)#aanvullen...
-        screen_y = int((HOOGTE - sprite_size_hoogte) / 2)#wordt in het midden gezet
+        if player.p_x > sprite.x and player.p_y > sprite.y: hoek_sprite += np.pi;
+        if player.p_x > sprite.x and player.p_y < sprite.y: hoek_sprite += np.pi;
+        if player.p_x < sprite.x and player.p_y > sprite.y: hoek_sprite += 2*np.pi;
+
+
+        while player.hoek <= 2 * np.pi:
+            player.hoek += 2 * np.pi
+
+        while player.hoek >= 2 * np.pi:
+            player.hoek -= 2 * np.pi
+
+        hoek_verschil = player.hoek - hoek_sprite
+        if abs(hoek_verschil) >= (np.pi/4): continue;
+
+
+
+        screen_y = (HOOGTE - sprite_size_hoogte) / 2    #wordt in het midden gezet
+        screen_x = int(BREEDTE / 2 + hoek_verschil * (BREEDTE * 2) / np.pi - sprite_size_breedte / 2)
 
         renderer.copy(sprite.image,dstrect=(screen_x,screen_y, sprite_size_breedte,sprite_size_hoogte))
 
@@ -383,7 +401,11 @@ def main():
     wheel = factory.from_image(resources.get_path("Wheel.png"))
     sprites = []
     tree = factory.from_image(resources.get_path("Tree.png"))
-    sprites.append(Sprite(tree, x=2, y=2))
+
+    sprites.append(Sprite(tree, x=10, y=10))
+    sprites.append(Sprite(tree, x=15, y=10))
+    sprites.append(Sprite(tree, x=3, y=3))
+
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
