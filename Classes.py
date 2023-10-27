@@ -89,6 +89,7 @@ class Player():
     def n_raycasting(self, world_map):
         """Gebruik maken van de numpy raycaster om de afstanden en kleuren van muren te bepalen
         Neemt world map in zodat er gemakkelijk van map kan gewisseld worden"""
+        print(self.r_speler)
         return numpy_raycaster(self.p_x, self.p_y, self.r_stralen, self.r_speler, self.breedte, world_map)
 
 
