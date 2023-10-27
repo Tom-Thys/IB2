@@ -208,7 +208,7 @@ def raycast(p_speler_x, p_speler_y, r_straal, r_speler, world_map):
 def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
     #variabelen
     y_dim, x_dim = np.shape(world_map)
-    l = min(60, 3 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2)) #maximale lengte die geraycast wordt
+    l = min(60, 4 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2)) #maximale lengte die geraycast wordt
 
     #Aanmaak numpy arrays die terug gestuurd worden
     kleuren = np.zeros(breedte,dtype='int')

@@ -11,7 +11,7 @@ import sdl2.ext
 import sdl2.sdlimage
 import sdl2.sdlmixer
 from sdl2 import *
-from worlds import worldlijst, world_generation
+from worlds import *
 from Classes import *
 from rendering import *
 
@@ -42,7 +42,7 @@ moet_afsluiten = False
 
 
 # positie van de speler
-p_speler_x, p_speler_y = 4,4
+p_speler_x, p_speler_y = 49*9,49*9
 
 # richting waarin de speler kijkt
 r_speler_hoek = math.pi / 4
@@ -226,7 +226,7 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def renderText(font, renderer, text, x, y, window = 0):
+def renderText(font, renderer, text, x, y, midden = 0):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     if midden:
         renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), y, text.size[0], text.size[1]))
@@ -296,6 +296,7 @@ def show_fps(font, renderer):
 
 
 def muziek_spelen(geluid, looped=False):
+    return
     global geluiden
     if not sound:
         return
@@ -305,9 +306,7 @@ def muziek_spelen(geluid, looped=False):
         "game start": geluiden[2],
         "footsteps": geluiden[3]
     }
-    print(liedjes[geluid])
     sdl2.sdlmixer.Mix_PlayChannel(1, liedjes[geluid], -1)
-    print(sdl2.sdlmixer.Mix_AllocateChannels(-1))
 
 
 def main_menu_nav():
@@ -391,8 +390,9 @@ def main():
 
     #Test Variable
     t = []
-    worldlijst.append(world_generation())
-    world_map = worldlijst[-1]
+    inf_world = Map()
+    inf_world.update()
+    world_map = inf_world.world_map
 
     while not moet_afsluiten:
         muziek_spelen("main menu")
