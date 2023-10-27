@@ -140,26 +140,27 @@ def verwerk_input(delta):
                     if settings_menu_index == 1:
                         pass
                     if settings_menu_index == 2:
-                        pass
+                        game_state = 0
+                        settings_menu_index = 0
                 if key == sdl2.SDLK_m:
                     game_state = 0
-            if not moet_afsluiten and game_state == 1:
-                if key == sdl2.SDLK_m:
-                    game_state = 0
-                if key == sdl2.SDLK_RIGHT and settings_menu_index == 1:
-                    volume += 1
-                    sdl2.sdlmixer.Mix_MasterVolume(volume)
-                if key == sdl2.SDLK_LEFT and settings_menu_index == 1:
+                if key == sdl2.SDLK_LEFT and settings_menu_index == 0:
                     volume -= 1
                     sdl2.sdlmixer.Mix_MasterVolume(volume)
                 if volume < 0:
                     volume = 0
-                if volume > 127:
-                    volume = 127
+                if volume > 100:
+                    volume = 100
+            if not moet_afsluiten and game_state == 2:
+                if key == sdl2.SDLK_m:
+                    game_state = 0
+
 
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
+                pass
+            if not moet_afsluiten and game_state == 1:
                 pass
             if not moet_afsluiten and game_state == 2:
                 pass
@@ -379,20 +380,22 @@ def menu_nav():
             main_menu_positie = POSITIE_QUIT_GAME
             return
         if main_menu_index > 2:
-            main_menu_index = 2
-        if main_menu_index < 0:
             main_menu_index = 0
+        if main_menu_index < 0:
+            main_menu_index = 2
     elif game_state == 1:
         if settings_menu_index == 0:
-            settings_menu_positie = POSITIE_SETTINGS_BACK
-            return
-        elif settings_menu_index == 1:
             settings_menu_positie = [150, 200]
             return
+        elif settings_menu_index == 1:
+            settings_menu_positie = [120, 230]
+            return
+        elif settings_menu_index:
+            settings_menu_positie = POSITIE_SETTINGS_BACK
         if settings_menu_index > 2:
-            settings_menu_index = 2
-        if settings_menu_index < 0:
             settings_menu_index = 0
+        if settings_menu_index < 0:
+            settings_menu_index = 2
 
 def main():
     global game_state, BREEDTE, volume
@@ -488,20 +491,20 @@ def main():
             delta = time.time() - start_time
             verwerk_input(delta)
             menu_nav()
-            print(settings_menu_index)
             renderer.copy(settings_menu,
                           srcrect=(0, 0, settings_menu.size[0], settings_menu.size[1]),
                           dstrect=(0, 0, BREEDTE, HOOGTE))
             volume_text = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Volume: {volume}"))
+            test_text = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Test"))
             renderer.copy(volume_text, dstrect=(10, 200, volume_text.size[0], volume_text.size[1]))
-            if settings_menu_index != 0:
+            renderer.copy(test_text, dstrect=(10, 230, test_text.size[0], test_text.size[1]))
+            if settings_menu_index != 2:
                 text = sdl2.ext.renderer.Texture(renderer, font.render_text("<>"))
                 renderer.copy(text, dstrect=(settings_menu_positie[0], settings_menu_positie[1], text.size[0], text.size[1]))
             else:
                 renderer.copy(menu_pointer,
                           srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
                           dstrect=(settings_menu_positie[0], settings_menu_positie[1], 80, 50))
-            print(settings_menu_positie)
             renderer.present()
 
         sdl2.SDL_SetRelativeMouseMode(True)
