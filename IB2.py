@@ -42,7 +42,7 @@ moet_afsluiten = False
 
 
 # positie van de speler
-p_speler_x, p_speler_y = 49*9,49*9
+p_speler_x, p_speler_y = 50.5*9,49*9
 
 # richting waarin de speler kijkt
 r_speler_hoek = math.pi / 4
@@ -436,7 +436,7 @@ def main():
 
             #render_sprites(renderer, sprites, speler)
             #t.append(time.time()-t1)
-            draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
+            #draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)

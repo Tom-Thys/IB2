@@ -5,15 +5,15 @@ from sdl2 import *
 from Raycaster import *
 from line_profiler_pycharm import profile
 
+
 class Sprite():
     def __init__(self, image, x, y):
         self.image = image  # The image of the sprite
         self.x = x  # The x-coordinate of the sprite
         self.y = y  # The y-coordinate of the sprite
-        self.position = (x,y)
+        self.position = (x, y)
         self.breedte = image.size[0]
         self.hoogte = image.size[1]
-
 
 
 class Player():
@@ -29,6 +29,7 @@ class Player():
         self.breedte = breedte
         self.car = 0
         self.in_auto = False
+        self.tile = math.floor(self.p_x/9),math.floor(self.p_y/9)
 
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""
@@ -46,26 +47,29 @@ class Player():
             else:
                 self.car.brake()
         else:
-            x = (self.p_x + richting * stap * self.r_speler[0])%x_dim
-            y = (self.p_y + richting * stap * self.r_speler[1])%y_dim
+            x = (self.p_x + richting * stap * self.r_speler[0]) % x_dim
+            y = (self.p_y + richting * stap * self.r_speler[1]) % y_dim
             atm = 0.3  # afstand_tot_muur zelfde bij auto
-            x_2 = (x + atm * richting * self.r_speler[0])%x_dim
-            y_2 = (y + atm * richting * self.r_speler[1])%y_dim
+            x_2 = (x + atm * richting * self.r_speler[0]) % x_dim
+            y_2 = (y + atm * richting * self.r_speler[1]) % y_dim
 
             if world_map[math.floor(y)][math.floor(x)] == 0 and \
                     world_map[math.floor(y_2)][math.floor(x_2)] == 0:
                 self.p_x = x
                 self.p_y = y
-                self.position = (x,y)
+                self.position = (x, y)
 
             if world_map[math.floor(y)][math.floor(self.p_x)] == 0 and \
                     world_map[math.floor(y_2)][math.floor(self.p_x)] == 0:
                 self.p_y = y
-                self.position = (self.p_x,y)
+                self.position = (self.p_x, y)
             if world_map[math.floor(self.p_y)][math.floor(x)] == 0 and \
                     world_map[math.floor(self.p_y)][math.floor(x_2)] == 0:
                 self.p_x = x
-                self.position = (x,self.p_y)
+                self.position = (x, self.p_y)
+        self.tile = math.floor(self.p_x/9),math.floor(self.p_y/9)
+        print(self.tile)
+
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""
         self.hoek += hoek
@@ -79,7 +83,6 @@ class Player():
         if self.car != 0:
             self.car.draaien(hoek, draai_matrix)
 
-
     def n_raycasting(self, world_map):
         """Gebruik maken van de numpy raycaster om de afstanden en kleuren van muren te bepalen
         Neemt world map in zodat er gemakkelijk van map kan gewisseld worden"""
@@ -89,7 +92,7 @@ class Player():
 
 class Auto():
     def __init__(self, p_x, p_y, type=0, hp=20, Player=0):
-        self.position = (p_x,p_y)
+        self.position = (p_x, p_y)
         self.p_x = p_x
         self.p_y = p_y
         self.type = type
@@ -121,7 +124,7 @@ class Auto():
             if self.player_inside:
                 self.Player.p_x = x
                 self.Player.p_y = y
-                self.Player.position = (x,y)
+                self.Player.position = (x, y)
 
     def brake(self):
         if self.speed > self.afrem:
@@ -156,4 +159,3 @@ class Auto():
 
     def hitting(self, object):
         self.hitpoints -= 1
-

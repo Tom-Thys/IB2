@@ -6,6 +6,8 @@ import sdl2.ext
 from sdl2 import *
 from random import randint
 
+from Classes import Player
+
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
 world_map = np.array([[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
@@ -96,7 +98,7 @@ def world_generation(openingen=[]):
     if len(openingen) == 4:
         return kaart, openingen
     else:
-        extra_openingen = 0 #randint(0, 4 - len(openingen))  # Extra openingen
+        extra_openingen = 0  # randint(0, 4 - len(openingen))  # Extra openingen
         print(extra_openingen)
         for i in range(extra_openingen):
             while True:
@@ -114,7 +116,7 @@ def world_generation(openingen=[]):
 
 
 class Tile():
-    def __init__(self, generated, png=0,ok = True):
+    def __init__(self, generated, png=0, ok=True):
         self.map = generated[0]
         self.png = png
         self.openingen = generated[1]
@@ -124,31 +126,49 @@ class Tile():
 
 class Map():
     def __init__(self):
-        self.world_map = np.array(0,dtype='int32')
-        self.tile_map = np.full((100,101),Tile((0,0),ok=False))
+        self.world_map = np.array(0, dtype='int32')
+        self.tile_map = np.full((100, 101), Tile((0, 0), ok=False))
         self.start()
+
     def start(self):
         map_initieel = np.full((9, 9), 2, dtype='int32')
         map_initieel[0:-3, 3:-3] = 0
         intiele_tile = Tile((map_initieel, [1]))
         tile_2 = Tile(world_generation([1, 2, 3, 4]))
-        self.tile_map[49,50] = tile_2
-        self.tile_map[50,50] = intiele_tile
+        tile_3 = Tile(world_generation([1, 2, 3, 4]))
+        self.tile_map[:, :] = 0
+        self.tile_map[48, 50] = tile_3
+        self.tile_map[49, 50] = tile_2
+        self.tile_map[50, 50] = intiele_tile
         self.size = (np.shape(map_initieel))[0]
 
     def update(self):
         y, x = np.shape(self.tile_map)
-        self.world_map = np.zeros((y*self.size,x*self.size,),dtype='int32')
+        self.world_map = np.zeros((y * self.size, x * self.size,), dtype='int32')
         for i, rij in enumerate(self.tile_map):
             for j, element in enumerate(rij):
                 if element != 0:
-                    self.world_map[i*self.size:(i+1)*self.size,j*self.size:(j+1)*self.size] = element.map
+                    self.world_map[i * self.size:(i + 1) * self.size, j * self.size:(j + 1) * self.size] = element.map
         print(self.world_map)
 
+    def map_making(self, speler):
+        x, y = speler.tile
+        while np.any(self.world_map[(x - 3):(x + 3), (y - 3):(y + 3)] == 0):  # bloking high end??
+            pass  # looping
 
 
 if __name__ == '__main__':
+    # positie van de speler
+    p_speler_x, p_speler_y = 50.5 * 9, 49 * 9
+
+    # richting waarin de speler kijkt
+    r_speler_hoek = math.pi / 4
+    # FOV
+    d_camera = 1
+    #
+    # Speler aanmaken
+    speler = Player(p_speler_x, p_speler_y, r_speler_hoek)
     inf_world = Map()
     inf_world.update()
 
-    #main()
+    # main()
