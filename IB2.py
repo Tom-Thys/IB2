@@ -23,13 +23,17 @@ HOOGTE = 700
 POSITIE_START_GAME = [365, 253]
 POSITIE_SETTINGS = [300, 401]
 POSITIE_QUIT_GAME = [420, 572]
+POSITIE_SETTINGS_BACK = [170, 55]
 #
 # Globale variabelen
 #
 game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
-index = 0
-positie = [0,0]
+volume = 80
+main_menu_index = 0
+settings_menu_index = 0
+main_menu_positie = [0, 0]
+settings_menu_positie = [0, 0]
 
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
@@ -77,7 +81,7 @@ kleuren = [
 #
 
 def verwerk_input(delta):
-    global moet_afsluiten,game_state, index
+    global moet_afsluiten,game_state, main_menu_index, settings_menu_index, volume
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
@@ -109,26 +113,49 @@ def verwerk_input(delta):
                 break
             if not moet_afsluiten and game_state == 0:
                 if key == sdl2.SDLK_DOWN:
-                    index += 1
+                    main_menu_index += 1
                     #muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_UP:
-                    index -= 1
+                    main_menu_index -= 1
                     #muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
-                    if index ==0:
+                    if main_menu_index == 0:
                         game_state = 2
-                    if index == 1:
+                    if main_menu_index == 1:
                         game_state = 1
                         pass
-                    if index == 2:
+                    if main_menu_index == 2:
                         moet_afsluiten = True
                         break
             if not moet_afsluiten and game_state == 1:
+                if key == sdl2.SDLK_DOWN:
+                    settings_menu_index += 1
+                    #muziek_spelen("main menu select", False, 2)
+                if key == sdl2.SDLK_UP:
+                    settings_menu_index -= 1
+                    #muziek_spelen("main menu select", False, 2)
+                if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
+                    if settings_menu_index == 0:
+                        pass
+                    if settings_menu_index == 1:
+                        pass
+                    if settings_menu_index == 2:
+                        pass
                 if key == sdl2.SDLK_m:
                     game_state = 0
-            if not moet_afsluiten and game_state == 2:
+            if not moet_afsluiten and game_state == 1:
                 if key == sdl2.SDLK_m:
                     game_state = 0
+                if key == sdl2.SDLK_RIGHT and settings_menu_index == 1:
+                    volume += 1
+                    sdl2.sdlmixer.Mix_MasterVolume(volume)
+                if key == sdl2.SDLK_LEFT and settings_menu_index == 1:
+                    volume -= 1
+                    sdl2.sdlmixer.Mix_MasterVolume(volume)
+                if volume < 0:
+                    volume = 0
+                if volume > 127:
+                    volume = 127
 
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
@@ -312,11 +339,13 @@ def show_fps(font, renderer):
 
 
 def muziek_spelen(geluid, looped=False, channel=1):
+    global volume
     if not sound:
         return
     if geluid == 0:
         sdl2.sdlmixer.Mix_HaltChannel(channel)
     else:
+        sdl2.sdlmixer.Mix_MasterVolume(volume)
         if sdl2.sdlmixer.Mix_Playing(channel) == 1:
             return
         geluiden = [
@@ -337,24 +366,36 @@ def muziek_spelen(geluid, looped=False, channel=1):
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], -1)
 
 
-def main_menu_nav():
-    global index, positie
-    if index == 0:
-        positie = POSITIE_START_GAME
-        return
-    elif index == 1:
-        positie = POSITIE_SETTINGS
-        return
-    elif index == 2:
-        positie = POSITIE_QUIT_GAME
-        return
-    if index > 2:
-        index = 2
-    if index < 0:
-        index = 0
+def menu_nav():
+    global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie
+    if game_state == 0:
+        if main_menu_index == 0:
+            main_menu_positie = POSITIE_START_GAME
+            return
+        elif main_menu_index == 1:
+            main_menu_positie = POSITIE_SETTINGS
+            return
+        elif main_menu_index == 2:
+            main_menu_positie = POSITIE_QUIT_GAME
+            return
+        if main_menu_index > 2:
+            main_menu_index = 2
+        if main_menu_index < 0:
+            main_menu_index = 0
+    elif game_state == 1:
+        if settings_menu_index == 0:
+            settings_menu_positie = POSITIE_SETTINGS_BACK
+            return
+        elif settings_menu_index == 1:
+            settings_menu_positie = [150, 200]
+            return
+        if settings_menu_index > 2:
+            settings_menu_index = 2
+        if settings_menu_index < 0:
+            settings_menu_index = 0
 
 def main():
-    global game_state, BREEDTE
+    global game_state, BREEDTE, volume
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
     sdl2.sdlmixer.Mix_Init(0)
@@ -432,13 +473,13 @@ def main():
             renderer.clear()
             delta = time.time() - start_time
             verwerk_input(delta)
-            main_menu_nav()
+            menu_nav()
             renderer.copy(achtergrond,
                           srcrect=(0, 0, achtergrond.size[0], achtergrond.size[1]),
                           dstrect=(0, 0, BREEDTE, HOOGTE))
             renderer.copy(menu_pointer,
                           srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
-                          dstrect=(positie[0], positie[1], 80, 50))
+                          dstrect=(main_menu_positie[0], main_menu_positie[1], 80, 50))
             renderer.present()
 
         while game_state == 1 and not moet_afsluiten:
@@ -446,9 +487,21 @@ def main():
             renderer.clear()
             delta = time.time() - start_time
             verwerk_input(delta)
+            menu_nav()
+            print(settings_menu_index)
             renderer.copy(settings_menu,
                           srcrect=(0, 0, settings_menu.size[0], settings_menu.size[1]),
                           dstrect=(0, 0, BREEDTE, HOOGTE))
+            volume_text = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Volume: {volume}"))
+            renderer.copy(volume_text, dstrect=(10, 200, volume_text.size[0], volume_text.size[1]))
+            if settings_menu_index != 0:
+                text = sdl2.ext.renderer.Texture(renderer, font.render_text("<>"))
+                renderer.copy(text, dstrect=(settings_menu_positie[0], settings_menu_positie[1], text.size[0], text.size[1]))
+            else:
+                renderer.copy(menu_pointer,
+                          srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
+                          dstrect=(settings_menu_positie[0], settings_menu_positie[1], 80, 50))
+            print(settings_menu_positie)
             renderer.present()
 
         sdl2.SDL_SetRelativeMouseMode(True)
