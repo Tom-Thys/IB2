@@ -419,6 +419,7 @@ def main():
 
     achtergrond = factory.from_image(resources.get_path("game_main_menu.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
+    settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
 
     #Test Variable
     t = []
@@ -440,19 +441,20 @@ def main():
                           dstrect=(positie[0], positie[1], 80, 50))
             renderer.present()
 
-
-        muziek_spelen(0)
-        while game_state == 1:
+        while game_state == 1 and not moet_afsluiten:
             start_time = time.time()
             renderer.clear()
             delta = time.time() - start_time
             verwerk_input(delta)
-            renderer.fill((0, 0, BREEDTE, HOOGTE), kleuren[4])
+            renderer.copy(settings_menu,
+                          srcrect=(0, 0, settings_menu.size[0], settings_menu.size[1]),
+                          dstrect=(0, 0, BREEDTE, HOOGTE))
             renderer.present()
 
-
         sdl2.SDL_SetRelativeMouseMode(True)
-        muziek_spelen("game start", False, 3)
+        if game_state != 0:
+            muziek_spelen(0)
+            muziek_spelen("game start", False, 3)
 
 
         while game_state == 2 and not moet_afsluiten:
