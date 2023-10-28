@@ -29,14 +29,18 @@ POSITIE_SETTINGS_BACK = [170, 55]
 #
 # Globale variabelen
 #
-config.read("config.ini")
-volume = int(config.get("settings", "volume"))
 game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
 main_menu_index = 0
 settings_menu_index = 0
 main_menu_positie = [0, 0]
 settings_menu_positie = [0, 0]
+# verwerking van config file: ook globale variabelen
+config.read("config.ini")
+volume = int(config.get("settings", "volume"))
+sensitivity_rw = int(config.get("settings", "sensitivity")) # echte sensitivity gaat van 100 - 300, 300 traagst, 100 snelst. Raw sensitivity gaat van 0 tot 100
+sensitivity = -2 * sensitivity_rw + 300
+
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
 
@@ -83,7 +87,7 @@ kleuren = [
 #
 
 def verwerk_input(delta):
-    global moet_afsluiten,game_state, main_menu_index, settings_menu_index, volume
+    global moet_afsluiten,game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
@@ -94,9 +98,9 @@ def verwerk_input(delta):
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2:
         speler.move(-1, 0.1,world_map)
     if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2:
-        speler.draaien(-math.pi / 200)
+        speler.draaien(-math.pi / sensitivity)
     if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2:
-        speler.draaien(math.pi / 200)
+        speler.draaien(math.pi / sensitivity)
 
     for event in events:
         # Een SDL_QUIT event wordt afgeleverd als de gebruiker de applicatie
@@ -146,16 +150,26 @@ def verwerk_input(delta):
                         settings_menu_index = 0
                 if key == sdl2.SDLK_m:
                     game_state = 0
-                if key == sdl2.SDLK_LEFT and settings_menu_index == 0:
-                    volume -= 1
-                    sdl2.sdlmixer.Mix_MasterVolume(volume)
-                if key == sdl2.SDLK_RIGHT and settings_menu_index == 0:
-                    volume += 1
-                    sdl2.sdlmixer.Mix_MasterVolume(volume)
+                if key == sdl2.SDLK_LEFT:
+                    if settings_menu_index == 0:
+                        volume -= 1
+                        sdl2.sdlmixer.Mix_MasterVolume(volume)
+                    if settings_menu_index == 1:
+                        sensitivity_rw -= 1
+                if key == sdl2.SDLK_RIGHT:
+                    if settings_menu_index == 0:
+                        volume += 1
+                        sdl2.sdlmixer.Mix_MasterVolume(volume)
+                    if settings_menu_index == 1:
+                        sensitivity_rw += 1
                 if volume < 0:
                     volume = 0
                 if volume > 100:
                     volume = 100
+                if sensitivity_rw < 0:
+                    sensitivity_rw = 0
+                if sensitivity_rw > 100:
+                    sensitivity_rw = 100
             if not moet_afsluiten and game_state == 2:
                 if key == sdl2.SDLK_m:
                     game_state = 0
@@ -393,7 +407,7 @@ def menu_nav():
             settings_menu_positie = [150, 200]
             return
         elif settings_menu_index == 1:
-            settings_menu_positie = [120, 230]
+            settings_menu_positie = [200, 230]
             return
         elif settings_menu_index:
             settings_menu_positie = POSITIE_SETTINGS_BACK
@@ -403,7 +417,7 @@ def menu_nav():
             settings_menu_index = 2
 
 def main():
-    global game_state, BREEDTE, volume
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
     sdl2.sdlmixer.Mix_Init(0)
@@ -500,9 +514,9 @@ def main():
                           srcrect=(0, 0, settings_menu.size[0], settings_menu.size[1]),
                           dstrect=(0, 0, BREEDTE, HOOGTE))
             volume_text = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Volume: {volume}"))
-            test_text = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Test"))
+            sensitivity_rw_text = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Sensitivity: {sensitivity_rw}"))
             renderer.copy(volume_text, dstrect=(10, 200, volume_text.size[0], volume_text.size[1]))
-            renderer.copy(test_text, dstrect=(10, 230, test_text.size[0], test_text.size[1]))
+            renderer.copy(sensitivity_rw_text, dstrect=(10, 230, sensitivity_rw_text.size[0], sensitivity_rw_text.size[1]))
             if settings_menu_index != 2:
                 text = sdl2.ext.renderer.Texture(renderer, font.render_text("<>"))
                 renderer.copy(text, dstrect=(settings_menu_positie[0], settings_menu_positie[1], text.size[0], text.size[1]))
@@ -518,6 +532,8 @@ def main():
             muziek_spelen("game start", False, 3)
         if game_state != 1:
             config.set("settings","volume",f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
+            config.set("settings", "sensitivity", f"{sensitivity_rw}")
+            sensitivity = -2 * sensitivity_rw + 300
             with open("config.ini", "w") as f:
                 config.write(f)
 
