@@ -14,6 +14,8 @@ from sdl2 import *
 from worlds import worldlijst
 from Classes import *
 from rendering import *
+from configparser import ConfigParser
+config = ConfigParser()
 
 
 # Constanten
@@ -27,14 +29,14 @@ POSITIE_SETTINGS_BACK = [170, 55]
 #
 # Globale variabelen
 #
+config.read("config.ini")
+volume = int(config.get("settings", "volume"))
 game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
-volume = 80
 main_menu_index = 0
 settings_menu_index = 0
 main_menu_positie = [0, 0]
 settings_menu_positie = [0, 0]
-
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
 
@@ -146,6 +148,9 @@ def verwerk_input(delta):
                     game_state = 0
                 if key == sdl2.SDLK_LEFT and settings_menu_index == 0:
                     volume -= 1
+                    sdl2.sdlmixer.Mix_MasterVolume(volume)
+                if key == sdl2.SDLK_RIGHT and settings_menu_index == 0:
+                    volume += 1
                     sdl2.sdlmixer.Mix_MasterVolume(volume)
                 if volume < 0:
                     volume = 0
@@ -508,9 +513,13 @@ def main():
             renderer.present()
 
         sdl2.SDL_SetRelativeMouseMode(True)
-        if game_state != 0:
+        if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
             muziek_spelen("game start", False, 3)
+        if game_state != 1:
+            config.set("settings","volume",f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
+            with open("config.ini", "w") as f:
+                config.write(f)
 
 
         while game_state == 2 and not moet_afsluiten:
