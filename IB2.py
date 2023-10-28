@@ -57,8 +57,14 @@ speler.aanmaak_r_stralen(d_camera=d_camera)
 
 #world
 wereld_nr = 0
-world_map = worldlijst[wereld_nr]
+#world_map = worldlijst[wereld_nr]
 #y_dim, x_dim = np.shape(world_map)
+
+
+inf_world = Map()
+inf_world.update()
+inf_world.map_making(speler)
+world_map = inf_world.world_map
 
 # Vooraf gedefinieerde kleuren
 kleuren = [
@@ -83,7 +89,7 @@ kleuren = [
 #
 
 def verwerk_input(delta):
-    global moet_afsluiten, game, garage, index
+    global moet_afsluiten, game, garage, index, world_map
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
@@ -91,8 +97,12 @@ def verwerk_input(delta):
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game:
         speler.move(1, 0.1,world_map)
+        inf_world.map_making(speler)
+        world_map = inf_world.world_map
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game:
         speler.move(-1, 0.1,world_map)
+        inf_world.map_making(speler)
+        world_map = inf_world.world_map
     if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game:
         speler.draaien(-math.pi / 200)
     if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game:
@@ -157,6 +167,8 @@ def verwerk_input(delta):
             speler.draaien(-math.pi / 4000 * draai)
             beweging = event.motion.yrel
             speler.move(1, beweging / 1000, world_map)
+            inf_world.map_making(speler)
+            world_map = inf_world.world_map
             continue
 
     # Polling-gebaseerde input. Dit gebruiken we bij voorkeur om bv het ingedrukt
@@ -390,9 +402,7 @@ def main():
 
     #Test Variable
     t = []
-    inf_world = Map()
-    inf_world.update()
-    world_map = inf_world.world_map
+
 
     while not moet_afsluiten:
         muziek_spelen("main menu")

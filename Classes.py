@@ -68,7 +68,6 @@ class Player():
                 self.p_x = x
                 self.position = (x, self.p_y)
         self.tile = math.floor(self.p_x/9),math.floor(self.p_y/9)
-        print(self.tile)
 
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""

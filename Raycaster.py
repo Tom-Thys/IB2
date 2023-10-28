@@ -1,7 +1,5 @@
 import math
-import numba
 import numpy as np
-from numba import jit
 
 
 def nr_rond(nr, tol=5):

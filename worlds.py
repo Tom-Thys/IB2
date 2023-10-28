@@ -98,21 +98,24 @@ def world_generation(openingen=[]):
     if len(openingen) == 4:
         return kaart, openingen
     else:
-        extra_openingen = 0  # randint(0, 4 - len(openingen))  # Extra openingen
-        print(extra_openingen)
+        extra_openingen = randint(0, 4 - len(openingen))  # Extra openingen
+        #print(extra_openingen)
         for i in range(extra_openingen):
-            while True:
-                opening = randint(1, 5)
+            print(i, openingen)
+            loops = 0
+            while loops < 5:
+                loops += 1
+                opening = randint(1, 4)
                 if opening not in openingen:
                     openingen.append(opening)
-                    break
+                    continue
         for i in range(1, 5):
             if i not in openingen:
+                print(i,openingen)
                 kleur = randint(2, 5)
                 kaart[z[i][0]:z[i][1], z[i][2]:z[i][3]] = kleur
-    print(kaart)
+    #print(kaart)
     return kaart, openingen
-    kleur = randint(2, 5)
 
 
 class Tile():
@@ -149,12 +152,90 @@ class Map():
             for j, element in enumerate(rij):
                 if element != 0:
                     self.world_map[i * self.size:(i + 1) * self.size, j * self.size:(j + 1) * self.size] = element.map
-        print(self.world_map)
+        #print(self.world_map)
 
     def map_making(self, speler):
-        x, y = speler.tile
-        while np.any(self.world_map[(x - 3):(x + 3), (y - 3):(y + 3)] == 0):  # bloking high end??
-            pass  # looping
+        lengte = 7
+        y, x = speler.tile
+        if np.any(self.world_map[(x - lengte):(x+lengte), (y - lengte):(y + lengte)] == 0):  # bloking high end??
+            for i in range(lengte):
+                x_pos = x - i
+                for j in range(lengte):
+                    y_pos = y+j
+                    if self.tile_map[x_pos,y_pos] == 0:
+                        openingen = []
+                        if self.tile_map[x_pos+1,y_pos] != 0:
+                            if 3 in self.tile_map[x_pos+1,y_pos].openingen:
+                                openingen.append(1)
+                        if self.tile_map[x_pos-1,y_pos] != 0:
+                            if 1 in self.tile_map[x_pos-1,y_pos].openingen:
+                                openingen.append(3)
+                        if self.tile_map[x_pos,y_pos+1] != 0:
+                            if 2 in self.tile_map[x_pos,y_pos+1].openingen:
+                                openingen.append(4)
+                        if self.tile_map[x_pos,y_pos-1] != 0:
+                            if 4 in self.tile_map[x_pos,y_pos-1].openingen:
+                                openingen.append(2)
+                        self.tile_map[x_pos,y_pos] = Tile(world_generation(openingen))
+            for i in range(lengte):
+                x_pos = x - i
+                for j in range(lengte):
+                    y_pos = y-j
+                    if self.tile_map[x_pos,y_pos] == 0:
+                        openingen = []
+                        if self.tile_map[x_pos+1,y_pos] != 0:
+                            if 3 in self.tile_map[x_pos+1,y_pos].openingen:
+                                openingen.append(1)
+                        if self.tile_map[x_pos-1,y_pos] != 0:
+                            if 1 in self.tile_map[x_pos-1,y_pos].openingen:
+                                openingen.append(3)
+                        if self.tile_map[x_pos,y_pos+1] != 0:
+                            if 2 in self.tile_map[x_pos,y_pos+1].openingen:
+                                openingen.append(4)
+                        if self.tile_map[x_pos,y_pos-1] != 0:
+                            if 4 in self.tile_map[x_pos,y_pos-1].openingen:
+                                openingen.append(2)
+                        self.tile_map[x_pos,y_pos] = Tile(world_generation(openingen))
+            for i in range(lengte):
+                x_pos = x + i
+                for j in range(lengte):
+                    y_pos = y-j
+                    if self.tile_map[x_pos,y_pos] == 0:
+                        openingen = []
+                        if self.tile_map[x_pos+1,y_pos] != 0:
+                            if 3 in self.tile_map[x_pos+1,y_pos].openingen:
+                                openingen.append(1)
+                        if self.tile_map[x_pos-1,y_pos] != 0:
+                            if 1 in self.tile_map[x_pos-1,y_pos].openingen:
+                                openingen.append(3)
+                        if self.tile_map[x_pos,y_pos+1] != 0:
+                            if 2 in self.tile_map[x_pos,y_pos+1].openingen:
+                                openingen.append(4)
+                        if self.tile_map[x_pos,y_pos-1] != 0:
+                            if 4 in self.tile_map[x_pos,y_pos-1].openingen:
+                                openingen.append(2)
+                        self.tile_map[x_pos,y_pos] = Tile(world_generation(openingen))
+            for i in range(lengte):
+                x_pos = x + i
+                for j in range(lengte):
+                    y_pos = y+j
+                    if self.tile_map[x_pos,y_pos] == 0:
+                        openingen = []
+                        if self.tile_map[x_pos+1,y_pos] != 0:
+                            if 3 in self.tile_map[x_pos+1,y_pos].openingen:
+                                openingen.append(1)
+                        if self.tile_map[x_pos-1,y_pos] != 0:
+                            if 1 in self.tile_map[x_pos-1,y_pos].openingen:
+                                openingen.append(3)
+                        if self.tile_map[x_pos,y_pos+1] != 0:
+                            if 2 in self.tile_map[x_pos,y_pos+1].openingen:
+                                openingen.append(4)
+                        if self.tile_map[x_pos,y_pos-1] != 0:
+                            if 4 in self.tile_map[x_pos,y_pos-1].openingen:
+                                openingen.append(2)
+                        self.tile_map[x_pos,y_pos] = Tile(world_generation(openingen))
+        # looping
+        self.update()
 
 
 if __name__ == '__main__':
