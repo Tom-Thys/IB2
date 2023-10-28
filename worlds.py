@@ -101,7 +101,6 @@ def world_generation(openingen=[]):
         extra_openingen = randint(0, 4 - len(openingen))  # Extra openingen
         #print(extra_openingen)
         for i in range(extra_openingen):
-            print(i, openingen)
             loops = 0
             while loops < 5:
                 loops += 1
@@ -111,7 +110,6 @@ def world_generation(openingen=[]):
                     continue
         for i in range(1, 5):
             if i not in openingen:
-                print(i,openingen)
                 kleur = randint(2, 5)
                 kaart[z[i][0]:z[i][1], z[i][2]:z[i][3]] = kleur
     #print(kaart)
