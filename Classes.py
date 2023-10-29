@@ -173,4 +173,4 @@ class Node():  # A* algoritme
         self.h = 0  # h_cost: afstand van eind node
         self.f = 0  # f_cost: g_cost + h_cost = totale cost
     def __eq__(self, other):
-        return self.position == other.position
+        return self.positie == other.positie

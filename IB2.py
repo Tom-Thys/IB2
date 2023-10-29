@@ -421,33 +421,75 @@ def menu_nav():
 def pathfinding_gps(speler_pos_x, speler_pos_y):
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
     # Begin- en eindnodes initialiseren met 0 cost
-    begin = Node(None, [math.floor(speler_pos_x), math.floor(speler_pos_y)])
+    begin = Node(None, (math.floor(speler_pos_x), math.floor(speler_pos_y)))
     begin.g = begin.h = begin.f = 0
-    eind = Node(None, [8, 8])
+    eind = Node(None, (8, 8))
     eind.g = eind.h = eind.f = 0
 
     # initialiseer open en closed lijsten
     open_list = []  # dit is de lijst van punten die geëvalueerd moeten worden
     closed_list = []  # dit is de lijst van punten die al geëvalueerd zijn
-    open_list.append(begin) # startnode toevoegen aan openlijst
-
+    open_list.append(begin)  # startnode toevoegen aan openlijst
     # loopen tot het einde gevonden is
     while len(open_list) > 0:
-        # tijdelijke variabele current maken, is de node met minste f cost
-        current = open_list[0]
+        # tijdelijke variabele current maken, is de node met minste f cost (in begin de beginnode)
+        current_node = open_list[0]
         current_index = 0
         # zoeken naar de node met kleinste f cost
         for index, item in enumerate(open_list):
-            if item.f < current.f:
+            if item.f < current_node.f:
                 current_node = item
                 current_index = index
         # current in de closed_list steken, aangezien deze geëvalueerd wordt
         open_list.pop(current_index)
-        closed_list.append(current)
+        closed_list.append(current_node)
         # als de current node de eindnode is, dan is pathfinding voltooid
-        if current == eind:
-            # gevonden pad maken
-            return
+        if current_node.positie == eind.positie:
+            pad = []
+            current = current_node
+            while current is not None:  # enkel het beginnende node heeft geen parent (None)
+                pad.append(current.positie)
+                current = current.parent
+            return pad
+        # nieuwe child nodes creëeren
+        children_list = []
+        for nieuwe_positie in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # enkel child nodes aanmaken boven, onder, links of rechts van de current node
+            # positie krijgen
+            node_positie = (current_node.positie[0] + nieuwe_positie[0], current_node.positie[1] + nieuwe_positie[1])  # huidige node x en y + "verschuiving" x en y
+            # kijken of deze nodes binnen de wereldmap vallen
+            if node_positie[0] > world_map.shape[0] or node_positie[0] < 0 or node_positie[1] > world_map.shape[1] or node_positie[1] < 0:
+                continue  # gaat naar de volgende nieuwe_positie
+            # kijken of we op deze node kunnen stappen
+            if world_map[node_positie[0]][node_positie[1]] != 0:
+                continue
+            # nieuwe node creëeren
+            nieuwe_node = Node(current_node, node_positie)
+            children_list.append(nieuwe_node)
+        for child in children_list:
+            # kijken of child_node in de closed lijst zit
+            is_closed = False
+            for closed_child in closed_list:
+                if child == closed_child:
+                    is_closed = True
+            if is_closed:
+                continue
+
+            # cost waarden berekenen
+            child.g = current_node.g + 1  # afstand tot begin node
+            child.h = ((child.positie[0] - eind.positie[0])**2) + ((child.positie[1]-eind.positie[1])**2)  # afstand tot eind node
+            child.f = child.g + child.h
+
+            # kijken of child_node in de open lijst zit
+            is_open = False
+            for open_node in open_list:
+                if child == open_node and child.g > open_node.g:
+                    is_open = True
+            if is_open:
+                continue
+            # indien niet al in open list, nu toevoegen
+            open_list.append(child)
+
+
 
 def main():
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity
@@ -570,7 +612,8 @@ def main():
             with open("config.ini", "w") as f:
                 config.write(f)
 
-        #pathfinding_gps(p_speler_x, p_speler_y)
+        pad = pathfinding_gps(p_speler_x, p_speler_y)
+        print(pad)
         while game_state == 2 and not moet_afsluiten:
             # Onthoud de huidige tijd
             start_time = time.time()
