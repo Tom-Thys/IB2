@@ -164,3 +164,13 @@ class Auto():
     def hitting(self, object):
         self.hitpoints -= 1
 
+
+class Node():  # A* algoritme
+    def __init__(self, parent=None, positie=None):
+        self.parent = parent
+        self.positie = positie
+        self.g = 0  # g_cost: afstand van beginnende node
+        self.h = 0  # h_cost: afstand van eind node
+        self.f = 0  # f_cost: g_cost + h_cost = totale cost
+    def __eq__(self, other):
+        return self.position == other.position

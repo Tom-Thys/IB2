@@ -416,6 +416,38 @@ def menu_nav():
         if settings_menu_index < 0:
             settings_menu_index = 2
 
+
+def pathfinding_gps(speler_pos_x, speler_pos_y):
+    # Voor het pathfinden van de gps gebruiken we het A* algoritme
+    # Begin- en eindnodes initialiseren met 0 cost
+    begin = Node(None, [math.floor(speler_pos_x), math.floor(speler_pos_y)])
+    begin.g = begin.h = begin.f = 0
+    eind = Node(None, [8, 8])
+    eind.g = eind.h = eind.f = 0
+
+    # initialiseer open en closed lijsten
+    open_list = []  # dit is de lijst van punten die geëvalueerd moeten worden
+    closed_list = []  # dit is de lijst van punten die al geëvalueerd zijn
+    open_list.append(begin) # startnode toevoegen aan openlijst
+
+    # loopen tot het einde gevonden is
+    while len(open_list) > 0:
+        # tijdelijke variabele current maken, is de node met minste f cost
+        current = open_list[0]
+        current_index = 0
+        # zoeken naar de node met kleinste f cost
+        for index, item in enumerate(open_list):
+            if item.f < current.f:
+                current_node = item
+                current_index = index
+        # current in de closed_list steken, aangezien deze geëvalueerd wordt
+        open_list.pop(current_index)
+        closed_list.append(current)
+        # als de current node de eindnode is, dan is pathfinding voltooid
+        if current == eind:
+            # gevonden pad maken
+            return
+
 def main():
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity
     # Initialiseer de SDL2 bibliotheek
@@ -537,7 +569,7 @@ def main():
             with open("config.ini", "w") as f:
                 config.write(f)
 
-
+        #pathfinding_gps(p_speler_x, p_speler_y)
         while game_state == 2 and not moet_afsluiten:
             # Onthoud de huidige tijd
             start_time = time.time()
@@ -545,7 +577,6 @@ def main():
             renderer.clear()
             render_floor_and_sky(renderer)
             # Render de huidige frame
-
             (d, v, kl) = speler.n_raycasting(world_map)
 
             t1 = time.time()
