@@ -96,7 +96,7 @@ def verwerk_input(delta):
     events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game:
-        speler.move(1, 0.1,world_map)
+        speler.move(10, 0.1,world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game:

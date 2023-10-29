@@ -3,7 +3,6 @@ import numpy as np
 from sdl2 import *
 
 from Raycaster import *
-from line_profiler_pycharm import profile
 
 
 class Sprite():

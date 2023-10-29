@@ -205,6 +205,7 @@ def raycast(p_speler_x, p_speler_y, r_straal, r_speler, world_map):
 
 def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
     #variabelen
+    print(p_x,p_y)
     y_dim, x_dim = np.shape(world_map)
     l = min(60, 30 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2)) #maximale lengte die geraycast wordt
 
@@ -287,6 +288,6 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         d_muur_vlak += np.where(muren_check * ~dist_cond, x, 0)
 
         # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
-        d_v += dist_cond * delta_x
-        d_h += (~dist_cond) * delta_y
+        d_v += dist_cond * ~muren_check * delta_x
+        d_h += (~dist_cond) * ~muren_check * delta_y
 
