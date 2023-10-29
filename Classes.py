@@ -74,7 +74,7 @@ class Player():
 
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""
-        self.hoek += hoek
+        self.hoek = (hoek + self.hoek) %(2*math.pi)
         draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
                                  [math.sin(hoek), math.cos(hoek)]])
 

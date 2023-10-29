@@ -297,11 +297,12 @@ def wheelSprite(renderer,sprite):
 
 def render_sprites(renderer, sprites, player):
     sprites.sort(reverse=True, key=lambda sprite: np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2))#Sorteren op afstand
+    #Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
 
     for sprite in sprites:
         # richting
         sprite_distance = np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2)
-        sprite_distance += np.pi
+        sprite_distance += math.pi
 
 
         if sprite_distance >= 60:continue;
@@ -314,24 +315,24 @@ def render_sprites(renderer, sprites, player):
         hoek_sprite = np.arctan((sprite.y-player.p_y)/(sprite.x-player.p_x))
 
 
-        if player.p_x > sprite.x and player.p_y > sprite.y: hoek_sprite += np.pi;
-        if player.p_x > sprite.x and player.p_y < sprite.y: hoek_sprite += np.pi;
-        if player.p_x < sprite.x and player.p_y > sprite.y: hoek_sprite += 2*np.pi;
+        if player.p_x > sprite.x and player.p_y > sprite.y: hoek_sprite += math.pi;
+        if player.p_x > sprite.x and player.p_y < sprite.y: hoek_sprite += math.pi;
+        if player.p_x < sprite.x and player.p_y > sprite.y: hoek_sprite += 2*math.pi;
 
 
-        while player.hoek <= 2 * np.pi:
+        """while player.hoek <= 2 * np.pi: #Fixxed this in speler.draaien()
             player.hoek += 2 * np.pi
 
         while player.hoek >= 2 * np.pi:
-            player.hoek -= 2 * np.pi
+            player.hoek -= 2 * np.pi"""
 
         hoek_verschil = player.hoek - hoek_sprite
-        if abs(hoek_verschil) >= (np.pi/4): continue;
+        if abs(hoek_verschil) >= (math.pi/3.7): continue; #net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
 
 
 
         screen_y = (HOOGTE - sprite_size_hoogte) / 2    #wordt in het midden gezet
-        screen_x = int(BREEDTE / 2 + hoek_verschil * (BREEDTE * 2) / np.pi - sprite_size_breedte / 2)
+        screen_x = int(BREEDTE / 2 + hoek_verschil * (BREEDTE * 2) / math.pi - sprite_size_breedte / 2)
 
         renderer.copy(sprite.image,dstrect=(screen_x,screen_y, sprite_size_breedte,sprite_size_hoogte))
 
@@ -463,7 +464,7 @@ def main():
     #Inladen sprites
     wheel = factory.from_image(resources.get_path("Wheel.png"))
     sprites = []
-    tree = factory.from_image(resources.get_path("Tree.png"))
+    tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
 
     sprites.append(Sprite(tree, x=10, y=10))
     sprites.append(Sprite(tree, x=15, y=10))
