@@ -444,7 +444,7 @@ def pathfinding_gps(speler_pos_x, speler_pos_y):
         open_list.pop(current_index)
         closed_list.append(current_node)
         # als de current node de eindnode is, dan is pathfinding voltooid
-        if current_node.positie == eind.positie:
+        if current_node == eind:
             pad = []
             current = current_node
             while current is not None:  # enkel het beginnende node heeft geen parent (None)
