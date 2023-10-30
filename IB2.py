@@ -371,6 +371,7 @@ def main():
     muren_info = []
     for i,muur in enumerate(soort_muren):
         muren_info.append((muur.size[0], muur.size[1]))
+    muren_info[0] = (64,89)
 
 
     # Inladen wereld_mappen

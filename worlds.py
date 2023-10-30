@@ -158,8 +158,9 @@ class Map():
             for i in range(lengte):
                 x_pos = x - i
                 if x_pos - 1 < 0:
-                    self.tile_map[x_pos, y] = Tile((np.full((9, 9), 1), []))
-                    self.added.append((x_pos, y))
+                    for i in range(3):
+                        self.tile_map[x_pos, y+1] = Tile((np.full((9, 9), 1), []))
+                        self.added.append((x_pos, y+i))
                     break
                 for j in range(lengte):
                     y_pos = y+j
@@ -187,8 +188,9 @@ class Map():
             for i in range(lengte):
                 x_pos = x - i
                 if x_pos - 1 < 0:
-                    self.tile_map[x_pos, y] = Tile((np.full((9, 9), 1), []))
-                    self.added.append((x_pos, y))
+                    for i in range(3):
+                        self.tile_map[x_pos, y + 1] = Tile((np.full((9, 9), 1), []))
+                        self.added.append((x_pos, y + i))
                     break
                 for j in range(lengte):
                     y_pos = y-j
