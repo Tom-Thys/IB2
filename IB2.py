@@ -173,6 +173,9 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 2:
                 if key == sdl2.SDLK_m:
                     game_state = 0
+                if key == sdl2.SDLK_k:
+                    #draw_path(renderer, pathfinding_gps())
+                    pass
 
 
         elif event.type == sdl2.SDL_KEYUP:
@@ -418,10 +421,10 @@ def menu_nav():
             settings_menu_index = 2
 
 
-def pathfinding_gps(speler_pos_x, speler_pos_y):
+def pathfinding_gps():
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
     # Begin- en eindnodes initialiseren met 0 cost
-    begin = Node(None, (math.floor(speler_pos_x), math.floor(speler_pos_y)))
+    begin = Node(None, (math.floor(speler.p_x), math.floor(speler.p_y)))
     begin.g = begin.h = begin.f = 0
     eind = Node(None, (8, 8))
     eind.g = eind.h = eind.f = 0
@@ -460,7 +463,8 @@ def pathfinding_gps(speler_pos_x, speler_pos_y):
             if node_positie[0] > world_map.shape[0] or node_positie[0] < 0 or node_positie[1] > world_map.shape[1] or node_positie[1] < 0:
                 continue  # gaat naar de volgende nieuwe_positie
             # kijken of we op deze node kunnen stappen
-            if world_map[node_positie[0]][node_positie[1]] != 0:
+            print(node_positie)
+            if world_map[node_positie[0]-1][node_positie[1]] != 0:  # hier de indices -1 doen zorgt ervoor dat er geen error is, maar dan berekent hij ook niet het pad meer als je op het uiteinde zit
                 continue
             # nieuwe node creëeren
             nieuwe_node = Node(current_node, node_positie)
@@ -489,8 +493,20 @@ def pathfinding_gps(speler_pos_x, speler_pos_y):
             # indien niet al in open list, nu toevoegen
             open_list.append(child)
 
-
-
+def draw_path(renderer, path):
+    if path == None:
+        pass
+    else:
+        print(path)
+        y_dim, x_dim = np.shape(world_map)
+        unit_d = 200/x_dim
+        for item in range(len(path)):
+            if item == 0:
+                renderer.fill(((path[item][0]*unit_d),(path[item][1]*unit_d),unit_d,unit_d),kleuren[1])
+            elif item == len(path)-1:
+                renderer.fill(((path[item][0]*unit_d+unit_d/4),(path[item][1]*unit_d+unit_d/4),unit_d/1.5,unit_d/1.5),kleuren[2])
+            else:
+                renderer.fill(((path[item][0]*unit_d+unit_d/4),(path[item][1]*unit_d+unit_d/4),unit_d/1.5,unit_d/1.5),kleuren[7])
 def main():
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity
     # Initialiseer de SDL2 bibliotheek
@@ -612,8 +628,7 @@ def main():
             with open("config.ini", "w") as f:
                 config.write(f)
 
-        pad = pathfinding_gps(p_speler_x, p_speler_y)
-        print(pad)
+
         while game_state == 2 and not moet_afsluiten:
             # Onthoud de huidige tijd
             start_time = time.time()
@@ -625,10 +640,10 @@ def main():
 
             t1 = time.time()
             renderen(renderer, d, v, kl, soort_muren, muren_info)
-
             render_sprites(renderer, sprites, speler)
             #t.append(time.time()-t1)
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
+            draw_path(renderer, pathfinding_gps())
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)
