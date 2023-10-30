@@ -460,11 +460,11 @@ def pathfinding_gps():
             # positie krijgen
             node_positie = (current_node.positie[0] + nieuwe_positie[0], current_node.positie[1] + nieuwe_positie[1])  # huidige node x en y + "verschuiving" x en y
             # kijken of deze nodes binnen de wereldmap vallen
-            if node_positie[0] > world_map.shape[0] or node_positie[0] < 0 or node_positie[1] > world_map.shape[1] or node_positie[1] < 0:
+            if node_positie[0] > world_map.shape[1] or node_positie[0] < 0 or node_positie[1] > world_map.shape[0] or node_positie[1] < 0:
                 continue  # gaat naar de volgende nieuwe_positie
             # kijken of we op deze node kunnen stappen
             print(node_positie)
-            if world_map[node_positie[0]-1][node_positie[1]] != 0:  # hier de indices -1 doen zorgt ervoor dat er geen error is, maar dan berekent hij ook niet het pad meer als je op het uiteinde zit
+            if world_map[node_positie[1]][node_positie[0]] != 0:
                 continue
             # nieuwe node creëeren
             nieuwe_node = Node(current_node, node_positie)
