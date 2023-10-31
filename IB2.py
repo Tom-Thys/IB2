@@ -11,7 +11,7 @@ import sdl2.ext
 import sdl2.sdlimage
 import sdl2.sdlmixer
 from sdl2 import *
-from worlds import worldlijst, deuren
+from worlds import *
 from Classes import *
 from rendering import *
 from configparser import ConfigParser
@@ -46,8 +46,7 @@ sensitivity = -2 * sensitivity_rw + 300
 moet_afsluiten = False
 
 # positie van de speler
-p_speler_x, p_speler_y = 3.2, 5 + 2 / math.sqrt(2)
-
+p_speler_x, p_speler_y = 50.5*9,49*9
 
 # richting waarin de speler kijkt
 r_speler_hoek = math.pi / 4
@@ -60,8 +59,14 @@ speler.aanmaak_r_stralen(d_camera=d_camera)
 
 # world
 wereld_nr = 0
-world_map = worldlijst[wereld_nr]
-# y_dim, x_dim = np.shape(world_map)
+#world_map = worldlijst[wereld_nr]
+#y_dim, x_dim = np.shape(world_map)
+
+
+inf_world = Map()
+inf_world.update()
+inf_world.map_making(speler)
+world_map = inf_world.world_map
 
 # Vooraf gedefinieerde kleuren
 kleuren = [
@@ -95,18 +100,22 @@ geluiden = [
 #
 
 def verwerk_input(delta):
-    global moet_afsluiten, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw, deuren
+    global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2:
-        speler.move(1, 0.1, world_map)
-        muziek_spelen("footsteps", False,4)
+        speler.move(10, 0.1,world_map)
+        inf_world.map_making(speler)
+        world_map = inf_world.world_map
+        muziek_spelen("footsteps", False, 4)
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2:
-        speler.move(-1, 0.1, world_map)
-        muziek_spelen("footsteps", False,4)
+        speler.move(-1, 0.1,world_map)
+        inf_world.map_making(speler)
+        world_map = inf_world.world_map
+        muziek_spelen("footsteps", False, 4)
     if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2:
         speler.draaien(-math.pi / sensitivity)
     if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2:
@@ -228,6 +237,8 @@ def verwerk_input(delta):
             speler.draaien(-math.pi / 4000 * draai)
             beweging = event.motion.yrel
             speler.move(1, beweging / 1000, world_map)
+            inf_world.map_making(speler)
+            world_map = inf_world.world_map
             continue
 
     # Polling-gebaseerde input. Dit gebruiken we bij voorkeur om bv het ingedrukt
@@ -313,7 +324,7 @@ def z_renderen(renderer, d, d_v, k, soort_muren, muren_info, deuren):
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def renderText(font, renderer, text, x, y, midden=0):
+def renderText(font, renderer, text, x, y, midden = 0):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     if midden:
         renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), y, text.size[0], text.size[1]))
@@ -333,14 +344,13 @@ def wheelSprite(renderer, sprite):
     y_pos = HOOGTE - 230
     renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250))
 
-
 def render_sprites(renderer, sprites, player):
     sprites.sort(reverse=True, key=lambda sprite: np.sqrt(
         (sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2))  # Sorteren op afstand
     # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
 
     for sprite in sprites:
-        # richting
+       # richting
         sprite_distance = np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2)
         sprite_distance += math.pi
 
@@ -543,6 +553,7 @@ def draw_path(renderer, path):
 
 def main():
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity
+    global game, garage, BREEDTE, wereld_nr, world_map, worldlijst
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
 
@@ -585,9 +596,9 @@ def main():
     sprites = []
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
 
-    sprites.append(Sprite(tree, x=10, y=10))
-    sprites.append(Sprite(tree, x=15, y=10))
-    sprites.append(Sprite(tree, x=3, y=3))
+    sprites.append(Sprite(tree, x=50.4*9, y=50*9))
+    sprites.append(Sprite(tree, x=49.5*9, y=50*9))
+    sprites.append(Sprite(tree, x=49*9, y=49.5*9))
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
@@ -666,14 +677,14 @@ def main():
             # Render de huidige frame
             (d, v, kl), (z_d, z_v, z_k) = speler.n_raycasting(world_map, deuren)
 
-            t1 = time.time()
+            #t1 = time.time()
             renderen(renderer, d, v, kl, soort_muren, muren_info)
             z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
             render_sprites(renderer, sprites, speler)
             # t.append(time.time()-t1)
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             if abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
-                pad = pathfinding_gps()
+                pad = pathfinding_gps((50*9,50*9))
             draw_path(renderer, pad)
             delta = time.time() - start_time
             if speler.in_auto:
