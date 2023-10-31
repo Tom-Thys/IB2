@@ -75,8 +75,17 @@ kleuren = [
     sdl2.ext.Color(120, 200, 250),  # 8 = Blauw_lucht
     sdl2.ext.Color(106, 13, 173)  # 9 = Purple
 ]
-
-
+# Start Audio
+sdl2.sdlmixer.Mix_Init(0)
+sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
+sdl2.sdlmixer.Mix_AllocateChannels(6)
+sdl2.sdlmixer.Mix_MasterVolume(80)
+geluiden = [
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_select.wav", "UTF-8")),
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_start.wav", "UTF-8")),
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8"))
+]
 #
 # Verwerkt alle input van het toetsenbord en de muis
 #
@@ -93,8 +102,10 @@ def verwerk_input(delta):
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2:
         speler.move(1, 0.1, world_map)
+        muziek_spelen("footsteps", False,4)
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2:
         speler.move(-1, 0.1, world_map)
+        muziek_spelen("footsteps", False,4)
     if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2:
         speler.draaien(-math.pi / sensitivity)
     if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2:
@@ -120,10 +131,10 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 0:
                 if key == sdl2.SDLK_DOWN:
                     main_menu_index += 1
-                    # muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_UP:
                     main_menu_index -= 1
-                    # muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if main_menu_index == 0:
                         game_state = 2
@@ -136,10 +147,10 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 1:
                 if key == sdl2.SDLK_DOWN:
                     settings_menu_index += 1
-                    # muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_UP:
                     settings_menu_index -= 1
-                    # muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if settings_menu_index == 0:
                         pass
@@ -173,6 +184,8 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 2:
                 if key == sdl2.SDLK_m:
                     game_state = 0
+                if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
+                    pass
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
@@ -180,7 +193,8 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 1:
                 pass
             if not moet_afsluiten and game_state == 2:
-                pass
+                if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
+                    muziek_spelen(0, False, 4)
         # Analoog aan SDL_KEYDOWN. Dit event wordt afgeleverd wanneer de
         # gebruiker een muisknop indrukt
         elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
@@ -374,7 +388,7 @@ def show_fps(font, renderer):
 
 
 def muziek_spelen(geluid, looped=False, channel=1):
-    global volume
+    global volume, geluiden
     if not sound:
         return
     if geluid == 0:
@@ -383,12 +397,6 @@ def muziek_spelen(geluid, looped=False, channel=1):
         sdl2.sdlmixer.Mix_MasterVolume(volume)
         if sdl2.sdlmixer.Mix_Playing(channel) == 1:
             return
-        geluiden = [
-            sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),
-            sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_select.wav", "UTF-8")),
-            sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_start.wav", "UTF-8")),
-            sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8"))
-        ]
         liedjes = {
             "main menu": geluiden[0],
             "main menu select": geluiden[1],
@@ -529,7 +537,6 @@ def main():
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
-    sdl2.sdlmixer.Mix_Init(0)
 
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
@@ -577,11 +584,6 @@ def main():
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
     fps_generator = show_fps(font, renderer)
-
-    # Start  audio
-    sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
-    sdl2.sdlmixer.Mix_AllocateChannels(6)
-    sdl2.sdlmixer.Mix_MasterVolume(80)
 
     achtergrond = factory.from_image(resources.get_path("game_main_menu.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
