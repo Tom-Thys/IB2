@@ -1,6 +1,6 @@
-#import cProfile
-#import pstats
-#from line_profiler_pycharm import profile
+# import cProfile
+# import pstats
+# from line_profiler_pycharm import profile
 
 import math
 import time
@@ -11,12 +11,12 @@ import sdl2.ext
 import sdl2.sdlimage
 import sdl2.sdlmixer
 from sdl2 import *
-from worlds import worldlijst
+from worlds import worldlijst, deuren
 from Classes import *
 from rendering import *
 from configparser import ConfigParser
-config = ConfigParser()
 
+config = ConfigParser()
 
 # Constanten
 BREEDTE = 1000
@@ -38,12 +38,12 @@ settings_menu_positie = [0, 0]
 # verwerking van config file: ook globale variabelen
 config.read("config.ini")
 volume = int(config.get("settings", "volume"))
-sensitivity_rw = int(config.get("settings", "sensitivity")) # echte sensitivity gaat van 100 - 300, 300 traagst, 100 snelst. Raw sensitivity gaat van 0 tot 100
+sensitivity_rw = int(config.get("settings",
+                                "sensitivity"))  # echte sensitivity gaat van 100 - 300, 300 traagst, 100 snelst. Raw sensitivity gaat van 0 tot 100
 sensitivity = -2 * sensitivity_rw + 300
 
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
-
 
 # positie van de speler
 p_speler_x, p_speler_y = 3 + 1 / math.sqrt(2), 5 + 1 / math.sqrt(2)
@@ -53,16 +53,14 @@ r_speler_hoek = math.pi / 4
 # FOV
 d_camera = 1
 #
-#Speler aanmaken
+# Speler aanmaken
 speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
 speler.aanmaak_r_stralen(d_camera=d_camera)
 
-
-
-#world
+# world
 wereld_nr = 0
 world_map = worldlijst[wereld_nr]
-#y_dim, x_dim = np.shape(world_map)
+# y_dim, x_dim = np.shape(world_map)
 
 # Vooraf gedefinieerde kleuren
 kleuren = [
@@ -75,7 +73,7 @@ kleuren = [
     sdl2.ext.Color(192, 192, 192),  # 6 = Licht grijs
     sdl2.ext.Color(255, 255, 255),  # 7 = Wit
     sdl2.ext.Color(120, 200, 250),  # 8 = Blauw_lucht
-    sdl2.ext.Color(106, 13, 173)    #9 = Purple
+    sdl2.ext.Color(106, 13, 173)  # 9 = Purple
 ]
 
 
@@ -87,16 +85,16 @@ kleuren = [
 #
 
 def verwerk_input(delta):
-    global moet_afsluiten,game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw
+    global moet_afsluiten, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2:
-        speler.move(1, 0.1,world_map)
+        speler.move(1, 0.1, world_map)
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2:
-        speler.move(-1, 0.1,world_map)
+        speler.move(-1, 0.1, world_map)
     if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2:
         speler.draaien(-math.pi / sensitivity)
     if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2:
@@ -117,13 +115,15 @@ def verwerk_input(delta):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
+            if key == sdl2.SDLK_r:
+                x,y = speler.position
             if not moet_afsluiten and game_state == 0:
                 if key == sdl2.SDLK_DOWN:
                     main_menu_index += 1
-                    #muziek_spelen("main menu select", False, 2)
+                    # muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_UP:
                     main_menu_index -= 1
-                    #muziek_spelen("main menu select", False, 2)
+                    # muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if main_menu_index == 0:
                         game_state = 2
@@ -136,10 +136,10 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 1:
                 if key == sdl2.SDLK_DOWN:
                     settings_menu_index += 1
-                    #muziek_spelen("main menu select", False, 2)
+                    # muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_UP:
                     settings_menu_index -= 1
-                    #muziek_spelen("main menu select", False, 2)
+                    # muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if settings_menu_index == 0:
                         pass
@@ -174,7 +174,7 @@ def verwerk_input(delta):
                 if key == sdl2.SDLK_m:
                     game_state = 0
                 if key == sdl2.SDLK_k:
-                    #draw_path(renderer, pathfinding_gps())
+                    # draw_path(renderer, pathfinding_gps())
                     pass
 
 
@@ -220,6 +220,7 @@ def verwerk_input(delta):
 
     if key_states[sdl2.SDL_SCANCODE_ESCAPE]:
         moet_afsluiten = True
+
 
 """ STAAT NU IN class Player
 def bereken_r_straal(kolom):
@@ -271,14 +272,31 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
             wall_texture = soort_muren[k_muur]
             breedte, hoogte = muren_info[k_muur]
             rij = unit_d * breedte
-            #d_muur = 10 / d_muur
-            kolom = BREEDTE-kolom
+            # d_muur = 10 / d_muur
+            kolom = BREEDTE - kolom
             scherm_y = HOOGTE / 2
-            renderer.copy(wall_texture, srcrect=(rij, 0, 1, 100),
+            renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def renderText(font, renderer, text, x, y, window = 0):
+def z_renderen(renderer, d, d_v, k, soort_muren, muren_info, deuren):
+    for kolom in range(BREEDTE):
+        if k[kolom] == 0: continue;
+        deur = deuren[k[kolom]]
+        d_muur = d[kolom]
+        unit_d = d_v[kolom]
+        if unit_d < deur.positie: continue;
+        wall_texture = soort_muren[deur.kleur]
+        breedte, hoogte = muren_info[deur.kleur]
+        rij = (unit_d-deur.positie)%1 * breedte
+        # d_muur = 10 / d_muur
+        kolom = BREEDTE - kolom
+        scherm_y = HOOGTE / 2
+        renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
+                      dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
+
+
+def renderText(font, renderer, text, x, y, midden=0):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     if midden:
         renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), y, text.size[0], text.size[1]))
@@ -293,35 +311,34 @@ def render_floor_and_sky(renderer):
     renderer.fill((0, HOOGTE // 2, BREEDTE, HOOGTE // 2), kleuren[5])
 
 
-def wheelSprite(renderer,sprite):
+def wheelSprite(renderer, sprite):
     x_pos = (BREEDTE - 250) // 2
     y_pos = HOOGTE - 230
-    renderer.copy(sprite,dstrect=(x_pos,y_pos,250,250))
+    renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250))
+
 
 def render_sprites(renderer, sprites, player):
-    sprites.sort(reverse=True, key=lambda sprite: np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2))#Sorteren op afstand
-    #Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
+    sprites.sort(reverse=True, key=lambda sprite: np.sqrt(
+        (sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2))  # Sorteren op afstand
+    # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
 
     for sprite in sprites:
         # richting
         sprite_distance = np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2)
         sprite_distance += math.pi
 
-
-        if sprite_distance >= 60:continue;
+        if sprite_distance >= 60: continue;
         # grootte
-        sprite_size_breedte = sprite.breedte/sprite_distance*10
-        sprite_size_hoogte = sprite.hoogte/sprite_distance*10
+        sprite_size_breedte = sprite.breedte / sprite_distance * 10
+        sprite_size_hoogte = sprite.hoogte / sprite_distance * 10
 
         # hoek
 
-        hoek_sprite = np.arctan((sprite.y-player.p_y)/(sprite.x-player.p_x))
-
+        hoek_sprite = np.arctan((sprite.y - player.p_y) / (sprite.x - player.p_x))
 
         if player.p_x > sprite.x and player.p_y > sprite.y: hoek_sprite += math.pi;
         if player.p_x > sprite.x and player.p_y < sprite.y: hoek_sprite += math.pi;
-        if player.p_x < sprite.x and player.p_y > sprite.y: hoek_sprite += 2*math.pi;
-
+        if player.p_x < sprite.x and player.p_y > sprite.y: hoek_sprite += 2 * math.pi;
 
         """while player.hoek <= 2 * np.pi: #Fixxed this in speler.draaien()
             player.hoek += 2 * np.pi
@@ -330,14 +347,13 @@ def render_sprites(renderer, sprites, player):
             player.hoek -= 2 * np.pi"""
 
         hoek_verschil = player.hoek - hoek_sprite
-        if abs(hoek_verschil) >= (math.pi/3.7): continue; #net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
+        if abs(hoek_verschil) >= (
+                math.pi / 3.7): continue;  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
 
-
-
-        screen_y = (HOOGTE - sprite_size_hoogte) / 2    #wordt in het midden gezet
+        screen_y = (HOOGTE - sprite_size_hoogte) / 2  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 + hoek_verschil * (BREEDTE * 2) / math.pi - sprite_size_breedte / 2)
 
-        renderer.copy(sprite.image,dstrect=(screen_x,screen_y, sprite_size_breedte,sprite_size_hoogte))
+        renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
 
 
 def show_fps(font, renderer):
@@ -421,12 +437,12 @@ def menu_nav():
             settings_menu_index = 2
 
 
-def pathfinding_gps():
+def pathfinding_gps(eindpositie=(8, 8)):
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
     # Begin- en eindnodes initialiseren met 0 cost
-    begin = Node(None, (math.floor(speler.p_x), math.floor(speler.p_y)))
+    begin = Node(None, speler.position)
     begin.g = begin.h = begin.f = 0
-    eind = Node(None, (8, 8))
+    eind = Node(None, eindpositie)
     eind.g = eind.h = eind.f = 0
 
     # initialiseer open en closed lijsten
@@ -456,15 +472,17 @@ def pathfinding_gps():
             return pad
         # nieuwe child nodes creëeren
         children_list = []
-        for nieuwe_positie in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # enkel child nodes aanmaken boven, onder, links of rechts van de current node
+        for nieuwe_positie in [(0, -1), (0, 1), (-1, 0),
+                               (1, 0)]:  # enkel child nodes aanmaken boven, onder, links of rechts van de current node
             # positie krijgen
-            node_positie = (current_node.positie[0] + nieuwe_positie[0], current_node.positie[1] + nieuwe_positie[1])  # huidige node x en y + "verschuiving" x en y
+            node_positie = (current_node.positie[0] + nieuwe_positie[0],
+                            current_node.positie[1] + nieuwe_positie[1])  # huidige node x en y + "verschuiving" x en y
             # kijken of deze nodes binnen de wereldmap vallen
-            if node_positie[0] > world_map.shape[1] or node_positie[0] < 0 or node_positie[1] > world_map.shape[0] or node_positie[1] < 0:
+            if node_positie[0] > world_map.shape[1] or node_positie[0] < 0 or node_positie[1] > world_map.shape[0] or \
+                    node_positie[1] < 0:
                 continue  # gaat naar de volgende nieuwe_positie
             # kijken of we op deze node kunnen stappen
-            print(node_positie)
-            if world_map[node_positie[1]][node_positie[0]] != 0:
+            if world_map[node_positie[1]][node_positie[0]] > 0:
                 continue
             # nieuwe node creëeren
             nieuwe_node = Node(current_node, node_positie)
@@ -480,7 +498,8 @@ def pathfinding_gps():
 
             # cost waarden berekenen
             child.g = current_node.g + 1  # afstand tot begin node
-            child.h = ((child.positie[0] - eind.positie[0])**2) + ((child.positie[1]-eind.positie[1])**2)  # afstand tot eind node
+            child.h = ((child.positie[0] - eind.positie[0]) ** 2) + (
+                        (child.positie[1] - eind.positie[1]) ** 2)  # afstand tot eind node
             child.f = child.g + child.h
 
             # kijken of child_node in de open lijst zit
@@ -493,38 +512,39 @@ def pathfinding_gps():
             # indien niet al in open list, nu toevoegen
             open_list.append(child)
 
+
 def draw_path(renderer, path):
     if path == None:
         pass
     else:
-        print(path)
         y_dim, x_dim = np.shape(world_map)
-        unit_d = 200/x_dim
+        unit_d = 200 / x_dim
         for item in range(len(path)):
             if item == 0:
-                renderer.fill(((path[item][0]*unit_d),(path[item][1]*unit_d),unit_d,unit_d),kleuren[1])
-            elif item == len(path)-1:
-                renderer.fill(((path[item][0]*unit_d+unit_d/4),(path[item][1]*unit_d+unit_d/4),unit_d/1.5,unit_d/1.5),kleuren[2])
+                renderer.fill(((path[item][0] * unit_d), (path[item][1] * unit_d), unit_d, unit_d), kleuren[1])
+            elif item == len(path) - 1:
+                renderer.fill(((path[item][0] * unit_d + unit_d / 4), (path[item][1] * unit_d + unit_d / 4),
+                               unit_d / 1.5, unit_d / 1.5), kleuren[2])
             else:
-                renderer.fill(((path[item][0]*unit_d+unit_d/4),(path[item][1]*unit_d+unit_d/4),unit_d/1.5,unit_d/1.5),kleuren[7])
+                renderer.fill(((path[item][0] * unit_d + unit_d / 4), (path[item][1] * unit_d + unit_d / 4),
+                               unit_d / 1.5, unit_d / 1.5), kleuren[7])
+
+
 def main():
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
     sdl2.sdlmixer.Mix_Init(0)
 
-
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
     window.show()
-    #screen = sdl2.ext.surface("Test",size=(BREEDTE,HOOGTE))
+    # screen = sdl2.ext.surface("Test",size=(BREEDTE,HOOGTE))
     # Begin met het uitlezen van input van de muis en vraag om relatieve coordinaten
     sdl2.SDL_SetRelativeMouseMode(True)
 
     # Maak een renderer aan zodat we in ons venster kunnen renderen
     renderer = sdl2.ext.Renderer(window)
-
-
 
     # resources inladen
     resources = sdl2.ext.Resources(__file__, "resources")
@@ -539,19 +559,18 @@ def main():
         factory.from_image(resources.get_path("Gruis_house.png"))  # 5
     ]
     muren_info = []
-    for i,muur in enumerate(soort_muren):
-        muren_info.append((muur.size[0], muur.size[1]))
-
+    for i, muur in enumerate(soort_muren):
+        muren_info.append((muur.size[0], 500))
 
     # Inladen wereld_mappen
-    map_resources = sdl2.ext.Resources(__file__,"mappen")
+    map_resources = sdl2.ext.Resources(__file__, "mappen")
     # alle mappen opslaan in sdl2 textures
     map_textuur = []
-    for i,map in enumerate(worldlijst):
+    for i, map in enumerate(worldlijst):
         naam = f"map{i}.png"
         map_textuur.append(factory.from_image(map_resources.get_path(naam)))
 
-    #Inladen sprites
+    # Inladen sprites
     wheel = factory.from_image(resources.get_path("Wheel.png"))
     sprites = []
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
@@ -560,13 +579,11 @@ def main():
     sprites.append(Sprite(tree, x=15, y=10))
     sprites.append(Sprite(tree, x=3, y=3))
 
-
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
     fps_generator = show_fps(font, renderer)
 
-
-    #Start  audio
+    # Start  audio
     sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
     sdl2.sdlmixer.Mix_AllocateChannels(6)
     sdl2.sdlmixer.Mix_MasterVolume(80)
@@ -575,7 +592,7 @@ def main():
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
 
-    #Test Variable
+    # Test Variable
     t = []
 
     while not moet_afsluiten:
@@ -605,16 +622,19 @@ def main():
                           srcrect=(0, 0, settings_menu.size[0], settings_menu.size[1]),
                           dstrect=(0, 0, BREEDTE, HOOGTE))
             volume_text = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Volume: {volume}"))
-            sensitivity_rw_text = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Sensitivity: {sensitivity_rw}"))
+            sensitivity_rw_text = sdl2.ext.renderer.Texture(renderer,
+                                                            font.render_text(f"Sensitivity: {sensitivity_rw}"))
             renderer.copy(volume_text, dstrect=(10, 200, volume_text.size[0], volume_text.size[1]))
-            renderer.copy(sensitivity_rw_text, dstrect=(10, 230, sensitivity_rw_text.size[0], sensitivity_rw_text.size[1]))
+            renderer.copy(sensitivity_rw_text,
+                          dstrect=(10, 230, sensitivity_rw_text.size[0], sensitivity_rw_text.size[1]))
             if settings_menu_index != 2:
                 text = sdl2.ext.renderer.Texture(renderer, font.render_text("<>"))
-                renderer.copy(text, dstrect=(settings_menu_positie[0], settings_menu_positie[1], text.size[0], text.size[1]))
+                renderer.copy(text,
+                              dstrect=(settings_menu_positie[0], settings_menu_positie[1], text.size[0], text.size[1]))
             else:
                 renderer.copy(menu_pointer,
-                          srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
-                          dstrect=(settings_menu_positie[0], settings_menu_positie[1], 80, 50))
+                              srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
+                              dstrect=(settings_menu_positie[0], settings_menu_positie[1], 80, 50))
             renderer.present()
 
         sdl2.SDL_SetRelativeMouseMode(True)
@@ -622,26 +642,29 @@ def main():
             muziek_spelen(0)
             muziek_spelen("game start", False, 3)
         if game_state != 1:
-            config.set("settings","volume",f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
+            config.set("settings", "volume",
+                       f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
             config.set("settings", "sensitivity", f"{sensitivity_rw}")
             sensitivity = -2 * sensitivity_rw + 300
             with open("config.ini", "w") as f:
                 config.write(f)
 
-
         while game_state == 2 and not moet_afsluiten:
+            for key in deuren:
+                deuren[key].update()
             # Onthoud de huidige tijd
             start_time = time.time()
             # Reset de rendering context
             renderer.clear()
             render_floor_and_sky(renderer)
             # Render de huidige frame
-            (d, v, kl) = speler.n_raycasting(world_map)
+            (d, v, kl), (z_d, z_v, z_k) = speler.n_raycasting(world_map)
 
             t1 = time.time()
             renderen(renderer, d, v, kl, soort_muren, muren_info)
+            z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
             render_sprites(renderer, sprites, speler)
-            #t.append(time.time()-t1)
+            # t.append(time.time()-t1)
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             draw_path(renderer, pathfinding_gps())
             delta = time.time() - start_time
@@ -655,16 +678,16 @@ def main():
 
             # Verwissel de rendering context met de frame buffer
             renderer.present()
-            #print(sum(t)/len(t))
+            # print(sum(t)/len(t))
 
     # Sluit SDL2 af
     sdl2.ext.quit()
 
 
 if __name__ == '__main__':
-    #profiler = cProfile.Profile()
-    #profiler.enable()
+    # profiler = cProfile.Profile()
+    # profiler.enable()
     main()
-    #profiler.disable()
-    #stats = pstats.Stats(profiler)
-    #stats.dump_stats('data.prof')
+    # profiler.disable()
+    # stats = pstats.Stats(profiler)
+    # stats.dump_stats('data.prof')

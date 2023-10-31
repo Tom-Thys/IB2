@@ -214,6 +214,10 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
     d_muur = np.zeros(breedte)
     d_muur_vlak = np.zeros(breedte)
 
+    z_kleuren = np.zeros(breedte, dtype='int')
+    z_d_muur = np.zeros(breedte)
+    z_d_muur_vlak = np.zeros(breedte)
+
     delta_x = 1 / np.abs(r_stralen[:, 0])
     delta_y = 1 / np.abs(r_stralen[:, 1])
 
@@ -228,6 +232,7 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
     while True:
         #reset van muren_check vormt plekken waarop we muren raken
         muren_check = np.full(breedte, False)
+        z_buffer = np.full(breedte, False)
 
         #kijken of we d_v of d_h nodig hebben deze loop
         dist_cond = d_v < d_h
@@ -237,6 +242,7 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         break_1 = d_v < l
         break_2 = d_h < l
         break_3 = kleuren == 0
+        break_z = z_kleuren == 0
         break_cond = (dist_cond * break_1 + ~dist_cond * break_2) * break_3
         #Break 1 enkel tellen als we met d_v werken en d_h enkel als we met d_h werken
         #Binair vermenigvuldigen als break3 = 0 dan wordt break_cond op die plek 0
@@ -244,7 +250,7 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
 
         #Als op alle plekken break_cond == 0 return dan de bekomen waardes
         if np.all(~break_cond):
-            return (10 / d_muur), (d_muur_vlak % 1), (kleuren-1)
+            return ((1 / d_muur), (d_muur_vlak % 1), (kleuren-1)),((1 / z_d_muur), (z_d_muur_vlak % 1), (z_kleuren))
 
         #x en y berekenen adhv gegeven d_v of d_h en afronden op 3-8 zodat astype(int) niet afrond naar beneden terwijl het naar boven zou moeten
         #AANPASSING: Zolang we geen modulo doen rond float 32 ook perfect af naar boven als het moet en is sneller
@@ -271,21 +277,33 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         #Logica: x_f moet tussen 0 en x_dim blijven en y_f tussen 0 en y_dim
         #Deze tellen ook enkel maar als de break conditie niet telt
         valid_indices = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map),break_cond))
-
-
         """HIER LOGICA INVOEGEN VOOR ALS EEN RAY OUT OF BOUND GAAT --> Map herwerken"""
-
 
         muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]], True, False)
         #op de plekken waar logica correct is kijken of we een muur raken
+        z_buffer[muren_check] = np.where(world_map[y_f[muren_check], x_f[muren_check]]>0, True, False)
+
+
+
 
         #We raken op muren_check = True muren en we slaan die data op in de gecreeerde arrays
-        kleuren[muren_check] += world_map[y_f[muren_check], x_f[muren_check]]
+        kleuren[muren_check*z_buffer] += world_map[y_f[muren_check*z_buffer], x_f[muren_check*z_buffer]]
         #r_straal*r_speler voor fish eye eruit te halen
-        d_muur += np.where(break_cond * muren_check, least_distance*(r_stralen[:,0]*r_speler[0]+r_stralen[:,1]*r_speler[1]), 0)
+        d_muur += np.where(break_cond * muren_check*z_buffer, least_distance*(r_stralen[:,0]*r_speler[0]+r_stralen[:,1]*r_speler[1]), 0)
         #Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
-        d_muur_vlak += np.where(muren_check * dist_cond, y, 0)
-        d_muur_vlak += np.where(muren_check * ~dist_cond, x, 0)
+        d_muur_vlak += np.where(muren_check*z_buffer * dist_cond, y, 0)
+        d_muur_vlak += np.where(muren_check*z_buffer * ~dist_cond, x, 0)
+
+        z_kleuren[muren_check * ~z_buffer*break_z] += world_map[y_f[muren_check * ~z_buffer*break_z], x_f[muren_check * ~z_buffer*break_z]]
+        # r_straal*r_speler voor fish eye eruit te halen
+        z_d_muur += np.where(break_cond * muren_check * ~z_buffer*break_z,
+                           least_distance * (r_stralen[:, 0] * r_speler[0] + r_stralen[:, 1] * r_speler[1]), 0)
+        # Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
+        z_d_muur_vlak += np.where(muren_check * ~z_buffer * dist_cond*break_z, y, 0)
+        z_d_muur_vlak += np.where(muren_check * ~z_buffer * ~dist_cond*break_z, x, 0)
+
+
+
 
         # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
         d_v += dist_cond * delta_x
