@@ -292,7 +292,6 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
             breedte, hoogte = muren_info[k_muur]
             rij = unit_d * breedte
             # d_muur = 10 / d_muur
-            kolom = BREEDTE - kolom
             scherm_y = HOOGTE / 2
             renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
@@ -309,7 +308,6 @@ def z_renderen(renderer, d, d_v, k, soort_muren, muren_info, deuren):
         breedte, hoogte = muren_info[deur.kleur]
         rij = (unit_d-deur.positie)%1 * breedte
         # d_muur = 10 / d_muur
-        kolom = BREEDTE - kolom
         scherm_y = HOOGTE / 2
         renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))

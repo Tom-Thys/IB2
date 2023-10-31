@@ -28,7 +28,8 @@ class Player():
         self.p_y = y
         self.hoek = hoek
         self.r_speler = np.array([math.cos(hoek), math.sin(hoek)])
-        self.breedte = breedte+1
+        self.breedte = breedte
+        self.hoeken = np.zeros(self.breedte)
         self.r_stralen = np.zeros((self.breedte, 2))
         self.car = 0
         self.in_auto = False
@@ -36,9 +37,12 @@ class Player():
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""
         cameravlak = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
-        for i in range(self.breedte):  # +1 anders mis je buitenste waarde op renderer
+        for i in range(self.breedte):
             r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / self.breedte) * cameravlak
-            self.r_stralen[i] = (np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom)))
+            hoek = math.atan(r_straal_kolom[0]/r_straal_kolom[1])
+            self.hoeken[i] = hoek
+        self.r_stralen[:,0] = np.cos(self.hoeken)
+        self.r_stralen[:,1] = np.sin(self.hoeken)
 
     def move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
@@ -76,21 +80,22 @@ class Player():
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""
         self.hoek = (hoek + self.hoek) %(2*math.pi)
-        draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
-                                 [math.sin(hoek), math.cos(hoek)]])
+        self.hoeken += hoek
 
         self.r_speler = np.array([math.cos(self.hoek), math.sin(self.hoek)])
 
-        for i, straal in enumerate(self.r_stralen):
-            self.r_stralen[i] = np.matmul(draai_matrix, straal)
+        self.r_stralen[:, 0] = np.cos(self.hoeken)
+        self.r_stralen[:, 1] = np.sin(self.hoeken)
         if self.car != 0:
-            self.car.draaien(hoek, draai_matrix)
+            self.car.draaien(hoek)
 
 
     def n_raycasting(self, world_map, deuren):
         """Gebruik maken van de numpy raycaster om de afstanden en kleuren van muren te bepalen
         Neemt world map in zodat er gemakkelijk van map kan gewisseld worden"""
 
+        #Had circulaire import dus np raycaster in de class
+        # print(self.r_speler)
         # variabelen
         y_dim, x_dim = np.shape(world_map)
         l = min(60, 3 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2))  # maximale lengte die geraycast wordt
@@ -205,7 +210,7 @@ class Auto():
         self.type = type
         self.hp = hp
         self.speed = 0
-        self.vector = np.array([0, 0])
+        self.vector = np.array([1, 0])
         self.afrem = 0.1
         self.optrek = 0.1
         self.hoek = 0
@@ -243,12 +248,9 @@ class Auto():
         if self.speed < 5:
             self.speed += self.optrek
 
-    def turning(self, hoek, draai_matrix=0):
-        if not draai_matrix.any():
-            draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
-                                     [math.sin(hoek), math.cos(hoek)]])
-        self.vector = np.matmul(draai_matrix, self.vector)
+    def turning(self, hoek):
         self.hoek += hoek
+        self.vector = np.array([math.cos(self.hoek), math.sin(self.hoek)])
 
     def player_enter(self):
         self.player_inside = True
@@ -265,7 +267,7 @@ class Auto():
                 self.Player.p_y = self.p_y - 0.5
 
     def hitting(self, object):
-        self.hitpoints -= 1
+        self.hp -= 1
 
 
 class Node():  # A* algoritme
@@ -300,10 +302,10 @@ class Deur():
                 self.positie = 0
 
     def start(self):
+        if self.moving:
+            self.richting *= -1
         self.moving = True
         self.open = False
-    def test(self):
-        print("test")
 
 
 
