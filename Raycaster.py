@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from Classes import Deur
 
 
 def nr_rond(nr, tol=5):
@@ -301,6 +302,7 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         # Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
         z_d_muur_vlak += np.where(muren_check * ~z_buffer * dist_cond*break_z, y, 0)
         z_d_muur_vlak += np.where(muren_check * ~z_buffer * ~dist_cond*break_z, x, 0)
+        z_kleuren = np.where((z_d_muur_vlak%1) < deuren[z_kleuren].positie, 0, z_kleuren)
 
 
 
@@ -309,3 +311,30 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         d_v += dist_cond * delta_x
         d_h += (~dist_cond) * delta_y
 
+
+deuren = {-1000: Deur(), -1001: Deur()}
+
+class Deur():
+    def __init__(self,kleur = 0):
+        self.moving = False
+        self.open = False
+        self.richting = 1
+        self.positie = 0
+        self.kleur = kleur
+
+    def update(self):
+        if self.moving:
+            self.positie += self.richting/500
+            if self.positie >= 1:
+                self.moving = False
+                self.open = True
+                self.richting = -1
+                self.positie = 1
+            elif self.positie <= 0:
+                self.moving = False
+                self.richting = 1
+                self.positie = 0
+
+    def moving(self):
+        self.moving = True
+        self.open = False

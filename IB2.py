@@ -46,7 +46,8 @@ sensitivity = -2 * sensitivity_rw + 300
 moet_afsluiten = False
 
 # positie van de speler
-p_speler_x, p_speler_y = 3 + 1 / math.sqrt(2), 5 + 1 / math.sqrt(2)
+p_speler_x, p_speler_y = 3.2, 5 + 2 / math.sqrt(2)
+
 
 # richting waarin de speler kijkt
 r_speler_hoek = math.pi / 4
@@ -85,7 +86,7 @@ kleuren = [
 #
 
 def verwerk_input(delta):
-    global moet_afsluiten, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw
+    global moet_afsluiten, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw, deuren
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
@@ -116,7 +117,16 @@ def verwerk_input(delta):
                 moet_afsluiten = True
                 break
             if key == sdl2.SDLK_r:
-                x,y = speler.position
+                x, y = speler.position
+                coords = ((-1,-1),(-1,0),(-1,1),(0,1),(1,1),(1,0),(1,-1),(0,-1))
+                for coord in coords:
+                    positie = (y + coord[1],x + coord[0])  # huidige node x en y + "verschuiving" x en y
+                    # kijken of deze nodes binnen de wereldmap vallen
+                    if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[1] < 0:
+                        continue
+                    if world_map[positie] < 0:
+                        deur = deuren[world_map[positie]]
+                        deur.start()
             if not moet_afsluiten and game_state == 0:
                 if key == sdl2.SDLK_DOWN:
                     main_menu_index += 1
@@ -560,7 +570,7 @@ def main():
     ]
     muren_info = []
     for i, muur in enumerate(soort_muren):
-        muren_info.append((muur.size[0], 500))
+        muren_info.append((muur.size[0], 890))
 
     # Inladen wereld_mappen
     map_resources = sdl2.ext.Resources(__file__, "mappen")
@@ -658,7 +668,7 @@ def main():
             renderer.clear()
             render_floor_and_sky(renderer)
             # Render de huidige frame
-            (d, v, kl), (z_d, z_v, z_k) = speler.n_raycasting(world_map)
+            (d, v, kl), (z_d, z_v, z_k) = speler.n_raycasting(world_map, deuren)
 
             t1 = time.time()
             renderen(renderer, d, v, kl, soort_muren, muren_info)
