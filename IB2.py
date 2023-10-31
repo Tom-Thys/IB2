@@ -173,11 +173,6 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 2:
                 if key == sdl2.SDLK_m:
                     game_state = 0
-                if key == sdl2.SDLK_k:
-                    # draw_path(renderer, pathfinding_gps())
-                    pass
-
-
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
@@ -560,7 +555,7 @@ def main():
     ]
     muren_info = []
     for i, muur in enumerate(soort_muren):
-        muren_info.append((muur.size[0], 500))
+        muren_info.append((muur.size[0], 890))
 
     # Inladen wereld_mappen
     map_resources = sdl2.ext.Resources(__file__, "mappen")
@@ -641,6 +636,7 @@ def main():
         if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
             muziek_spelen("game start", False, 3)
+            pad = pathfinding_gps()
         if game_state != 1:
             config.set("settings", "volume",
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
@@ -666,7 +662,9 @@ def main():
             render_sprites(renderer, sprites, speler)
             # t.append(time.time()-t1)
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
-            draw_path(renderer, pathfinding_gps())
+            if abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
+                pad = pathfinding_gps()
+            draw_path(renderer, pad)
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)
