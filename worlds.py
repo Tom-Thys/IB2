@@ -92,11 +92,11 @@ def world_generation(openingen=[]):
     z = {1: (2, -3, 0, 2), 2: (0, 2, 2, -3), 3: (2, -3, -3, -1),
          4: (-3, -1, 2, -3)}  # KANTEN voor map locaties invullen gaten
     kaart = np.zeros((9, 9), dtype='int32')
-    kleur = randint(2, 5)
+    kleur = randint(2, 6)
     kaart[:3, :3] = kleur
-    kleur = randint(2, 5)
+    kleur = randint(2, 6)
     kaart[-3:, -3:] = kleur
-    kleur = randint(2, 5)
+    kleur = randint(2, 6)
     kaart[-3:, :3] = kleur
     kleur = randint(-1, 30)
     kaart[:3, -3:] = (kleur%3)+2
@@ -115,7 +115,7 @@ def world_generation(openingen=[]):
                     continue
         for i in range(1, 5):
             if i not in openingen:
-                kleur = randint(2, 5)
+                kleur = randint(2, 6)
                 kaart[z[i][0]:z[i][1], z[i][2]:z[i][3]] = kleur
     #print(kaart)
     return kaart, openingen

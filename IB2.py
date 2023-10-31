@@ -107,7 +107,7 @@ def verwerk_input(delta):
     events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2:
-        speler.move(10, 0.1,world_map)
+        speler.move(1, 0.1,world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
         muziek_spelen("footsteps", False, 4)
@@ -577,7 +577,8 @@ def main():
         factory.from_image(resources.get_path("Red_house.png")),  # 2
         factory.from_image(resources.get_path("Pink_house.png")),  # 3
         factory.from_image(resources.get_path("yellow_house.png")),  # 4
-        factory.from_image(resources.get_path("Gruis_house.png"))  # 5
+        factory.from_image(resources.get_path("Gruis_house.png")),  # 5
+        factory.from_image(resources.get_path("hedge.png"))  # 6
     ]
     muren_info = []
     for i, muur in enumerate(soort_muren):
