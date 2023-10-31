@@ -4,6 +4,7 @@ from sdl2 import *
 
 from Raycaster import *
 
+moving_stappen = False
 
 class Sprite():
     def __init__(self, image, x, y):
@@ -16,16 +17,17 @@ class Sprite():
 
 
 class Player():
+    global moving_stappen
     def __init__(self, x, y, hoek, breedte=800):
         """Player is gedefinieerd door zijn start x-, y-coördinaten (floats), kijkhoek (rad) en
          de breedte (int) van het scherm dat hij opneemt"""
-        self.position = (x, y)
+        self.position = (math.floor(x), math.floor(y))
         self.p_x = x
         self.p_y = y
         self.hoek = hoek
         self.r_speler = np.array([math.cos(hoek), math.sin(hoek)])
-        self.r_stralen = np.zeros((breedte, 2))
-        self.breedte = breedte
+        self.breedte = breedte+1
+        self.r_stralen = np.zeros((self.breedte, 2))
         self.car = 0
         self.in_auto = False
         self.tile = math.floor(self.p_x/9),math.floor(self.p_y/9)
@@ -40,6 +42,8 @@ class Player():
     def move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
+        # print(self.r_speler,[self.p_x,self.p_y])
+        moving_stappen = False
         if type(self.car) != int:
             if richting == 1:
                 self.car.accelerate(world_map)
@@ -52,25 +56,26 @@ class Player():
             x_2 = (x + atm * richting * self.r_speler[0]) % x_dim
             y_2 = (y + atm * richting * self.r_speler[1]) % y_dim
 
+            moving_stappen = True
             if world_map[math.floor(y)][math.floor(x)] == 0 and \
                     world_map[math.floor(y_2)][math.floor(x_2)] == 0:
                 self.p_x = x
                 self.p_y = y
-                self.position = (x, y)
+                self.position = (math.floor(x),math.floor(y))
 
             if world_map[math.floor(y)][math.floor(self.p_x)] == 0 and \
                     world_map[math.floor(y_2)][math.floor(self.p_x)] == 0:
                 self.p_y = y
-                self.position = (self.p_x, y)
+                self.position = (math.floor(self.p_x),math.floor(y))
             if world_map[math.floor(self.p_y)][math.floor(x)] == 0 and \
                     world_map[math.floor(self.p_y)][math.floor(x_2)] == 0:
                 self.p_x = x
-                self.position = (x, self.p_y)
+                self.position = (math.floor(x),math.floor(self.p_y))
         self.tile = math.floor(self.p_x/9),math.floor(self.p_y/9)
 
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""
-        self.hoek += hoek
+        self.hoek = (hoek + self.hoek) %(2*math.pi)
         draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
                                  [math.sin(hoek), math.cos(hoek)]])
 
@@ -157,3 +162,82 @@ class Auto():
 
     def hitting(self, object):
         self.hitpoints -= 1
+
+
+class Node():  # A* algoritme
+    def __init__(self, parent=None, positie=None):
+        self.parent = parent
+        self.positie = positie
+        self.g = 0  # g_cost: afstand van beginnende node
+        self.h = 0  # h_cost: afstand van eind node
+        self.f = 0  # f_cost: g_cost + h_cost = totale cost
+    def __eq__(self, other):
+        return self.positie == other.positie
+
+class Deur():
+    def __init__(self,kleur = 0):
+        self.moving = False
+        self.open = False
+        self.richting = 1
+        self.positie = 0
+        self.kleur = kleur
+
+    def update(self):
+        if self.moving:
+            self.positie += self.richting/500
+            if self.positie >= 1:
+                self.moving = False
+                self.open = True
+                self.richting = -1
+                self.positie = 1
+            elif self.positie <= 0:
+                self.moving = False
+                self.richting = 1
+                self.positie = 0
+
+    def moving(self):
+        self.moving = True
+        self.open = False
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
