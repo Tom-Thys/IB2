@@ -596,9 +596,9 @@ def main():
     sprites = []
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
 
-    sprites.append(Sprite(tree, x=10, y=10))
-    sprites.append(Sprite(tree, x=15, y=10))
-    sprites.append(Sprite(tree, x=3, y=3))
+    sprites.append(Sprite(tree, x=50.4*9, y=50*9))
+    sprites.append(Sprite(tree, x=49.5*9, y=50*9))
+    sprites.append(Sprite(tree, x=49*9, y=49.5*9))
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])

@@ -98,12 +98,12 @@ def world_generation(openingen=[]):
     kaart[-3:, -3:] = kleur
     kleur = randint(2, 5)
     kaart[-3:, :3] = kleur
-    kleur = randint(2, 5)
-    kaart[:3, -3:] = kleur
+    kleur = randint(-1, 30)
+    kaart[:3, -3:] = (kleur%3)+2
     if len(openingen) == 4:
         return kaart, openingen
     else:
-        extra_openingen = randint(0, 4 - len(openingen))  # Extra openingen
+        extra_openingen = 4#randint(0, 4 - len(openingen))  # Extra openingen
         #print(extra_openingen)
         for i in range(extra_openingen):
             loops = 0
