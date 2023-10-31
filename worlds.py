@@ -31,7 +31,7 @@ world_map = np.array([[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 world_map_2 = np.zeros((30,5),dtype='int')
 world_map_2[0,-2] = 3
 
-deuren = {-1000: Deur(),-1001: Deur()}
+deuren = {0: Deur(), -1000: Deur(),-1001: Deur()}
 
 
 garage_map = [[10, 10, 10, 10, 10, 10, 10, 10],

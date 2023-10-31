@@ -81,8 +81,17 @@ kleuren = [
     sdl2.ext.Color(120, 200, 250),  # 8 = Blauw_lucht
     sdl2.ext.Color(106, 13, 173)  # 9 = Purple
 ]
-
-
+# Start Audio
+sdl2.sdlmixer.Mix_Init(0)
+sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
+sdl2.sdlmixer.Mix_AllocateChannels(6)
+sdl2.sdlmixer.Mix_MasterVolume(80)
+geluiden = [
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_select.wav", "UTF-8")),
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_start.wav", "UTF-8")),
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8"))
+]
 #
 # Verwerkt alle input van het toetsenbord en de muis
 #
@@ -101,10 +110,12 @@ def verwerk_input(delta):
         speler.move(10, 0.1,world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
+        muziek_spelen("footsteps", False, 4)
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2:
         speler.move(-1, 0.1,world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
+        muziek_spelen("footsteps", False, 4)
     if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2:
         speler.draaien(-math.pi / sensitivity)
     if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2:
@@ -126,14 +137,23 @@ def verwerk_input(delta):
                 moet_afsluiten = True
                 break
             if key == sdl2.SDLK_r:
-                x,y = speler.position
+                x, y = speler.position
+                coords = ((-1,-1),(-1,0),(-1,1),(0,1),(1,1),(1,0),(1,-1),(0,-1))
+                for coord in coords:
+                    positie = (y + coord[1],x + coord[0])  # huidige node x en y + "verschuiving" x en y
+                    # kijken of deze nodes binnen de wereldmap vallen
+                    if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[1] < 0:
+                        continue
+                    if world_map[positie] < 0:
+                        deur = deuren[world_map[positie]]
+                        deur.start()
             if not moet_afsluiten and game_state == 0:
                 if key == sdl2.SDLK_DOWN:
                     main_menu_index += 1
-                    # muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_UP:
                     main_menu_index -= 1
-                    # muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if main_menu_index == 0:
                         game_state = 2
@@ -146,10 +166,10 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 1:
                 if key == sdl2.SDLK_DOWN:
                     settings_menu_index += 1
-                    # muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_UP:
                     settings_menu_index -= 1
-                    # muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if settings_menu_index == 0:
                         pass
@@ -183,11 +203,8 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 2:
                 if key == sdl2.SDLK_m:
                     game_state = 0
-                if key == sdl2.SDLK_k:
-                    # draw_path(renderer, pathfinding_gps())
+                if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
                     pass
-
-
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
@@ -195,7 +212,8 @@ def verwerk_input(delta):
             if not moet_afsluiten and game_state == 1:
                 pass
             if not moet_afsluiten and game_state == 2:
-                pass
+                if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
+                    muziek_spelen(0, False, 4)
         # Analoog aan SDL_KEYDOWN. Dit event wordt afgeleverd wanneer de
         # gebruiker een muisknop indrukt
         elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
@@ -285,7 +303,6 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
             breedte, hoogte = muren_info[k_muur]
             rij = unit_d * breedte
             # d_muur = 10 / d_muur
-            kolom = BREEDTE - kolom-1
             scherm_y = HOOGTE / 2
             renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
@@ -302,7 +319,6 @@ def z_renderen(renderer, d, d_v, k, soort_muren, muren_info, deuren):
         breedte, hoogte = muren_info[deur.kleur]
         rij = (unit_d-deur.positie)%1 * breedte
         # d_muur = 10 / d_muur
-        kolom = BREEDTE - kolom - 1
         scherm_y = HOOGTE / 2
         renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
@@ -390,7 +406,7 @@ def show_fps(font, renderer):
 
 
 def muziek_spelen(geluid, looped=False, channel=1):
-    global volume
+    global volume, geluiden
     if not sound:
         return
     if geluid == 0:
@@ -399,12 +415,6 @@ def muziek_spelen(geluid, looped=False, channel=1):
         sdl2.sdlmixer.Mix_MasterVolume(volume)
         if sdl2.sdlmixer.Mix_Playing(channel) == 1:
             return
-        geluiden = [
-            sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),
-            sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_select.wav", "UTF-8")),
-            sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_start.wav", "UTF-8")),
-            sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8"))
-        ]
         liedjes = {
             "main menu": geluiden[0],
             "main menu select": geluiden[1],
@@ -546,7 +556,6 @@ def main():
     global game, garage, BREEDTE, wereld_nr, world_map, worldlijst
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
-    sdl2.sdlmixer.Mix_Init(0)
 
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
@@ -572,7 +581,7 @@ def main():
     ]
     muren_info = []
     for i, muur in enumerate(soort_muren):
-        muren_info.append((muur.size[0], 500))
+        muren_info.append((muur.size[0], 890))
 
     # Inladen wereld_mappen
     map_resources = sdl2.ext.Resources(__file__, "mappen")
@@ -594,11 +603,6 @@ def main():
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
     fps_generator = show_fps(font, renderer)
-
-    # Start  audio
-    sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
-    sdl2.sdlmixer.Mix_AllocateChannels(6)
-    sdl2.sdlmixer.Mix_MasterVolume(80)
 
     achtergrond = factory.from_image(resources.get_path("game_main_menu.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
@@ -653,6 +657,7 @@ def main():
         if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
             muziek_spelen("game start", False, 3)
+            pad = pathfinding_gps()
         if game_state != 1:
             config.set("settings", "volume",
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
@@ -670,7 +675,7 @@ def main():
             renderer.clear()
             render_floor_and_sky(renderer)
             # Render de huidige frame
-            (d, v, kl), (z_d, z_v, z_k) = speler.n_raycasting(world_map)
+            (d, v, kl), (z_d, z_v, z_k) = speler.n_raycasting(world_map, deuren)
 
             #t1 = time.time()
             renderen(renderer, d, v, kl, soort_muren, muren_info)
@@ -678,9 +683,9 @@ def main():
             render_sprites(renderer, sprites, speler)
             # t.append(time.time()-t1)
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
-            path = pathfinding_gps((50*9,50*9))
-            print(len(path))
-            draw_path(renderer, path)
+            if abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
+                pad = pathfinding_gps((50*9,50*9))
+            draw_path(renderer, pad)
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)
