@@ -26,7 +26,7 @@ class Player():
         self.p_y = y
         self.hoek = hoek
         self.r_speler = np.array([math.cos(hoek), math.sin(hoek)])
-        self.breedte = breedte+1
+        self.breedte = breedte
         self.r_stralen = np.zeros((self.breedte, 2))
         self.car = 0
         self.in_auto = False

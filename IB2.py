@@ -91,24 +91,23 @@ kleuren = [
 #
 
 def verwerk_input(delta):
-    global moet_afsluiten, game, garage, index, world_map
-    global moet_afsluiten, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw
+    global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
-    if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game:
+    if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2:
         speler.move(10, 0.1,world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
-    if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game:
+    if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2:
         speler.move(-1, 0.1,world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
-    if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game:
+    if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2:
         speler.draaien(-math.pi / sensitivity)
-    if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game:
+    if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2:
         speler.draaien(math.pi / sensitivity)
 
     for event in events:
@@ -286,7 +285,7 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
             breedte, hoogte = muren_info[k_muur]
             rij = unit_d * breedte
             # d_muur = 10 / d_muur
-            kolom = BREEDTE - kolom
+            kolom = BREEDTE - kolom-1
             scherm_y = HOOGTE / 2
             renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
@@ -303,7 +302,7 @@ def z_renderen(renderer, d, d_v, k, soort_muren, muren_info, deuren):
         breedte, hoogte = muren_info[deur.kleur]
         rij = (unit_d-deur.positie)%1 * breedte
         # d_muur = 10 / d_muur
-        kolom = BREEDTE - kolom
+        kolom = BREEDTE - kolom - 1
         scherm_y = HOOGTE / 2
         renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
@@ -679,7 +678,9 @@ def main():
             render_sprites(renderer, sprites, speler)
             # t.append(time.time()-t1)
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
-            draw_path(renderer, pathfinding_gps())
+            path = pathfinding_gps((50*9,50*9))
+            print(len(path))
+            draw_path(renderer, path)
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)

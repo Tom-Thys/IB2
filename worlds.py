@@ -103,7 +103,7 @@ def world_generation(openingen=[]):
     if len(openingen) == 4:
         return kaart, openingen
     else:
-        extra_openingen = 4#randint(0, 4 - len(openingen))  # Extra openingen
+        extra_openingen = randint(0, 4 - len(openingen))  # Extra openingen
         #print(extra_openingen)
         for i in range(extra_openingen):
             loops = 0
@@ -131,7 +131,7 @@ class Tile():
 
 class Map():
     def __init__(self):
-        self.tile_map = np.full((60, 60), Tile((0, 0)))
+        self.tile_map = np.full((500, 600), Tile((0, 0)))
         y, x = np.shape(self.tile_map)
         self.world_map = np.zeros((y * 9, x * 9), dtype='int32')
         self.tiles_size = np.shape(self.tile_map)
