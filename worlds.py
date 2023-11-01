@@ -7,32 +7,30 @@ from sdl2 import *
 from random import randint
 from Classes import Deur
 
-
 from Classes import Player
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
 world_map = np.array([[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-                    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [2, 0, 0, 0, -1000, 0, 0, 0, 0, 0, 0, 0, -1001, 0, 0, 0, 0, 0, 4],
-                    [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4],
-                    [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4],
-                    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4],
-                    [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-                    [2, 2, 2, 4, 2, 2, 1, 1, 1, 2, 2, 3, 2, 4, 2, 5, 2, 2, 2]])
-world_map_2 = np.zeros((30,5),dtype='int')
-world_map_2[0,-2] = 3
+                      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [2, 0, 0, 0, -1000, 0, 0, 0, 0, 0, 0, 0, -1001, 0, 0, 0, 0, 0, 4],
+                      [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4],
+                      [2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4],
+                      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4],
+                      [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+                      [2, 2, 2, 4, 2, 2, 1, 1, 1, 2, 2, 3, 2, 4, 2, 5, 2, 2, 2]])
+world_map_2 = np.zeros((30, 5), dtype='int')
+world_map_2[0, -2] = 3
 
-deuren = {0: Deur(), -1000: Deur(),-1001: Deur()}
-
+deuren = {0: Deur(), -1000: Deur(), -1001: Deur()}
 
 garage_map = [[10, 10, 10, 10, 10, 10, 10, 10],
               [10, 0, 0, 0, 0, 0, 0, 10],
@@ -99,12 +97,12 @@ def world_generation(openingen=[]):
     kleur = randint(2, 6)
     kaart[-3:, :3] = kleur
     kleur = randint(-1, 30)
-    kaart[:3, -3:] = (kleur%3)+2
+    kaart[:3, -3:] = (kleur % 4) + 2
     if len(openingen) == 4:
         return kaart, openingen
     else:
-        extra_openingen = 4#randint(0, 4 - len(openingen))  # Extra openingen
-        #print(extra_openingen)
+        extra_openingen = randint(0, 4 - len(openingen))  # Extra openingen
+        # print(extra_openingen)
         for i in range(extra_openingen):
             loops = 0
             while loops < 5:
@@ -116,8 +114,8 @@ def world_generation(openingen=[]):
         for i in range(1, 5):
             if i not in openingen:
                 kleur = randint(2, 6)
-                kaart[z[i][0]:z[i][1], z[i][2]:z[i][3]] = kleur
-    #print(kaart)
+                kaart[z[i][0]:z[i][1], z[i][2]:z[i][3]] = 6  # kleur
+    # print(kaart)
     return kaart, openingen
 
 
@@ -152,9 +150,9 @@ class Map():
 
     def update(self):
         for x, y in self.added:
-            self.world_map[x * self.size:(x + 1) * self.size, y * self.size:(y + 1) * self.size] = self.tile_map[x,y].map
+            self.world_map[x * self.size:(x + 1) * self.size, y * self.size:(y + 1) * self.size] = self.tile_map[x, y].map
         self.added = []
-        #print(self.world_map)
+        # print(self.world_map)
 
     def map_making(self, speler):
         lengte = 7
@@ -164,30 +162,30 @@ class Map():
                 x_pos = x - i
                 if x_pos - 1 < 0:
                     for i in range(3):
-                        self.tile_map[x_pos, y+1] = Tile((np.full((9, 9), 1), []))
-                        self.added.append((x_pos, y+i))
+                        self.tile_map[x_pos, y + 1] = Tile((np.full((9, 9), 1), []))
+                        self.added.append((x_pos, y + i))
                     break
                 for j in range(lengte):
-                    y_pos = y+j
+                    y_pos = y + j
                     if y_pos + 2 > self.tiles_size[0]:
                         self.tile_map[x_pos, y_pos] = Tile((np.full((9, 9), 1), []))
                         self.added.append((x_pos, y_pos))
                         break
-                    if self.tile_map[x_pos,y_pos] == 0:
+                    if self.tile_map[x_pos, y_pos] == 0:
                         openingen = []
-                        if self.tile_map[x_pos+1,y_pos] != 0:
-                            if 3 in self.tile_map[x_pos+1,y_pos].openingen:
+                        if self.tile_map[x_pos + 1, y_pos] != 0:
+                            if 3 in self.tile_map[x_pos + 1, y_pos].openingen:
                                 openingen.append(1)
-                        if self.tile_map[x_pos-1,y_pos] != 0:
-                            if 1 in self.tile_map[x_pos-1,y_pos].openingen:
+                        if self.tile_map[x_pos - 1, y_pos] != 0:
+                            if 1 in self.tile_map[x_pos - 1, y_pos].openingen:
                                 openingen.append(3)
-                        if self.tile_map[x_pos,y_pos+1] != 0:
-                            if 2 in self.tile_map[x_pos,y_pos+1].openingen:
+                        if self.tile_map[x_pos, y_pos + 1] != 0:
+                            if 2 in self.tile_map[x_pos, y_pos + 1].openingen:
                                 openingen.append(4)
-                        if self.tile_map[x_pos,y_pos-1] != 0:
-                            if 4 in self.tile_map[x_pos,y_pos-1].openingen:
+                        if self.tile_map[x_pos, y_pos - 1] != 0:
+                            if 4 in self.tile_map[x_pos, y_pos - 1].openingen:
                                 openingen.append(2)
-                        self.tile_map[x_pos,y_pos] = Tile(world_generation(openingen))
+                        self.tile_map[x_pos, y_pos] = Tile(world_generation(openingen))
                         self.added.append((x_pos, y_pos))
         if np.any(self.world_map[(x - lengte):x, (y - lengte):y] == 0):
             for i in range(lengte):
@@ -198,26 +196,26 @@ class Map():
                         self.added.append((x_pos, y + i))
                     break
                 for j in range(lengte):
-                    y_pos = y-j
+                    y_pos = y - j
                     if y_pos - 1 < 0:
                         self.tile_map[x_pos, y_pos] = Tile((np.full((9, 9), 1), []))
                         self.added.append((x_pos, y_pos))
                         break
-                    if self.tile_map[x_pos,y_pos] == 0:
+                    if self.tile_map[x_pos, y_pos] == 0:
                         openingen = []
-                        if self.tile_map[x_pos+1,y_pos] != 0:
-                            if 3 in self.tile_map[x_pos+1,y_pos].openingen:
+                        if self.tile_map[x_pos + 1, y_pos] != 0:
+                            if 3 in self.tile_map[x_pos + 1, y_pos].openingen:
                                 openingen.append(1)
-                        if self.tile_map[x_pos-1,y_pos] != 0:
-                            if 1 in self.tile_map[x_pos-1,y_pos].openingen:
+                        if self.tile_map[x_pos - 1, y_pos] != 0:
+                            if 1 in self.tile_map[x_pos - 1, y_pos].openingen:
                                 openingen.append(3)
-                        if self.tile_map[x_pos,y_pos+1] != 0:
-                            if 2 in self.tile_map[x_pos,y_pos+1].openingen:
+                        if self.tile_map[x_pos, y_pos + 1] != 0:
+                            if 2 in self.tile_map[x_pos, y_pos + 1].openingen:
                                 openingen.append(4)
-                        if self.tile_map[x_pos,y_pos-1] != 0:
-                            if 4 in self.tile_map[x_pos,y_pos-1].openingen:
+                        if self.tile_map[x_pos, y_pos - 1] != 0:
+                            if 4 in self.tile_map[x_pos, y_pos - 1].openingen:
                                 openingen.append(2)
-                        self.tile_map[x_pos,y_pos] = Tile(world_generation(openingen))
+                        self.tile_map[x_pos, y_pos] = Tile(world_generation(openingen))
                         self.added.append((x_pos, y_pos))
         if np.any(self.world_map[x:(x + lengte), (y - lengte):y] == 0):
             for i in range(lengte):
@@ -227,56 +225,56 @@ class Map():
                     self.added.append((x_pos, y))
                     break
                 for j in range(lengte):
-                    y_pos = y-j
+                    y_pos = y - j
                     if y_pos - 1 < 0 or y_pos + 2 > self.tiles_size[0]:
                         self.tile_map[x_pos, y_pos] = Tile((np.full((9, 9), 1), []))
                         self.added.append((x_pos, y_pos))
                         break
-                    if self.tile_map[x_pos,y_pos] == 0:
+                    if self.tile_map[x_pos, y_pos] == 0:
                         openingen = []
-                        if self.tile_map[x_pos+1,y_pos] != 0:
-                            if 3 in self.tile_map[x_pos+1,y_pos].openingen:
+                        if self.tile_map[x_pos + 1, y_pos] != 0:
+                            if 3 in self.tile_map[x_pos + 1, y_pos].openingen:
                                 openingen.append(1)
-                        if self.tile_map[x_pos-1,y_pos] != 0:
-                            if 1 in self.tile_map[x_pos-1,y_pos].openingen:
+                        if self.tile_map[x_pos - 1, y_pos] != 0:
+                            if 1 in self.tile_map[x_pos - 1, y_pos].openingen:
                                 openingen.append(3)
-                        if self.tile_map[x_pos,y_pos+1] != 0:
-                            if 2 in self.tile_map[x_pos,y_pos+1].openingen:
+                        if self.tile_map[x_pos, y_pos + 1] != 0:
+                            if 2 in self.tile_map[x_pos, y_pos + 1].openingen:
                                 openingen.append(4)
-                        if self.tile_map[x_pos,y_pos-1] != 0:
-                            if 4 in self.tile_map[x_pos,y_pos-1].openingen:
+                        if self.tile_map[x_pos, y_pos - 1] != 0:
+                            if 4 in self.tile_map[x_pos, y_pos - 1].openingen:
                                 openingen.append(2)
-                        self.tile_map[x_pos,y_pos] = Tile(world_generation(openingen))
+                        self.tile_map[x_pos, y_pos] = Tile(world_generation(openingen))
                         self.added.append((x_pos, y_pos))
         if np.any(self.world_map[x:(x + lengte), y:(y + lengte)] == 0):
             for i in range(lengte):
                 x_pos = x + i
                 if x_pos + 2 > self.tiles_size[1]:
-                    self.tile_map[x_pos, y] = Tile((np.full((9, 9), 1),[]))
+                    self.tile_map[x_pos, y] = Tile((np.full((9, 9), 1), []))
                     self.added.append((x_pos, y))
                     break
                 for j in range(lengte):
-                    y_pos = y+j
+                    y_pos = y + j
                     if y_pos + 2 > self.tiles_size[0]:
                         self.tile_map[x_pos, y_pos] = Tile((np.full((9, 9), 1), []))
                         self.added.append((x_pos, y_pos))
                         break
-                    if self.tile_map[x_pos,y_pos] == 0:
+                    if self.tile_map[x_pos, y_pos] == 0:
                         openingen = []
-                        if self.tile_map[x_pos+1,y_pos] != 0:
-                            if 3 in self.tile_map[x_pos+1,y_pos].openingen:
+                        if self.tile_map[x_pos + 1, y_pos] != 0:
+                            if 3 in self.tile_map[x_pos + 1, y_pos].openingen:
                                 openingen.append(1)
-                        if self.tile_map[x_pos-1,y_pos] != 0:
-                            if 1 in self.tile_map[x_pos-1,y_pos].openingen:
+                        if self.tile_map[x_pos - 1, y_pos] != 0:
+                            if 1 in self.tile_map[x_pos - 1, y_pos].openingen:
                                 openingen.append(3)
-                        if self.tile_map[x_pos,y_pos+1] != 0:
-                            if 2 in self.tile_map[x_pos,y_pos+1].openingen:
+                        if self.tile_map[x_pos, y_pos + 1] != 0:
+                            if 2 in self.tile_map[x_pos, y_pos + 1].openingen:
                                 openingen.append(4)
-                        if self.tile_map[x_pos,y_pos-1] != 0:
-                            if 4 in self.tile_map[x_pos,y_pos-1].openingen:
+                        if self.tile_map[x_pos, y_pos - 1] != 0:
+                            if 4 in self.tile_map[x_pos, y_pos - 1].openingen:
                                 openingen.append(2)
-                        self.tile_map[x_pos,y_pos] = Tile(world_generation(openingen))
-                        self.added.append((x_pos,y_pos))
+                        self.tile_map[x_pos, y_pos] = Tile(world_generation(openingen))
+                        self.added.append((x_pos, y_pos))
         # looping
         self.update()
 

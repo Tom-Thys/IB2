@@ -13,6 +13,11 @@ class Sprite():
         self.position = (x, y)
         self.breedte = image.size[0]
         self.hoogte = image.size[1]
+        self.afstand = 1
+
+    def afstanden(self, player):
+        self.afstand = ((self.x - player.p_x) ** 2 + (self.y - player.p_y) ** 2)**(1/2)
+        return self.afstand
 
 
 class Player():
@@ -39,6 +44,7 @@ class Player():
             r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / self.breedte) * cameravlak
             hoek = math.atan(r_straal_kolom[0]/r_straal_kolom[1])
             self.hoeken[i] = hoek
+
         self.r_stralen[:,0] = np.cos(self.hoeken)
         self.r_stralen[:,1] = np.sin(self.hoeken)
 
@@ -97,7 +103,7 @@ class Player():
         # print(self.r_speler)
         # variabelen
         y_dim, x_dim = np.shape(world_map)
-        l = min(60, 3 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2))  # maximale lengte die geraycast wordt
+        l = min(50, 3 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2))  # maximale lengte die geraycast wordt
 
         # Aanmaak numpy arrays die terug gestuurd worden
         kleuren = np.zeros(self.breedte, dtype='int')

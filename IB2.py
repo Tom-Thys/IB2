@@ -20,7 +20,7 @@ config = ConfigParser()
 
 # Constanten
 BREEDTE = 1000
-HOOGTE = 700
+HOOGTE = int(BREEDTE/10*7)
 
 POSITIE_START_GAME = [365, 253]
 POSITIE_SETTINGS = [300, 401]
@@ -46,7 +46,7 @@ sensitivity = -2 * sensitivity_rw + 300
 moet_afsluiten = False
 
 # positie van de speler
-p_speler_x, p_speler_y = 50.5*9,49*9
+p_speler_x, p_speler_y = 50.4 * 9, 49 * 9
 
 # richting waarin de speler kijkt
 r_speler_hoek = math.pi / 4
@@ -59,8 +59,8 @@ speler.aanmaak_r_stralen(d_camera=d_camera)
 
 # world
 wereld_nr = 0
-#world_map = worldlijst[wereld_nr]
-#y_dim, x_dim = np.shape(world_map)
+# world_map = worldlijst[wereld_nr]
+# y_dim, x_dim = np.shape(world_map)
 
 
 inf_world = Map()
@@ -92,6 +92,8 @@ geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_start.wav", "UTF-8")),
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8"))
 ]
+
+
 #
 # Verwerkt alle input van het toetsenbord en de muis
 #
@@ -107,12 +109,12 @@ def verwerk_input(delta):
     events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2:
-        speler.move(1, 0.1,world_map)
+        speler.move(1, 0.1, world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
         muziek_spelen("footsteps", False, 4)
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2:
-        speler.move(-1, 0.1,world_map)
+        speler.move(-1, 0.1, world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
         muziek_spelen("footsteps", False, 4)
@@ -138,11 +140,12 @@ def verwerk_input(delta):
                 break
             if key == sdl2.SDLK_r:
                 x, y = speler.position
-                coords = ((-1,-1),(-1,0),(-1,1),(0,1),(1,1),(1,0),(1,-1),(0,-1))
+                coords = ((-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1))
                 for coord in coords:
-                    positie = (y + coord[1],x + coord[0])  # huidige node x en y + "verschuiving" x en y
+                    positie = (y + coord[1], x + coord[0])  # huidige node x en y + "verschuiving" x en y
                     # kijken of deze nodes binnen de wereldmap vallen
-                    if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[1] < 0:
+                    if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[
+                        1] < 0:
                         continue
                     if world_map[positie] < 0:
                         deur = deuren[world_map[positie]]
@@ -317,14 +320,14 @@ def z_renderen(renderer, d, d_v, k, soort_muren, muren_info, deuren):
         if unit_d < deur.positie: continue;
         wall_texture = soort_muren[deur.kleur]
         breedte, hoogte = muren_info[deur.kleur]
-        rij = (unit_d-deur.positie)%1 * breedte
+        rij = (unit_d - deur.positie) % 1 * breedte
         # d_muur = 10 / d_muur
         scherm_y = HOOGTE / 2
         renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def renderText(font, renderer, text, x, y, midden = 0):
+def renderText(font, renderer, text, x, y, midden=0):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     if midden:
         renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), y, text.size[0], text.size[1]))
@@ -344,14 +347,14 @@ def wheelSprite(renderer, sprite):
     y_pos = HOOGTE - 230
     renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250))
 
+
 def render_sprites(renderer, sprites, player):
-    sprites.sort(reverse=True, key=lambda sprite: np.sqrt(
-        (sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2))  # Sorteren op afstand
+    sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player))  # Sorteren op afstand
     # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
 
     for sprite in sprites:
-       # richting
-        sprite_distance = np.sqrt((sprite.x - player.p_x) ** 2 + (sprite.y - player.p_y) ** 2)
+        # richting
+        sprite_distance = sprite.afstand
         sprite_distance += math.pi
 
         if sprite_distance >= 60: continue;
@@ -361,21 +364,19 @@ def render_sprites(renderer, sprites, player):
 
         # hoek
 
-        hoek_sprite = np.arctan((sprite.y - player.p_y) / (sprite.x - player.p_x))
+        hoek_sprite = math.atan((sprite.y - player.p_y) / np.abs(sprite.x - player.p_x))
+        """np.abs to prevent zero division error"""
 
-        if player.p_x > sprite.x and player.p_y > sprite.y: hoek_sprite += math.pi;
-        if player.p_x > sprite.x and player.p_y < sprite.y: hoek_sprite += math.pi;
-        if player.p_x < sprite.x and player.p_y > sprite.y: hoek_sprite += 2 * math.pi;
+        if player.p_x > sprite.x:
+            hoek_sprite += math.pi
+        else:
+            if player.p_y > sprite.y:
+                hoek_sprite += 2 * math.pi
 
-        """while player.hoek <= 2 * np.pi: #Fixxed this in speler.draaien()
-            player.hoek += 2 * np.pi
-
-        while player.hoek >= 2 * np.pi:
-            player.hoek -= 2 * np.pi"""
 
         hoek_verschil = player.hoek - hoek_sprite
-        if abs(hoek_verschil) >= (
-                math.pi / 3.7): continue;  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
+        if abs(hoek_verschil) >= (math.pi / 3.7):
+            continue  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
 
         screen_y = (HOOGTE - sprite_size_hoogte) / 2  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 + hoek_verschil * (BREEDTE * 2) / math.pi - sprite_size_breedte / 2)
@@ -520,7 +521,7 @@ def pathfinding_gps(eindpositie=(8, 8)):
             # cost waarden berekenen
             child.g = current_node.g + 1  # afstand tot begin node
             child.h = ((child.positie[0] - eind.positie[0]) ** 2) + (
-                        (child.positie[1] - eind.positie[1]) ** 2)  # afstand tot eind node
+                    (child.positie[1] - eind.positie[1]) ** 2)  # afstand tot eind node
             child.f = child.g + child.h
 
             # kijken of child_node in de open lijst zit
@@ -597,9 +598,9 @@ def main():
     sprites = []
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
 
-    sprites.append(Sprite(tree, x=50.4*9, y=50*9))
-    sprites.append(Sprite(tree, x=49.5*9, y=50*9))
-    sprites.append(Sprite(tree, x=49*9, y=49.5*9))
+    sprites.append(Sprite(tree, x=50.4 * 9, y=50 * 9))
+    sprites.append(Sprite(tree, x=49.5 * 9, y=50 * 9))
+    sprites.append(Sprite(tree, x=49 * 9, y=49.5 * 9))
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
@@ -658,7 +659,7 @@ def main():
         if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
             muziek_spelen("game start", False, 3)
-            pad = pathfinding_gps()
+            pad = pathfinding_gps((50 * 9, 50 * 9))
         if game_state != 1:
             config.set("settings", "volume",
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
@@ -678,14 +679,15 @@ def main():
             # Render de huidige frame
             (d, v, kl), (z_d, z_v, z_k) = speler.n_raycasting(world_map, deuren)
 
-            #t1 = time.time()
+            # t1 = time.time()
             renderen(renderer, d, v, kl, soort_muren, muren_info)
-            z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
+            if np.any(z_k) != 0:
+                z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
             render_sprites(renderer, sprites, speler)
             # t.append(time.time()-t1)
             draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             if abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
-                pad = pathfinding_gps((50*9,50*9))
+                pad = pathfinding_gps((50 * 9, 50 * 9))
             draw_path(renderer, pad)
             delta = time.time() - start_time
             if speler.in_auto:
