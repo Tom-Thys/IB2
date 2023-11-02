@@ -384,7 +384,7 @@ def render_sprites(renderer, sprites, player):
             continue  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
 
         screen_y = (HOOGTE - sprite_size_hoogte) / 2  # wordt in het midden gezet
-        screen_x = int(BREEDTE / 2 + hoek_verschil * (BREEDTE * 2) / math.pi - sprite_size_breedte / 2)
+        screen_x = int(a- sprite_size_breedte / 2)
 
         renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
 
