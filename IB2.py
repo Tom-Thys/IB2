@@ -349,6 +349,7 @@ def wheelSprite(renderer, sprite):
 
 
 def render_sprites(renderer, sprites, player):
+    from Raycaster import sign;
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player))  # Sorteren op afstand
     # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
 
@@ -364,14 +365,18 @@ def render_sprites(renderer, sprites, player):
 
         # hoek
 
-        hoek_sprite = math.atan((sprite.y - player.p_y) / np.abs(sprite.x - player.p_x))
-        """np.abs to prevent zero division error"""
+        if (sprite.x - player.p_x) != 0:
+            hoek_sprite = math.atan((sprite.y - player.p_y) / (sprite.x - player.p_x))
+        else:
+            hoek_sprite = sign(sprite.y - player.p_y) * math.pi / 2
 
         if player.p_x > sprite.x:
             hoek_sprite += math.pi
-        else:
-            if player.p_y > sprite.y:
-                hoek_sprite += 2 * math.pi
+        elif player.p_y > sprite.y:
+            hoek_sprite += 2 * math.pi
+
+        a = ((speler.p_x + speler.r_camera[0]/1000 - speler.p_y*sprite.x/sprite.y - speler.r_camera[1]*sprite.x/(1000*sprite.y) )
+             /(1/speler.r_camera[0]/500)-(speler.r_camera[1]*sprite.x/(500*sprite.y)))
 
 
         hoek_verschil = player.hoek - hoek_sprite
