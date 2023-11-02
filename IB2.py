@@ -29,8 +29,8 @@ POSITIE_SETTINGS_BACK = [170, 55]
 #
 # Globale variabelen
 #
-game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
-sound = True
+game_state = 2  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
+sound = False
 main_menu_index = 0
 settings_menu_index = 0
 main_menu_positie = [0, 0]
