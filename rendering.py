@@ -23,20 +23,20 @@ def draw_nav(renderer, Map, speler, pad, sprites):
 
     unit_d = (width / (2 * afstand))
     for i in range(-afstand, afstand):
-        for j in range(-afstand-1, afstand):
+        for j in range(afstand, -afstand-1,-1):
             x = i + mid_x
             y = j + mid_y
             if x % 3 == 0 and y % 3 == 0 and i < afstand-2 and j < afstand - 2:
                 if x < 0 or y < 0 or x >= Map.world_size[1] or y >= Map.world_size[0]:
-                    renderer.fill(((i + afstand) * unit_d, (j + afstand) * unit_d, 3 * unit_d, 3 * unit_d), kleuren[6])
+                    renderer.fill(((j + afstand) * unit_d, (i + afstand) * unit_d, 3 * unit_d, 3 * unit_d), kleuren[6])
                 else:
-                    renderer.fill(((i + afstand) * unit_d, (j + afstand) * unit_d, 3*unit_d, 3*unit_d),
+                    renderer.fill(((j + afstand) * unit_d, (i + afstand) * unit_d, 3*unit_d, 3*unit_d),
                                   kleuren[Map.world_map[y, x]])
-            elif i < -afstand+2 or j < -afstand+2 or i > afstand-3 or j > afstand-3:
+            elif i < -afstand+3 or j < -afstand+3 or i > afstand-3 or j > afstand-3:
                 if x < 0 or y < 0 or x >= Map.world_size[1] or y >= Map.world_size[0]:
-                    renderer.fill(((i + afstand) * unit_d, (j + afstand) * unit_d, unit_d, unit_d), kleuren[6])
+                    renderer.fill(((j + afstand) * unit_d, (i + afstand) * unit_d, unit_d, unit_d), kleuren[6])
                 else:
-                    renderer.fill(((i + afstand) * unit_d, (j + afstand) * unit_d, unit_d, unit_d),
+                    renderer.fill(((j + afstand) * unit_d, (i + afstand) * unit_d, unit_d, unit_d),
                                   kleuren[Map.world_map[y, x]])
             if i == 0 and j == 0:
                 renderer.fill(((i + afstand) * unit_d, (j + afstand) * unit_d, unit_d, unit_d), kleuren[9])
@@ -102,14 +102,13 @@ def render_floor_and_sky(renderer):
 
 
 def draw_path(renderer, path, mid_x, mid_y, afstand, unit_d):
-    print("pad")
     if path == None:
         pass
         #Moeten we hier niet kijken dat er dan een nieuwe locatie wordt gevonden? Als de eindlocatie in ingesloten ruimte zit
     else:
         for item,locatie in enumerate(path):
-            x = locatie[0] - mid_x+afstand
-            y = locatie[1] - mid_y + afstand
+            x = locatie[1] - mid_y + afstand
+            y = locatie[0] - mid_x + afstand
             if x < 0 or y < 0 or x > 2*afstand or y > 2*afstand:
                 continue
             if locatie[0] == 0:
