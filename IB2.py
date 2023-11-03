@@ -31,7 +31,7 @@ POSITIE_SETTINGS_BACK = [170, 55]
 #
 # Globale variabelen
 #
-game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
+game_state = 2  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = False
 main_menu_index = 0
 settings_menu_index = 0
@@ -76,6 +76,7 @@ kleuren = [
     sdl2.ext.Color(255, 0, 20),  # 1 = Rood
     sdl2.ext.Color(0, 255, 0),  # 2 = Groen
     sdl2.ext.Color(0, 0, 255),  # 3 = Blauw
+    sdl2.ext.Color(225, 165, 0),  # 4 = oranje
     sdl2.ext.Color(64, 64, 64),  # 4 = Donker grijs
     sdl2.ext.Color(128, 128, 128),  # 5 = Grijs
     sdl2.ext.Color(192, 192, 192),  # 6 = Licht grijs
@@ -527,7 +528,7 @@ def main():
 
 
     # Initialiseer font voor de fps counter
-    font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
+    font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
     fps_generator = show_fps(font, renderer)
 
 
@@ -633,10 +634,10 @@ def main():
                 z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
             render_sprites(renderer, sprites, speler)
             # t.append(time.time()-t1)
-            draw_nav(renderer, world_map, map_textuur[wereld_nr], speler)
             if abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 pad = pathfinding_gps((50 * 9, 50 * 9))
-            draw_path(renderer, pad)
+            draw_nav(renderer, inf_world, speler, pad, sprites)
+            #draw_path(renderer, pad)
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)
