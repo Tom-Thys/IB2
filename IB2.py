@@ -32,7 +32,7 @@ POSITIE_SETTINGS_BACK = [170, 55]
 # Globale variabelen
 #
 game_state = 2  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
-sound = False
+sound = True
 main_menu_index = 0
 settings_menu_index = 0
 main_menu_positie = [0, 0]
@@ -396,7 +396,6 @@ def pathfinding_gps(eindpositie=(8, 8)):
     begin.g = begin.h = begin.f = 0
     eind = Node(None, eindpositie)
     eind.g = eind.h = eind.f = 0
-
     # initialiseer open en closed lijsten
     open_list = []  # dit is de lijst van punten die geëvalueerd moeten worden
     closed_list = []  # dit is de lijst van punten die al geëvalueerd zijn
@@ -408,7 +407,7 @@ def pathfinding_gps(eindpositie=(8, 8)):
         current_index = 0
         # zoeken naar de node met kleinste f cost
         for index, item in enumerate(open_list):
-            if item.f < current_node.f:
+            if item.f < current_node.f or (item.f == current_node.f and item.h < current_node.h):
                 current_node = item
                 current_index = index
         # current in de closed_list steken, aangezien deze geëvalueerd wordt
@@ -447,12 +446,11 @@ def pathfinding_gps(eindpositie=(8, 8)):
                     is_closed = True
             if is_closed:
                 continue
-
             # cost waarden berekenen
             child.g = current_node.g + 1  # afstand tot begin node
-            child.h = ((child.positie[0] - eind.positie[0]) ** 2) + (
-                    (child.positie[1] - eind.positie[1]) ** 2)  # afstand tot eind node
+            child.h = int(10*np.linalg.norm([child.positie[0] - eind.positie[0], child.positie[1]-eind.positie[1]]))  # afstand tot eind node
             child.f = child.g + child.h
+            print(f"h = {child.h}, g = {child.g}, f = {child.f}")
 
             # kijken of child_node in de open lijst zit
             is_open = False
@@ -463,7 +461,17 @@ def pathfinding_gps(eindpositie=(8, 8)):
                 continue
             # indien niet al in open list, nu toevoegen
             open_list.append(child)
-
+    """while len(open_list) > 0:
+        current_node = open_list[0]
+        current_index = 0
+        for index, item in enumerate(open_list):
+            if item.f < current_node.f or (item.f == current_node.f and item.h < current_node.h):
+                current_node = item
+                current_index = index
+        open_list.pop(current_index)
+        closed_list.append(current_node)
+        if current_node == eind:
+            pad = []"""
 
 
 """Functies voor interactieve knoppen"""
