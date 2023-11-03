@@ -265,45 +265,50 @@ def wheelSprite(renderer, sprite):
 
 
 def render_sprites(renderer, sprites, player):
-    from Raycaster import sign;
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player))  # Sorteren op afstand
     # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
 
     for sprite in sprites:
+
+
+        # hoek
+        rx = sprite.x - player.p_x
+        ry = sprite.y - player.p_y
+        hoek_sprite = math.atan2(ry , rx)
+
+        """
+        if player.p_x > sprite.x and player.p_y > sprite.y: hoek_sprite -= np.pi;
+        # correct elif player.p_x > sprite.x and player.p_y < sprite.y:continue# hoek_sprite += np.pi;
+        elif player.p_x < sprite.x and player.p_y > sprite.y:continue # hoek_sprite +=  np.pi;
+        """
+
+        hoek_verschil = player.hoek - hoek_sprite
+        if hoek_verschil >= (math.pi / 3.7):
+            continue  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
+
+        a = ((speler.r_speler[0] + speler.r_camera[0] / 1000 - speler.r_speler[1] * rx / ry - speler.r_camera[
+            1] * rx / (1000 * ry)) / ((speler.r_camera[0] / 500) - (speler.r_camera[1] * rx / (500 * ry))))
+        if not (-BREEDTE*0.6 < a < BREEDTE*0.6):
+            continue
+
         # richting
-        sprite_distance = sprite.afstand
-        sprite_distance += math.pi
+        sprite_distance = sprite.afstand*abs(np.cos(hoek_verschil))
+        sprite_distance += 0.01
 
         if sprite_distance >= 60: continue;
         # grootte
         sprite_size_breedte = sprite.breedte / sprite_distance * 10
         sprite_size_hoogte = sprite.hoogte / sprite_distance * 10
 
-        # hoek
-
-        if (sprite.x - player.p_x) != 0:
-            hoek_sprite = math.atan((sprite.y - player.p_y) / (sprite.x - player.p_x))
-        else:
-            hoek_sprite = sign(sprite.y - player.p_y) * math.pi / 2
-
-        if player.p_x > sprite.x:
-            hoek_sprite += math.pi
-        elif player.p_y > sprite.y:
-            hoek_sprite += 2 * math.pi
-
-        a = ((speler.p_x + speler.r_camera[0]/1000 - speler.p_y*sprite.x/sprite.y - speler.r_camera[1]*sprite.x/(1000*sprite.y) )
-             /(1/speler.r_camera[0]/500)-(speler.r_camera[1]*sprite.x/(500*sprite.y)))
-
-
-        hoek_verschil = player.hoek - hoek_sprite
-        if abs(hoek_verschil) >= (math.pi / 3.7):
-            continue  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
+        """a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
+        b = np.array([speler.r_speler[0]+speler.r_camera[0]/1000,speler.r_speler[1]+speler.r_camera[1]/1000])
+        print(np.linalg.solve(a,b)[1])
+        c = np.linalg.solve(a,b)[1]"""
 
         screen_y = (HOOGTE - sprite_size_hoogte) / 2  # wordt in het midden gezet
-        screen_x = int(a- sprite_size_breedte / 2)
+        screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
 
         renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
-
 
 
 def show_fps(font, renderer):
