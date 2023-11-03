@@ -8,11 +8,13 @@ import random
 import numpy as np
 
 import sdl2.ext
+import sys
 import sdl2.sdlimage
 import sdl2.sdlmixer
 from sdl2 import *
 from worlds import *
 from Classes import *
+from Raycaster import *
 from rendering import *
 from configparser import ConfigParser
 
@@ -29,7 +31,7 @@ POSITIE_SETTINGS_BACK = [170, 55]
 #
 # Globale variabelen
 #
-game_state = 2  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
+game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = False
 main_menu_index = 0
 settings_menu_index = 0
@@ -101,12 +103,13 @@ geluiden = [
 # @delta       Tijd in milliseconden sinds de vorige oproep van deze functie
 #
 
-def verwerk_input(delta):
+def verwerk_input(delta,events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
-    events = sdl2.ext.get_events()
+    if events == 0:
+        events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2:
         speler.move(1, 0.1, world_map)
@@ -255,93 +258,6 @@ def verwerk_input(delta):
         moet_afsluiten = True
 
 
-""" STAAT NU IN class Player
-def bereken_r_straal(kolom):
-    r_straal_kolom = d_camera * r_speler + (1 - (2 * kolom) / BREEDTE) * r_cameravlak
-    r_straal = np.divide(r_straal_kolom, np.linalg.norm(r_straal_kolom))
-    return r_straal
-
-
-def draaien(hoek):
-    
-    global r_cameravlak, r_speler, stralen
-    draai_matrix = np.array([[math.cos(hoek), -math.sin(hoek)],
-                             [math.sin(hoek), math.cos(hoek)]])
-    r_speler = np.matmul(draai_matrix, r_speler)
-    r_cameravlak = np.matmul(draai_matrix, r_cameravlak)
-    for i, straal in enumerate(stralen):
-        stralen[i] = np.matmul(draai_matrix, straal)
-    return r_speler, r_cameravlak
-
-
-def move(dir, stap):
-    Geef stap, veranderd positie speler volgens r_speler
-    aan muur volgt het slechts vector die niet in de weg zit
-    global p_speler_x, p_speler_y
-    x = p_speler_x + dir * stap * r_speler[0]
-    y = p_speler_y + dir * stap * r_speler[1]
-    if world_map[math.floor(y)][math.floor(x)] == 0 and 0<x<x_dim-1 and 0<y<y_dim-1:
-        p_speler_x = x
-        p_speler_y = y
-    else:
-        pass
-        # Kan gebruikt worden voor muren die schade aanrichten enzo
-"""
-
-
-def render_kolom(renderer, window, kolom, d_muur, k_muur):
-    d_muur = d_muur * 2
-    renderer.draw_line((kolom, window.size[1] / 2 - window.size[1] * (1 / d_muur), kolom,
-                        window.size[1] / 2 + [1] * (1 / d_muur)), kleuren[k_muur])
-    return
-
-
-def renderen(renderer, d, d_v, k, soort_muren, muren_info):
-    for kolom in range(BREEDTE):
-        d_muur = d[kolom]
-        unit_d = d_v[kolom]
-        k_muur = k[kolom]
-        if k_muur >= 0:
-            wall_texture = soort_muren[k_muur]
-            breedte, hoogte = muren_info[k_muur]
-            rij = unit_d * breedte
-            # d_muur = 10 / d_muur
-            scherm_y = HOOGTE / 2
-            renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
-                          dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
-
-
-def z_renderen(renderer, d, d_v, k, soort_muren, muren_info, deuren):
-    for kolom in range(BREEDTE):
-        if k[kolom] == 0: continue;
-        deur = deuren[k[kolom]]
-        d_muur = d[kolom]
-        unit_d = d_v[kolom]
-        if unit_d < deur.positie: continue;
-        wall_texture = soort_muren[deur.kleur]
-        breedte, hoogte = muren_info[deur.kleur]
-        rij = (unit_d - deur.positie) % 1 * breedte
-        # d_muur = 10 / d_muur
-        scherm_y = HOOGTE / 2
-        renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
-                      dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
-
-
-def renderText(font, renderer, text, x, y, midden=0):
-    text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
-    if midden:
-        renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), y, text.size[0], text.size[1]))
-    else:
-        renderer.copy(text, dstrect=(x, y, text.size[0], text.size[1]))
-
-
-def render_floor_and_sky(renderer):
-    # SKY in blauw
-    renderer.fill((0, 0, BREEDTE, HOOGTE // 2), kleuren[8])
-    # Floor in grijs
-    renderer.fill((0, HOOGTE // 2, BREEDTE, HOOGTE // 2), kleuren[5])
-
-
 def wheelSprite(renderer, sprite):
     x_pos = (BREEDTE - 250) // 2
     y_pos = HOOGTE - 230
@@ -389,12 +305,15 @@ def render_sprites(renderer, sprites, player):
         renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
 
 
+
 def show_fps(font, renderer):
     fps_list = [1]
     loop_time = 0
 
     while True:
         fps_list.append(1 / (time.time() - loop_time))
+        if min(fps_list) < 20:
+            print(min(fps_list))
         """if fps_list[-1] > 190:
             print(fps_list[-1])"""
         """if (time.time() - loop_time) != 0:
@@ -540,26 +459,22 @@ def pathfinding_gps(eindpositie=(8, 8)):
             open_list.append(child)
 
 
-def draw_path(renderer, path):
-    if path == None:
-        pass
-    else:
-        y_dim, x_dim = np.shape(world_map)
-        unit_d = 200 / x_dim
-        for item in range(len(path)):
-            if item == 0:
-                renderer.fill(((path[item][0] * unit_d), (path[item][1] * unit_d), unit_d, unit_d), kleuren[1])
-            elif item == len(path) - 1:
-                renderer.fill(((path[item][0] * unit_d + unit_d / 4), (path[item][1] * unit_d + unit_d / 4),
-                               unit_d / 1.5, unit_d / 1.5), kleuren[2])
-            else:
-                renderer.fill(((path[item][0] * unit_d + unit_d / 4), (path[item][1] * unit_d + unit_d / 4),
-                               unit_d / 1.5, unit_d / 1.5), kleuren[7])
+
+"""Functies voor interactieve knoppen"""
+def start(button, event):
+    global game_state
+    game_state = 2
+def settings(button, event):
+    global game_state
+    game_state = 1
+def quit(button, event):
+    global moet_afsluiten
+    moet_afsluiten = True
 
 
 def main():
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity
-    global game, garage, BREEDTE, wereld_nr, world_map, worldlijst
+    global wereld_nr, world_map, worldlijst
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
 
@@ -571,7 +486,8 @@ def main():
     sdl2.SDL_SetRelativeMouseMode(True)
 
     # Maak een renderer aan zodat we in ons venster kunnen renderen
-    renderer = sdl2.ext.Renderer(window)
+    renderer = sdl2.ext.Renderer(window, flags=sdl2.render.SDL_RENDERER_ACCELERATED)
+
 
     # resources inladen
     resources = sdl2.ext.Resources(__file__, "resources")
@@ -590,6 +506,7 @@ def main():
     for i, muur in enumerate(soort_muren):
         muren_info.append((muur.size[0], 890))
 
+
     # Inladen wereld_mappen
     map_resources = sdl2.ext.Resources(__file__, "mappen")
     # alle mappen opslaan in sdl2 textures
@@ -597,6 +514,7 @@ def main():
     for i, map in enumerate(worldlijst):
         naam = f"map{i}.png"
         map_textuur.append(factory.from_image(map_resources.get_path(naam)))
+
 
     # Inladen sprites
     wheel = factory.from_image(resources.get_path("Wheel.png"))
@@ -607,16 +525,36 @@ def main():
     sprites.append(Sprite(tree, x=49.5 * 9, y=50 * 9))
     sprites.append(Sprite(tree, x=49 * 9, y=49.5 * 9))
 
+
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[7])
     fps_generator = show_fps(font, renderer)
 
-    achtergrond = factory.from_image(resources.get_path("game_main_menu.png"))
+
+    achtergrond = factory.from_image(resources.get_path("game_main_menu_wh_tekst.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
 
-    # Test Variable
-    t = []
+    #UI
+    uifactory = sdl2.ext.UIFactory(factory)
+    startknop = uifactory.from_image(sdl2.ext.BUTTON,
+                                  resources.get_path("start_game.png"))
+    settingsknop = uifactory.from_image(sdl2.ext.BUTTON,
+                                  resources.get_path("settings.png"))
+    quitknop = uifactory.from_image(sdl2.ext.BUTTON,
+                                  resources.get_path("quit_game.png"))
+
+    startknop.position = POSITIE_START_GAME[0]-310, POSITIE_START_GAME[1]-15
+    settingsknop.position = POSITIE_SETTINGS[0]-250, POSITIE_SETTINGS[1]-15
+    quitknop.position = POSITIE_QUIT_GAME[0]-375, POSITIE_QUIT_GAME[1]-25
+
+    startknop.click += start
+    settingsknop.click += settings
+    quitknop.click += quit
+
+    spriterenderer = factory.create_sprite_render_system(window)
+    uiprocessor = sdl2.ext.UIProcessor()
+
 
     while not moet_afsluiten:
         muziek_spelen("main menu", True)
@@ -625,7 +563,11 @@ def main():
             start_time = time.time()
             renderer.clear()
             delta = time.time() - start_time
-            verwerk_input(delta)
+            events = sdl2.ext.get_events()
+            """Shitty fix maar UI werkt niet als ik ze in verwerk_inputs oproep"""
+            verwerk_input(delta, events)
+            for event in events:
+                uiprocessor.dispatch([startknop, settingsknop, quitknop], event)
             menu_nav()
             renderer.copy(achtergrond,
                           srcrect=(0, 0, achtergrond.size[0], achtergrond.size[1]),
@@ -633,7 +575,8 @@ def main():
             renderer.copy(menu_pointer,
                           srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
                           dstrect=(main_menu_positie[0], main_menu_positie[1], 80, 50))
-            renderer.present()
+            spriterenderer.render((startknop, settingsknop, quitknop))
+            renderer.clear(0)
 
         while game_state == 1 and not moet_afsluiten:
             start_time = time.time()

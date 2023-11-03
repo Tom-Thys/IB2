@@ -131,7 +131,8 @@ class Map():
     def __init__(self):
         self.tile_map = np.full((500, 600), Tile((0, 0)))
         y, x = np.shape(self.tile_map)
-        self.world_map = np.zeros((y * 9, x * 9), dtype='int32')
+        self.world_size = (y*9,x*9)
+        self.world_map = np.zeros(self.world_size, dtype='int32')
         self.tiles_size = np.shape(self.tile_map)
         self.start()
         self.added = []

@@ -40,7 +40,6 @@ class Player():
 
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""
-        cameravlak = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
         for i in range(self.breedte):
             r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / self.breedte) * self.r_camera
             hoek = math.atan(r_straal_kolom[0]/r_straal_kolom[1])
@@ -85,14 +84,15 @@ class Player():
 
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""
-        self.hoek = (hoek + self.hoek) %(2*math.pi)
-        self.hoeken += hoek
+        self.hoek = (hoek + self.hoek) % (2*math.pi)
+        self.hoeken = (hoek + self.hoeken) % (2*math.pi)
 
         self.r_speler = np.array([math.cos(self.hoek), math.sin(self.hoek)])
         self.r_camera = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
 
         self.r_stralen[:, 0] = np.cos(self.hoeken)
         self.r_stralen[:, 1] = np.sin(self.hoeken)
+        #print(self.hoeken)
         if self.car != 0:
             self.car.draaien(hoek)
 
