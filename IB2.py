@@ -293,7 +293,7 @@ def render_sprites(renderer, sprites, player):
             continue
 
         # richting
-        sprite_distance = sprite.afstand*abs(np.cos(hoek_verschil))
+        sprite_distance = sprite.afstand*abs(math.cos(hoek_verschil))
         sprite_distance += 0.01
 
         if sprite_distance >= 60: continue;
