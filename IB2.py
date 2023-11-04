@@ -23,11 +23,16 @@ config = ConfigParser()
 # Constanten
 BREEDTE = 1000
 HOOGTE = int(BREEDTE/10*7)
-
-POSITIE_START_GAME = [365, 253]
-POSITIE_SETTINGS = [300, 401]
-POSITIE_QUIT_GAME = [420, 572]
-POSITIE_SETTINGS_BACK = [170, 55]
+POSITIE_MAIN_MENU = [
+    [365, 253],  # 0: Start Game
+    [300, 401],  # 1: Settings
+    [420, 572]  # 2: Quit Game
+]
+POSITIE_SETTINGS_MENU = [
+    [170, 55],  # 0: Back
+    [150, 200],  # 1: volume
+    [200, 230]  # 2: sensitivity
+]
 POSITIE_PAUZE = [
     [540, 175],  # 0: Continue
     [520, 310],  # 1: Settings
@@ -189,24 +194,24 @@ def verwerk_input(delta,events=0):
                     muziek_spelen("main menu select", False, 2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if settings_menu_index == 0:
-                        pass
-                    if settings_menu_index == 1:
-                        pass
-                    if settings_menu_index == 2:
                         game_state = 0 if not paused else 2
                         settings_menu_index = 0
                         return
+                    if settings_menu_index == 1:
+                        pass
+                    if settings_menu_index == 2:
+                        pass
                 if key == sdl2.SDLK_LEFT:
-                    if settings_menu_index == 0:
+                    if settings_menu_index == 1:
                         volume -= 1
                         sdl2.sdlmixer.Mix_MasterVolume(volume)
-                    if settings_menu_index == 1:
+                    if settings_menu_index == 2:
                         sensitivity_rw -= 1
                 if key == sdl2.SDLK_RIGHT:
-                    if settings_menu_index == 0:
+                    if settings_menu_index == 1:
                         volume += 1
                         sdl2.sdlmixer.Mix_MasterVolume(volume)
-                    if settings_menu_index == 1:
+                    if settings_menu_index == 2:
                         sensitivity_rw += 1
                 if volume < 0:
                     volume = 0
@@ -392,37 +397,23 @@ def muziek_spelen(geluid, looped=False, channel=1):
 def menu_nav():
     global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie, pauze_index, pauze_positie
     if game_state == 0:
-        if main_menu_index == 0:
-            main_menu_positie = POSITIE_START_GAME
-            return
-        elif main_menu_index == 1:
-            main_menu_positie = POSITIE_SETTINGS
-            return
-        elif main_menu_index == 2:
-            main_menu_positie = POSITIE_QUIT_GAME
-            return
         if main_menu_index > 2:
             main_menu_index = 0
         if main_menu_index < 0:
             main_menu_index = 2
+        main_menu_positie = POSITIE_MAIN_MENU[main_menu_index]
     elif game_state == 1:
-        if settings_menu_index == 0:
-            settings_menu_positie = [150, 200]
-        elif settings_menu_index == 1:
-            settings_menu_positie = [200, 230]
-        elif settings_menu_index == 2:
-            settings_menu_positie = POSITIE_SETTINGS_BACK
         if settings_menu_index > 2:
             settings_menu_index = 0
         if settings_menu_index < 0:
             settings_menu_index = 2
+        settings_menu_positie = POSITIE_SETTINGS_MENU[settings_menu_index]
     elif paused:
         if pauze_index > 3:
             pauze_index = 0
         if pauze_index < 0:
             pauze_index = 3
         pauze_positie = POSITIE_PAUZE[pauze_index]
-
 
 
 def pathfinding_gps(eindpositie=(8, 8)):
@@ -486,7 +477,7 @@ def pathfinding_gps(eindpositie=(8, 8)):
             child.g = current_node.g + 1  # afstand tot begin node
             child.h = int(10*np.linalg.norm([child.positie[0] - eind.positie[0], child.positie[1]-eind.positie[1]]))  # afstand tot eind node
             child.f = child.g + child.h
-            print(f"h = {child.h}, g = {child.g}, f = {child.f}")
+            #print(f"h = {child.h}, g = {child.g}, f = {child.f}")
 
             # kijken of child_node in de open lijst zit
             is_open = False
@@ -497,17 +488,6 @@ def pathfinding_gps(eindpositie=(8, 8)):
                 continue
             # indien niet al in open list, nu toevoegen
             open_list.append(child)
-    """while len(open_list) > 0:
-        current_node = open_list[0]
-        current_index = 0
-        for index, item in enumerate(open_list):
-            if item.f < current_node.f or (item.f == current_node.f and item.h < current_node.h):
-                current_node = item
-                current_index = index
-        open_list.pop(current_index)
-        closed_list.append(current_node)
-        if current_node == eind:
-            pad = []"""
 
 
 """Functies voor interactieve knoppen"""
@@ -595,9 +575,9 @@ def main():
     quitknop = uifactory.from_image(sdl2.ext.BUTTON,
                                   resources.get_path("quit_game.png"))
 
-    startknop.position = POSITIE_START_GAME[0]-310, POSITIE_START_GAME[1]-15
-    settingsknop.position = POSITIE_SETTINGS[0]-250, POSITIE_SETTINGS[1]-15
-    quitknop.position = POSITIE_QUIT_GAME[0]-375, POSITIE_QUIT_GAME[1]-25
+    startknop.position = POSITIE_MAIN_MENU[0][0]-310, POSITIE_MAIN_MENU[0][1]-15
+    settingsknop.position = POSITIE_MAIN_MENU[1][0]-250, POSITIE_MAIN_MENU[1][1]-15
+    quitknop.position = POSITIE_MAIN_MENU[2][0]-375, POSITIE_MAIN_MENU[2][1]-25
 
     startknop.click += start
     settingsknop.click += settings
@@ -644,7 +624,7 @@ def main():
             renderer.copy(volume_text, dstrect=(10, 200, volume_text.size[0], volume_text.size[1]))
             renderer.copy(sensitivity_rw_text,
                           dstrect=(10, 230, sensitivity_rw_text.size[0], sensitivity_rw_text.size[1]))
-            if settings_menu_index != 2:
+            if settings_menu_index != 0:
                 text = sdl2.ext.renderer.Texture(renderer, font.render_text("<>"))
                 renderer.copy(text,
                               dstrect=(settings_menu_positie[0], settings_menu_positie[1], text.size[0], text.size[1]))
