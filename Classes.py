@@ -36,7 +36,7 @@ class Player():
         self.r_stralen = np.zeros((self.breedte, 2))
         self.car = 0
         self.in_auto = False
-        self.tile = math.floor(self.p_x/9),math.floor(self.p_y/9)
+        self.tile = math.floor(self.p_x/9), math.floor(self.p_y/9)
 
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""
@@ -209,6 +209,13 @@ class Player():
             d_v += dist_cond * delta_x
             d_h += (~dist_cond) * delta_y
         #print(self.r_speler)
+    def reset(self):
+        self.p_x = 50.4*9
+        self.p_y = 49*9
+        self.hoek = math.pi / 4
+        self.r_speler = np.array([math.cos(self.hoek), math.sin(self.hoek)])
+        self.r_camera = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
+        self.aanmaak_r_stralen(d_camera=1)
 
 
 class Auto():

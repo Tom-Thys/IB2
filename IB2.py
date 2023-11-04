@@ -221,6 +221,7 @@ def verwerk_input(delta,events=0):
             if not moet_afsluiten and game_state == 2:
                 if key == sdl2.SDLK_m and not paused:
                     game_state = 0
+                    speler.reset()
                 if key == sdl2.SDLK_p:
                     paused = True if not paused else False
                 if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
@@ -239,6 +240,7 @@ def verwerk_input(delta,events=0):
                     if pauze_index == 2 and key == sdl2.SDLK_SPACE:
                         game_state = 0
                         paused = False
+                        speler.reset()
                     if pauze_index == 3 and key == sdl2.SDLK_SPACE:
                         moet_afsluiten = True
         elif event.type == sdl2.SDL_KEYUP:
