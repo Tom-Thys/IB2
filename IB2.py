@@ -28,15 +28,24 @@ POSITIE_START_GAME = [365, 253]
 POSITIE_SETTINGS = [300, 401]
 POSITIE_QUIT_GAME = [420, 572]
 POSITIE_SETTINGS_BACK = [170, 55]
+POSITIE_PAUZE = [
+    [540, 175],  # 0: Continue
+    [520, 310],  # 1: Settings
+    [595, 450],  # 2: Main Menu
+    [590, 585]  # 3: Quit Game
+]
 #
 # Globale variabelen
 #
-game_state = 2  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
+game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
+paused = False
 main_menu_index = 0
 settings_menu_index = 0
 main_menu_positie = [0, 0]
 settings_menu_positie = [0, 0]
+pauze_index = 0
+pauze_positie = POSITIE_PAUZE[0]
 # verwerking van config file: ook globale variabelen
 config.read("config.ini")
 volume = int(config.get("settings", "volume"))
@@ -105,26 +114,26 @@ geluiden = [
 #
 
 def verwerk_input(delta,events=0):
-    global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw
+    global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw, paused, pauze_index
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     if events == 0:
         events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
-    if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2:
+    if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2 and not paused:
         speler.move(1, 0.1, world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
         muziek_spelen("footsteps", False, 4)
-    if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2:
+    if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2 and not paused:
         speler.move(-1, 0.1, world_map)
         inf_world.map_making(speler)
         world_map = inf_world.world_map
         muziek_spelen("footsteps", False, 4)
-    if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2:
+    if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2 and not paused:
         speler.draaien(-math.pi / sensitivity)
-    if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2:
+    if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2 and not paused:
         speler.draaien(math.pi / sensitivity)
 
     for event in events:
@@ -164,9 +173,10 @@ def verwerk_input(delta,events=0):
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if main_menu_index == 0:
                         game_state = 2
+                        return
                     if main_menu_index == 1:
                         game_state = 1
-                        pass
+                        return
                     if main_menu_index == 2:
                         moet_afsluiten = True
                         break
@@ -183,10 +193,9 @@ def verwerk_input(delta,events=0):
                     if settings_menu_index == 1:
                         pass
                     if settings_menu_index == 2:
-                        game_state = 0
+                        game_state = 0 if not paused else 2
                         settings_menu_index = 0
-                if key == sdl2.SDLK_m:
-                    game_state = 0
+                        return
                 if key == sdl2.SDLK_LEFT:
                     if settings_menu_index == 0:
                         volume -= 1
@@ -207,11 +216,31 @@ def verwerk_input(delta,events=0):
                     sensitivity_rw = 0
                 if sensitivity_rw > 100:
                     sensitivity_rw = 100
-            if not moet_afsluiten and game_state == 2:
                 if key == sdl2.SDLK_m:
+                    game_state = 0 if not paused else 2
+            if not moet_afsluiten and game_state == 2:
+                if key == sdl2.SDLK_m and not paused:
                     game_state = 0
+                if key == sdl2.SDLK_p:
+                    paused = True if not paused else False
                 if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
                     pass
+                if paused:
+                    if key == sdl2.SDLK_UP or key == sdl2.SDLK_e:
+                        pauze_index -= 1
+                        muziek_spelen("main menu select", False, 2)
+                    if key == sdl2.SDLK_DOWN or key == sdl2.SDLK_d:
+                        pauze_index += 1
+                        muziek_spelen("main menu select", False, 2)
+                    if pauze_index == 0 and key == sdl2.SDLK_SPACE:
+                        paused = False
+                    if pauze_index == 1 and key == sdl2.SDLK_SPACE:
+                        game_state = 1
+                    if pauze_index == 2 and key == sdl2.SDLK_SPACE:
+                        game_state = 0
+                        paused = False
+                    if pauze_index == 3 and key == sdl2.SDLK_SPACE:
+                        moet_afsluiten = True
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
@@ -236,7 +265,7 @@ def verwerk_input(delta,events=0):
         # Wordt afgeleverd als de gebruiker de muis heeft bewogen.
         # Aangezien we relative motion gebruiken zijn alle coordinaten
         # relatief tegenover de laatst gerapporteerde positie van de muis.
-        elif event.type == sdl2.SDL_MOUSEMOTION and game_state == 2:
+        elif event.type == sdl2.SDL_MOUSEMOTION and game_state == 2 and not paused:
             # Aangezien we in onze game maar 1 as hebben waarover de camera
             # kan roteren zijn we enkel geinteresseerd in bewegingen over de
             # X-as
@@ -359,7 +388,7 @@ def muziek_spelen(geluid, looped=False, channel=1):
 
 
 def menu_nav():
-    global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie
+    global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie, pauze_index, pauze_positie
     if game_state == 0:
         if main_menu_index == 0:
             main_menu_positie = POSITIE_START_GAME
@@ -377,16 +406,21 @@ def menu_nav():
     elif game_state == 1:
         if settings_menu_index == 0:
             settings_menu_positie = [150, 200]
-            return
         elif settings_menu_index == 1:
             settings_menu_positie = [200, 230]
-            return
-        elif settings_menu_index:
+        elif settings_menu_index == 2:
             settings_menu_positie = POSITIE_SETTINGS_BACK
         if settings_menu_index > 2:
             settings_menu_index = 0
         if settings_menu_index < 0:
             settings_menu_index = 2
+    elif paused:
+        if pauze_index > 3:
+            pauze_index = 0
+        if pauze_index < 0:
+            pauze_index = 3
+        pauze_positie = POSITIE_PAUZE[pauze_index]
+
 
 
 def pathfinding_gps(eindpositie=(8, 8)):
@@ -548,6 +582,7 @@ def main():
     achtergrond = factory.from_image(resources.get_path("game_main_menu_wh_tekst.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
+    pauze_menu = factory.from_image(resources.get_path("pause_menu.png"))
 
     #UI
     uifactory = sdl2.ext.UIFactory(factory)
@@ -649,16 +684,27 @@ def main():
             # t.append(time.time()-t1)
             if abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 pad = pathfinding_gps((50 * 9, 50 * 9))
+                print(len(pad))
             draw_nav(renderer, inf_world, speler, pad, sprites)
             #draw_path(renderer, pad)
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)
+            if paused:
+                renderer.copy(pauze_menu,
+                              srcrect=(0, 0, pauze_menu.size[0], pauze_menu.size[1]),
+                              dstrect=(0, 0, BREEDTE, HOOGTE))
+                renderer.copy(menu_pointer,
+                              srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
+                              dstrect=(pauze_positie[0], pauze_positie[1], 80, 50))
+                menu_nav()
+            else:
+                next(fps_generator)
 
             verwerk_input(delta)
 
             # Toon de fps
-            next(fps_generator)
+            #next(fps_generator)
 
             # Verwissel de rendering context met de frame buffer
             renderer.present()

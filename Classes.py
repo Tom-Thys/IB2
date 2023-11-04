@@ -279,7 +279,7 @@ class Auto():
         self.hp -= 1
 
 
-class Node():  # A* algoritme
+class Node:  # A* algoritme
     def __init__(self, parent=None, positie=None):
         self.parent = parent
         self.positie = positie
