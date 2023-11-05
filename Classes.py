@@ -1,10 +1,10 @@
 import math
 import numpy as np
 from sdl2 import *
-from numba import jit
-
 
 moving_stappen = False
+
+
 
 class Sprite():
     def __init__(self, image, x, y):

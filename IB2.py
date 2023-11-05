@@ -95,6 +95,8 @@ kleuren = [
     sdl2.ext.Color(120, 200, 250),  # 8 = Blauw_lucht
     sdl2.ext.Color(106, 13, 173)  # 9 = Purple
 ]
+kleuren_textures = []
+
 # Start Audio
 sdl2.sdlmixer.Mix_Init(0)
 sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
@@ -481,6 +483,11 @@ def pathfinding_gps(eindpositie=(8, 8)):
             open_list.append(child)
 
 
+def positie_check():
+    if math.floor(speler.p_x) == 450 and math.floor(speler.p_y) == 450:
+        print("bestemming bereikt")
+
+
 """Functies voor interactieve knoppen"""
 def start(button, event):
     global game_state
@@ -494,7 +501,7 @@ def quit(button, event):
 
 
 def main():
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures
 
     inf_world = Map()
     inf_world.start()
@@ -533,8 +540,7 @@ def main():
     muren_info = []
     for i, muur in enumerate(soort_muren):
         muren_info.append((muur.size[0], 890))
-
-
+    kleuren_textures = [factory.from_color(kleur, (1, 1)) for kleur in kleuren]
     # Inladen wereld_mappen
     """map_resources = sdl2.ext.Resources(__file__, "mappen")
     # alle mappen opslaan in sdl2 textures
@@ -652,7 +658,7 @@ def main():
             start_time = time.time()
             # Reset de rendering context
             renderer.clear()
-            render_floor_and_sky(renderer)
+            render_floor_and_sky(renderer, kleuren_textures)
             # Render de huidige frame
             (d, v, kl), (z_d, z_v, z_k) = speler.n_raycasting(world_map, deuren)
 
@@ -667,7 +673,7 @@ def main():
                 #pad = (speler.position)
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 pad = pathfinding_gps((50 * 9, 50 * 9))
-            draw_nav(renderer, inf_world, speler, pad, sprites)
+            draw_nav(renderer,kleuren_textures, inf_world, speler, pad, sprites)
             #draw_path(renderer, pad)
             delta = time.time() - start_time
             if speler.in_auto:
@@ -681,6 +687,7 @@ def main():
                               dstrect=(pauze_positie[0], pauze_positie[1], 80, 50))
                 menu_nav()
             else:
+                positie_check()
                 next(fps_generator)
 
             verwerk_input(delta)
