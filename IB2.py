@@ -1,6 +1,6 @@
 # import cProfile
 # import pstats
-from line_profiler_pycharm import profile
+#from line_profiler_pycharm import profile
 
 import math
 import time
@@ -414,7 +414,6 @@ def menu_nav():
             pauze_index = 3
         pauze_positie = POSITIE_PAUZE[pauze_index]
 
-@profile
 def pathfinding_gps(eindpositie=(8, 8)):
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
     # Begin- en eindnodes initialiseren met 0 cost
