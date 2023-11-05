@@ -1,6 +1,6 @@
 # import cProfile
 # import pstats
-# from line_profiler_pycharm import profile
+from line_profiler_pycharm import profile
 
 import math
 import time
@@ -414,7 +414,7 @@ def menu_nav():
             pauze_index = 3
         pauze_positie = POSITIE_PAUZE[pauze_index]
 
-
+@profile
 def pathfinding_gps(eindpositie=(8, 8)):
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
     # Begin- en eindnodes initialiseren met 0 cost
@@ -422,6 +422,8 @@ def pathfinding_gps(eindpositie=(8, 8)):
     begin.g = begin.h = begin.f = 0
     eind = Node(None, eindpositie)
     eind.g = eind.h = eind.f = 0
+    print(speler.position[0])
+    print(eindpositie)
     # initialiseer open en closed lijsten
     open_list = []  # dit is de lijst van punten die geëvalueerd moeten worden
     closed_list = []  # dit is de lijst van punten die al geëvalueerd zijn
@@ -470,19 +472,29 @@ def pathfinding_gps(eindpositie=(8, 8)):
             for closed_child in closed_list:
                 if child == closed_child:
                     is_closed = True
+            """if any(child == closed for closed in closed_list):
+                is_closed = True """
             if is_closed:
                 continue
             # cost waarden berekenen
-            child.g = current_node.g + 1  # afstand tot begin node
-            child.h = int(10*np.linalg.norm([child.positie[0] - eind.positie[0], child.positie[1]-eind.positie[1]]))  # afstand tot eind node
+            #child.g = current_node.g + 1  # afstand tot begin node
+            child.g = current_node.g + 10
+            child.h = int(10*np.linalg.norm((child.positie[0] - eind.positie[0], child.positie[1]-eind.positie[1])))  # afstand tot eind node
+            #y = abs(child.positie[0] - eind.positie[0])
+            #x = abs(child.positie[1] - eind.positie[1])
+            #print(y)
+            #print(x)
+            #child.h = 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
             child.f = child.g + child.h
-            #print(f"h = {child.h}, g = {child.g}, f = {child.f}")
+            print(f"h = {child.h}, g = {child.g}, f = {child.f}")
 
             # kijken of child_node in de open lijst zit
             is_open = False
-            for open_node in open_list:
+            """for open_node in open_list:
                 if child == open_node and child.g > open_node.g:
-                    is_open = True
+                    is_open = True """
+            if any(child == open_node for open_node in open_list):
+                is_open = True
             if is_open:
                 continue
             # indien niet al in open list, nu toevoegen
@@ -490,7 +502,7 @@ def pathfinding_gps(eindpositie=(8, 8)):
 
 
 def positie_check():
-    if math.floor(speler.p_x) == 450 and math.floor(speler.p_y) == 450:
+    if speler.position == (450, 450):
         print("bestemming bereikt")
 
 
