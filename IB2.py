@@ -421,8 +421,6 @@ def pathfinding_gps(eindpositie=(8, 8)):
     begin.g = begin.h = begin.f = 0
     eind = Node(None, eindpositie)
     eind.g = eind.h = eind.f = 0
-    print(speler.position[0])
-    print(eindpositie)
     # initialiseer open en closed lijsten
     open_list = []  # dit is de lijst van punten die geëvalueerd moeten worden
     closed_list = []  # dit is de lijst van punten die al geëvalueerd zijn
@@ -471,6 +469,8 @@ def pathfinding_gps(eindpositie=(8, 8)):
             for closed_child in closed_list:
                 if child == closed_child:
                     is_closed = True
+                    if is_closed:
+                        break
             """if any(child == closed for closed in closed_list):
                 is_closed = True """
             if is_closed:
@@ -478,14 +478,14 @@ def pathfinding_gps(eindpositie=(8, 8)):
             # cost waarden berekenen
             #child.g = current_node.g + 1  # afstand tot begin node
             child.g = current_node.g + 10
-            child.h = int(10*np.linalg.norm((child.positie[0] - eind.positie[0], child.positie[1]-eind.positie[1])))  # afstand tot eind node
-            #y = abs(child.positie[0] - eind.positie[0])
-            #x = abs(child.positie[1] - eind.positie[1])
+            #child.h = int(10*np.linalg.norm((child.positie[0] - eind.positie[0], child.positie[1]-eind.positie[1])))  # afstand tot eind node
+            y = abs(child.positie[0] - eind.positie[0])
+            x = abs(child.positie[1] - eind.positie[1])
             #print(y)
             #print(x)
-            #child.h = 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
+            child.h = 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
             child.f = child.g + child.h
-            print(f"h = {child.h}, g = {child.g}, f = {child.f}")
+            #print(f"h = {child.h}, g = {child.g}, f = {child.f}")
 
             # kijken of child_node in de open lijst zit
             is_open = False
@@ -496,6 +496,8 @@ def pathfinding_gps(eindpositie=(8, 8)):
                 is_open = True"""
             if any(child == open_node for open_node in open_list):
                 is_open = True
+                if is_open:
+                    break
             if is_open:
                 continue
             # indien niet al in open list, nu toevoegen
@@ -693,6 +695,7 @@ def main():
                 #pad = (speler.position)
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 pad = pathfinding_gps((50 * 9, 50 * 9))
+                print(len(pad))
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             #draw_path(renderer, pad)
             delta = time.time() - start_time
