@@ -302,7 +302,7 @@ def render_sprites(renderer, sprites, player):
         # hoek
         rx = sprite.x - player.p_x
         ry = sprite.y - player.p_y
-        hoek_sprite = math.atan2(ry , rx)
+        hoek_sprite = math.atan2(ry , rx)%(math.pi*2)
         if sprite.afstand >= 60: continue;
 
         '''
@@ -312,7 +312,7 @@ def render_sprites(renderer, sprites, player):
         elif player.p_x < sprite.x and player.p_y < sprite.y:continue # hoek_sprite +=  np.pi;
         '''
 
-        hoek_verschil = abs(player.hoek - hoek_sprite)%(math.pi*2)
+        hoek_verschil = abs(player.hoek - hoek_sprite)
         if hoek_verschil >= (math.pi / 3.7):
             continue  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
 
