@@ -304,15 +304,17 @@ def render_sprites(renderer, sprites, player):
         # hoek
         rx = sprite.x - player.p_x
         ry = sprite.y - player.p_y
-        hoek_sprite = math.atan2(ry , rx)
+        hoek_sprite = math.atan2(ry , rx)%(math.pi*2)
+        if sprite.afstand >= 60: continue;
 
-        """
-        if player.p_x > sprite.x and player.p_y > sprite.y: hoek_sprite -= np.pi;
-        # correct elif player.p_x > sprite.x and player.p_y < sprite.y:continue# hoek_sprite += np.pi;
+        '''
+        if player.p_x > sprite.x and player.p_y > sprite.y: 0#hoek_sprite += np.pi;
+        elif player.p_x > sprite.x and player.p_y < sprite.y:continue# hoek_sprite += np.pi;
         elif player.p_x < sprite.x and player.p_y > sprite.y:continue # hoek_sprite +=  np.pi;
-        """
+        elif player.p_x < sprite.x and player.p_y < sprite.y:continue # hoek_sprite +=  np.pi;
+        '''
 
-        hoek_verschil = player.hoek - hoek_sprite
+        hoek_verschil = abs(player.hoek - hoek_sprite)
         if hoek_verschil >= (math.pi / 3.7):
             continue  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
 
@@ -337,10 +339,14 @@ def render_sprites(renderer, sprites, player):
 
         screen_y = (HOOGTE - sprite_size_hoogte) / 2  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
-
         renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
-
-
+        """"
+        
+        for kolom in range(BREEDTE):
+            if kolom > screen_x+ sprite_size_breedte and kolom < screen_x: continue
+            renderer.copy(sprite.image, srcrect=(5, 0, 1, sprite_size_hoogte),
+                dstrect=(kolom, screen_y, 1, sprite_size_hoogte))
+        """
 def show_fps(font, renderer):
     fps_list = [1]
     loop_time = 0
@@ -558,6 +564,7 @@ def main():
     sprites.append(Sprite(tree, x=50.4 * 9, y=50 * 9))
     sprites.append(Sprite(tree, x=49.5 * 9, y=50 * 9))
     sprites.append(Sprite(tree, x=49 * 9, y=49.5 * 9))
+
 
 
     # Initialiseer font voor de fps counter
