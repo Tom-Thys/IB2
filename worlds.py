@@ -1,8 +1,4 @@
-import math
-import time
-import random
 import numpy as np
-from numba import njit
 import sdl2.ext
 from sdl2 import *
 from random import randint
@@ -174,13 +170,12 @@ class Tile():
 
 class Map():
     def __init__(self):
-        self.tile_map = np.full((100, 100), Tile((0, 0)))
+        self.tile_map = np.full((111, 111), Tile((0, 0)))
         self.tile_map[:, :] = 0
-        y, x = np.shape(self.tile_map)
+        self.tiles_size = np.shape(self.tile_map)
+        y, x = self.tiles_size
         self.world_size = (y * 9, x * 9)
         self.world_map = np.zeros(self.world_size, dtype='int32')
-        self.image_map = np.zeros((9 * y, 9 * x), dtype='int32')
-        self.tiles_size = np.shape(self.tile_map)
         self.added = []
 
     def start(self):

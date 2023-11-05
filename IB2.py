@@ -344,14 +344,14 @@ def show_fps(font, renderer):
     loop_time = 0
 
     while True:
-        #fps_list.append(1 / (time.time() - loop_time))
+        fps_list.append(1 / (time.time() - loop_time))
         """if min(fps_list) < 20:
             print(min(fps_list))
         if fps_list[-1] > 190:
-            print(fps_list[-1])"""
+            print(fps_list[-1])
         if (time.time() - loop_time) != 0:
             fps_list.append(1 / (time.time() - loop_time))
-            #print(min(fps_list))
+            #print(min(fps_list))"""
         loop_time = time.time()
 
         fps = sum(fps_list) / len(fps_list)
