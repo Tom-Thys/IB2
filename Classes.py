@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from sdl2 import *
+from numba import jit
 
 
 moving_stappen = False
@@ -18,7 +19,6 @@ class Sprite():
     def afstanden(self, player):
         self.afstand = ((self.x - player.p_x) ** 2 + (self.y - player.p_y) ** 2)**(1/2)
         return self.afstand
-
 
 class Player():
     global moving_stappen
@@ -40,6 +40,7 @@ class Player():
 
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""
+
         for i in range(self.breedte):
             r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / self.breedte) * self.r_camera
             hoek = math.atan(r_straal_kolom[0]/r_straal_kolom[1])
@@ -160,7 +161,7 @@ class Player():
             x = (self.p_x + least_distance * self.r_stralen[:, 0]).astype('float32')
             y = (self.p_y + least_distance * self.r_stralen[:, 1]).astype('float32')
 
-            # infinity world try-out
+            """# infinity world try-out
             while np.any(np.logical_and.reduce((-4 * x_dim < x, x <= 0))):
                 x = np.where(x <= 0, x + x_dim, x)
             while np.any(np.logical_and.reduce((-4 * y_dim <= y, y <= 0))):
@@ -169,7 +170,7 @@ class Player():
                 y = np.where(y >= y_dim, y - y_dim, y)
 
             while np.any(np.logical_and.reduce((x_dim < x, x < 5*x_dim))):
-                x = np.where(x >= x_dim, x - x_dim, x)
+                x = np.where(x >= x_dim, x - x_dim, x)"""
 
             # World map neemt enkel int dus afronden naar beneden via astype(int) enkel als d_v genomen is moet correctie toegevoegd worden bij x
             x_f = np.where(dist_cond, (x - richting_x).astype(int), x.astype(int))
@@ -185,15 +186,15 @@ class Player():
             # op de plekken waar logica correct is kijken of we een muur raken
             if False:
                 z_buffer[muren_check] = np.where(world_map[y_f[muren_check], x_f[muren_check]] > 0, True, False)
-
-            # We raken op muren_check = True muren en we slaan die data op in de gecreeerde arrays
-            kleuren[muren_check * z_buffer] += world_map[y_f[muren_check * z_buffer], x_f[muren_check * z_buffer]]
-            # r_straal*r_speler voor fish eye eruit te halen
-            d_muur += np.where(break_cond * muren_check * z_buffer,
-                               least_distance * (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 0)
-            # Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
-            d_muur_vlak += np.where(muren_check * z_buffer * dist_cond, y, 0)
-            d_muur_vlak += np.where(muren_check * z_buffer * ~dist_cond, x, 0)
+            if np.any(muren_check == True):
+                # We raken op muren_check = True muren en we slaan die data op in de gecreeerde arrays
+                kleuren[muren_check * z_buffer] += world_map[y_f[muren_check * z_buffer], x_f[muren_check * z_buffer]]
+                # r_straal*r_speler voor fish eye eruit te halen
+                d_muur += np.where(break_cond * muren_check * z_buffer,
+                                   least_distance * (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 0)
+                # Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
+                d_muur_vlak += np.where(muren_check * z_buffer * dist_cond, y, 0)
+                d_muur_vlak += np.where(muren_check * z_buffer * ~dist_cond, x, 0)
             if False:
                 z_kleuren[muren_check * ~z_buffer * break_z] += world_map[
                     y_f[muren_check * ~z_buffer * break_z], x_f[muren_check * ~z_buffer * break_z]]

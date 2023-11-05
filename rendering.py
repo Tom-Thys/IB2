@@ -1,6 +1,6 @@
 import numpy as np
 import sdl2.ext
-from IB2 import kleuren, HOOGTE, BREEDTE, inf_world
+from IB2 import kleuren, HOOGTE, BREEDTE
 
 """ALLES RELATED AAN DRAWING OP HET SCHERM"""
 
@@ -59,7 +59,7 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
     for kolom in range(BREEDTE):
         d_muur = d[kolom]
         unit_d = d_v[kolom]
-        k_muur = k[kolom]
+        k_muur = (k[kolom]-1)
         if k_muur >= 0:
             wall_texture = soort_muren[k_muur]
             breedte, hoogte = muren_info[k_muur]
