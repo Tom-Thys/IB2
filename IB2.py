@@ -62,10 +62,10 @@ sensitivity = -2 * sensitivity_rw + 300
 moet_afsluiten = False
 
 # positie van de speler
-p_speler_x, p_speler_y = 50.4 * 9, 49 * 9
+p_speler_x, p_speler_y =  50.4 * 9, 49 * 9
 
 # richting waarin de speler kijkt
-r_speler_hoek = math.pi / 4
+r_speler_hoek = -math.pi / 4
 # FOV
 d_camera = 1
 #
@@ -74,15 +74,12 @@ speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
 speler.aanmaak_r_stralen(d_camera=d_camera)
 
 # world
-wereld_nr = 0
+world_map = np.ones((10,10))
 # world_map = worldlijst[wereld_nr]
 # y_dim, x_dim = np.shape(world_map)
 
 
-inf_world = Map()
-inf_world.update()
-inf_world.map_making(speler)
-world_map = inf_world.world_map
+
 
 # Vooraf gedefinieerde kleuren
 kleuren = [
@@ -128,13 +125,9 @@ def verwerk_input(delta,events=0):
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2 and not paused:
         speler.move(1, 0.1, world_map)
-        inf_world.map_making(speler)
-        world_map = inf_world.world_map
         muziek_spelen("footsteps", False, 4)
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2 and not paused:
         speler.move(-1, 0.1, world_map)
-        inf_world.map_making(speler)
-        world_map = inf_world.world_map
         muziek_spelen("footsteps", False, 4)
     if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2 and not paused:
         speler.draaien(-math.pi / sensitivity)
@@ -280,8 +273,6 @@ def verwerk_input(delta,events=0):
             speler.draaien(-math.pi / 4000 * draai)
             beweging = event.motion.yrel
             speler.move(1, beweging / 1000, world_map)
-            inf_world.map_making(speler)
-            world_map = inf_world.world_map
             continue
 
     # Polling-gebaseerde input. Dit gebruiken we bij voorkeur om bv het ingedrukt
@@ -360,11 +351,11 @@ def show_fps(font, renderer):
 
     while True:
         fps_list.append(1 / (time.time() - loop_time))
-        if min(fps_list) < 20:
+        """if min(fps_list) < 20:
             print(min(fps_list))
-        """if fps_list[-1] > 190:
-            print(fps_list[-1])"""
-        """if (time.time() - loop_time) != 0:
+        if fps_list[-1] > 190:
+            print(fps_list[-1])
+        if (time.time() - loop_time) != 0:
             fps_list.append(1 / (time.time() - loop_time))
             #print(min(fps_list))"""
         loop_time = time.time()
@@ -509,8 +500,15 @@ def quit(button, event):
 
 
 def main():
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity
-    global wereld_nr, world_map, worldlijst
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map
+
+    inf_world = Map()
+    inf_world.start()
+    # inf_world.map_making(speler)
+    world_map = inf_world.world_map
+
+
+
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
 
@@ -544,12 +542,12 @@ def main():
 
 
     # Inladen wereld_mappen
-    map_resources = sdl2.ext.Resources(__file__, "mappen")
+    """map_resources = sdl2.ext.Resources(__file__, "mappen")
     # alle mappen opslaan in sdl2 textures
     map_textuur = []
     for i, map in enumerate(worldlijst):
         naam = f"map{i}.png"
-        map_textuur.append(factory.from_image(map_resources.get_path(naam)))
+        map_textuur.append(factory.from_image(map_resources.get_path(naam)))"""
 
 
     # Inladen sprites
@@ -671,9 +669,11 @@ def main():
                 z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
             render_sprites(renderer, sprites, speler)
             # t.append(time.time()-t1)
-            if abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
+            if pad == None:
+                pass
+                #pad = (speler.position)
+            elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 pad = pathfinding_gps((50 * 9, 50 * 9))
-                print(len(pad))
             draw_nav(renderer, inf_world, speler, pad, sprites)
             #draw_path(renderer, pad)
             delta = time.time() - start_time
