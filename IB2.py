@@ -680,7 +680,7 @@ def main():
                 #pad = (speler.position)
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 pad = pathfinding_gps((50 * 9, 50 * 9))
-            draw_nav(renderer,kleuren_textures, inf_world, speler, pad, sprites)
+            draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             #draw_path(renderer, pad)
             delta = time.time() - start_time
             if speler.in_auto:
