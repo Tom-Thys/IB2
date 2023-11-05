@@ -166,10 +166,10 @@ def verwerk_input(delta,events=0):
             if not moet_afsluiten and game_state == 0:
                 if key == sdl2.SDLK_DOWN:
                     main_menu_index += 1
-                    muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", channel=2)
                 if key == sdl2.SDLK_UP:
                     main_menu_index -= 1
-                    muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", channel=2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if main_menu_index == 0:
                         game_state = 2
@@ -492,6 +492,8 @@ def pathfinding_gps(eindpositie=(8, 8)):
             """for open_node in open_list:
                 if child == open_node and child.g > open_node.g:
                     is_open = True """
+            """if any(child == open_node and child.g > open_node.g for open_node in open_list):
+                is_open = True"""
             if any(child == open_node for open_node in open_list):
                 is_open = True
             if is_open:
@@ -659,7 +661,7 @@ def main():
         sdl2.SDL_SetRelativeMouseMode(True)
         if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
-            muziek_spelen("game start", False, 3)
+            muziek_spelen("game start", channel=3)
             pad = pathfinding_gps((50 * 9, 50 * 9))
         if game_state != 1:
             config.set("settings", "volume",
