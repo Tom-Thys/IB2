@@ -103,28 +103,41 @@ def world_generation(openingen=[]):
     kaart[-3:, :3] = kleur
     kleur = randint(-1, 30)
     kaart[:3, -3:] = (kleur % 4) + 2
-    if len(openingen) < 4:
-        extra_openingen = randint(0, 4 - len(openingen))  # Extra openingen
-        # print(extra_openingen)
+    if len(openingen) < 3:
+        extra_openingen = randint(0, 3 - len(openingen))  # Extra openingen
+        if extra_openingen == 0 and len(openingen) <= 1:
+            extra_openingen = randint(1,3)
         for i in range(extra_openingen):
             loops = 0
-            while loops < 5:
+            while loops < 6:
                 loops += 1
                 opening = randint(1, 4)
                 if opening not in openingen:
                     openingen.append(opening)
                     continue
-        for i in range(1, 5):
-            if i not in openingen:
-                kleur = randint(2, 6)
-                if i == 1:
-                    kaart[3:-3, :3] = 6
-                elif i == 2:
-                    kaart[:3, 3:-3] = 6
-                elif i == 3:
-                    kaart[3:-3, -3:] = 6
-                else:
-                    kaart[-3:, 3:-3] = 6
+    elif len(openingen) == 3:
+        openingen.pop(randint(0,2))
+        if randint(0,10) == 0:
+            openingen.pop(randint(0,1))
+            if randint(0,20) == 0:
+                openingen.pop(0)
+    else:
+        openingen.pop(randint(0, 3))
+        if randint(0, 2) == 0:
+            openingen.pop(randint(0, 2))
+            if randint(0, 6) == 6:
+                openingen.pop(randint(0, 1))
+    for i in range(1, 5):
+        if i not in openingen:
+            kleur = randint(2, 6)
+            if i == 1:
+                kaart[3:-3, :3] = 6
+            elif i == 2:
+                kaart[:3, 3:-3] = 6
+            elif i == 3:
+                kaart[3:-3, -3:] = 6
+            else:
+                kaart[-3:, 3:-3] = 6
     #print(kaart)
     return kaart, openingen
 
@@ -172,7 +185,7 @@ class Tile():
 
 class Map():
     def __init__(self):
-        self.tile_map = np.full((111, 111), Tile((0, 0)))
+        self.tile_map = np.full((60, 60), Tile((0, 0)))
         self.tile_map[:, :] = 0
         self.tiles_size = np.shape(self.tile_map)
         y, x = self.tiles_size
@@ -217,11 +230,6 @@ class Map():
         rgbimg.paste(im)
         new_im = converter(rgbimg)
         new_im.save('map.png')
-
-        checkmap = self.world_map[10:20, 10:20]
-
-        b = np.transpose((self.world_map == -1).nonzero())
-        print(b)
 
     def update(self):
         for x, y in self.added:

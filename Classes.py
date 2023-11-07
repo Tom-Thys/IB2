@@ -82,7 +82,7 @@ class Player():
 
         for i in range(self.breedte):
             r_straal_kolom = d_camera * self.r_speler + (1 - (2 * i) / self.breedte) * self.r_camera
-            hoek = math.atan(r_straal_kolom[0]/r_straal_kolom[1])
+            hoek = math.atan2(r_straal_kolom[0], r_straal_kolom[1])
             self.hoeken[i] = hoek
 
         self.r_stralen[:,0] = np.cos(self.hoeken)
@@ -138,7 +138,7 @@ class Player():
         sprite.updatebaar = True
         sprite.deletable = True
         sprite.vector = self.r_speler/5
-        for i in range(15):
+        for i in range(51):
             sprite.update(world_map)
         return sprite
 
