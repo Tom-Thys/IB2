@@ -71,6 +71,7 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
 
 
 def renderen(renderer, d, d_v, k, soort_muren, muren_info):
+    d = 1/d
     for kolom in range(BREEDTE):
         d_muur = d[kolom]
         unit_d = d_v[kolom]

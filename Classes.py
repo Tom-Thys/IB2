@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from numba import njit
 #from line_profiler_pycharm import profile
 
 from sdl2 import *
@@ -197,7 +198,7 @@ class Player():
 
             # Als op alle plekken break_cond == 0 return dan de bekomen waardes
             if (break_cond == False).all():
-                return ((1 / d_muur), (d_muur_vlak % 1), (kleuren - 1)), (
+                return (d_muur, (d_muur_vlak % 1), (kleuren - 1)), (
                 (1 / z_d_muur), (z_d_muur_vlak % 1), (z_kleuren))
 
             # x en y berekenen adhv gegeven d_v of d_h en afronden op 3-8 zodat astype(int) niet afrond naar beneden terwijl het naar boven zou moeten
