@@ -355,9 +355,7 @@ def render_sprites(renderer, sprites, player, d):
                 continue
             if d[kolom] <= sprite.afstand:
                 continue
-            renderer.copy(kleuren_textures[2], dstrect=(kolom, screen_y, 1, sprite_size_hoogte))
-
-            renderer.copy(sprite.image, srcrect=(i, 0, 1, sprite_size_hoogte*sprite.afstand),
+            renderer.copy(sprite.image, srcrect=(i/sprite_size_breedte*sprite.breedte, 0, 1*sprite.afstand, sprite_size_hoogte*sprite.afstand),
                 dstrect=(kolom, screen_y, 1, sprite_size_hoogte))
 
 
