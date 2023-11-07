@@ -516,7 +516,7 @@ def pathfinding_gps(eindpositie=(8, 8)):
             #print(x)
             child.h = 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
             child.f = child.g + child.h
-            #print(f"h = {child.h}, g = {child.g}, f = {child.f}")
+            print(f"h = {child.h}, g = {child.g}, f = {child.f}")
 
             # kijken of child_node in de open lijst zit
             is_open = False
@@ -541,10 +541,25 @@ def positie_check():
 def bestemming_selector(mode=""):
     global world_map, lijst_mogelijke_bestemmingen
     if mode == "start":
-        lijst_mogelijke_bestemmingen = np.transpose((world_map == -1).nonzero())
+        lijst_mogelijke_bestemmingen = np.transpose((world_map == -1).nonzero()).tolist()
         return
     x, y = speler.position
-    checkmap = world_map[y-5:y+4, x-5:x+4]
+    """checkmap = world_map[y-5:y+4, x-5:x+4]
+    """
+    spelerpositie = list(speler.position)
+    range_min = [spelerpositie[0] - 5, spelerpositie[1] - 5]
+    range_max = [spelerpositie[0] + 5, spelerpositie[1] + 5]
+    """
+    dichte_bestemmingen_bool = np.any() """
+
+    dichte_locaties = list(filter(lambda m: m[0] >= range_min[0] and m[1] >= range_min[1] and m[0] <= range_max[0]and m[1] <= range_max[1], lijst_mogelijke_bestemmingen))
+    print(f"len dichte locaties = {len(dichte_locaties)}")
+    rnd = randint(0, len(dichte_locaties)-1)  # len(dichte_locaties) kan 0 zijn indien er geen dichte locaties zijn: vermijden door groot genoeg gebied te zoeken
+    print(rnd)
+    bestemming = tuple(dichte_locaties[rnd])
+    print(spelerpositie)
+    print(bestemming)
+    return bestemming
     """
     lijst = []
     for i in range(-10,11):
@@ -748,8 +763,9 @@ def main():
                 pass
                 #pad = (speler.position)
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
-                pad = pathfinding_gps((50 * 9, 50 * 9))
-                #pad = pathfinding_gps(bestemming_selector())
+                #pad = pathfinding_gps((50 * 9, 50 * 9))
+                #bestemming_selector()
+                pad = pathfinding_gps(bestemming_selector())
                 #print(len(pad))
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             #draw_path(renderer, pad)
