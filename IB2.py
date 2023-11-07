@@ -52,6 +52,7 @@ settings_menu_positie = [0, 0]
 pauze_index = 0
 pauze_positie = POSITIE_PAUZE[0]
 sprites = []
+lijst_mogelijke_bestemmingen = []
 # verwerking van config file: ook globale variabelen
 config.read("config.ini")
 volume = int(config.get("settings", "volume"))
@@ -523,11 +524,12 @@ def pathfinding_gps(eindpositie=(8, 8)):
             is_open = False
             """for open_node in open_list:
                 if child == open_node and child.g > open_node.g:
-                    is_open = True """
-            """if any(child == open_node and child.g > open_node.g for open_node in open_list):
-                is_open = True"""
-            if any(child == open_node for open_node in open_list):
+                    is_open = True 
+                    break """
+            if any(child == open_node and child.g > open_node.g for open_node in open_list):
                 is_open = True
+            """if any(child == open_node for open_node in open_list):
+                is_open = True """
             if is_open:
                 continue
             # indien niet al in open list, nu toevoegen
@@ -538,6 +540,27 @@ def positie_check():
     if speler.position == (450, 450):
         print("bestemming bereikt")
 
+def bestemming_selector(mode=""):
+    global world_map, lijst_mogelijke_bestemmingen
+    if mode == "start":
+        lijst_mogelijke_bestemmingen = np.transpose((world_map == -1).nonzero())
+        return
+    x, y = speler.position
+    checkmap = world_map[y-5:y+4, x-5:x+4]
+    """
+    lijst = []
+    for i in range(-10,11):
+        for j in range(-10,11):
+            if world_map[y+i][x+j] == -1:
+                lijst.append((y+i,x+j))
+    if len(lijst) == 0:
+        bestemming = (50*9, 50*9)
+        return bestemming
+    rnd = randint(0, len(lijst)-1)
+    bestemming = lijst[rnd]
+    print(bestemming)
+    return bestemming
+    print(checkmap)"""
 
 """Functies voor interactieve knoppen"""
 def start(button, event):
@@ -644,7 +667,6 @@ def main():
     spriterenderer = factory.create_sprite_render_system(window)
     uiprocessor = sdl2.ext.UIProcessor()
 
-
     while not moet_afsluiten:
         muziek_spelen("main menu", True)
         sdl2.SDL_SetRelativeMouseMode(False)
@@ -696,6 +718,7 @@ def main():
         if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
             muziek_spelen("game start", channel=3)
+            bestemming_selector("start")
             pad = pathfinding_gps((50 * 9, 50 * 9))
         if game_state != 1:
             config.set("settings", "volume",
@@ -728,6 +751,7 @@ def main():
                 #pad = (speler.position)
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 pad = pathfinding_gps((50 * 9, 50 * 9))
+                #pad = pathfinding_gps(bestemming_selector())
                 #print(len(pad))
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             #draw_path(renderer, pad)
