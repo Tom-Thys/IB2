@@ -218,6 +218,11 @@ class Map():
         new_im = converter(rgbimg)
         new_im.save('map.png')
 
+        checkmap = self.world_map[10:20, 10:20]
+
+        b = np.transpose((self.world_map == -1).nonzero())
+        print(b)
+
     def update(self):
         for x, y in self.added:
             self.world_map[x * self.size:(x + 1) * self.size, y * self.size:(y + 1) * self.size] = self.tile_map[

@@ -302,14 +302,14 @@ def wheelSprite(renderer, sprite):
     renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250))
 
 
-def render_sprites(renderer, sprites, player):
+def render_sprites(renderer, sprites, player, afstanden):
     global world_map
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player))  # Sorteren op afstand
     # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
 
     for i,sprite in enumerate(sprites):
         if sprite.update(world_map):
-            sprites.pop(i)
+            del sprite
             continue
 
         # hoek
@@ -333,7 +333,8 @@ def render_sprites(renderer, sprites, player):
         sprite_distance = sprite.afstand*abs(math.cos(hoek_verschil))
         sprite_distance += 0.01
 
-        if sprite_distance >= 60: continue;
+
+
         # grootte
         sprite_size_breedte = sprite.breedte / sprite_distance * 10
         sprite_size_hoogte = sprite.hoogte / sprite_distance * 10
@@ -710,7 +711,7 @@ def main():
             renderen(renderer, d, v, kl, soort_muren, muren_info)
             if np.any(z_k) != 0:
                 z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
-            render_sprites(renderer, sprites, speler)
+            render_sprites(renderer, sprites, speler, d)
             collision_detection(renderer,speler,sprites,hartje)
             # t.append(time.time()-t1)
             if pad == None:

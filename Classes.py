@@ -28,7 +28,7 @@ class Sprite():
     def update(self, world_map):
         if self.updatebaar:
             time = self.tick/50
-            self.height -= (4*time-time**2)
+            self.height -= (1/2)*(4*time-time**2)
             x = (self.x + 0.1 * self.vector[0])
             y = (self.y + 0.1 * self.vector[1])
             if world_map[math.floor(y)][math.floor(x)] == 0:
@@ -50,8 +50,11 @@ class Sprite():
 
         if self.deletable and self.tick > 500:
             return True
-        else:
-            return False
+        return False
+
+
+    def __delete__(self, instance):
+        del self
 
 
 
@@ -151,11 +154,11 @@ class Player():
 
         # Aanmaak numpy arrays die terug gestuurd worden
         kleuren = np.zeros(self.breedte, dtype='int')
-        d_muur = np.zeros(self.breedte)
+        d_muur = np.ones(self.breedte)*60
         d_muur_vlak = np.zeros(self.breedte)
 
         z_kleuren = np.zeros(self.breedte, dtype='int')
-        z_d_muur = np.zeros(self.breedte)
+        z_d_muur = np.ones(self.breedte)
         z_d_muur_vlak = np.zeros(self.breedte)
 
         delta_x = 1 / np.abs(self.r_stralen[:, 0])
