@@ -73,7 +73,7 @@ class Player():
         self.hoeken = np.zeros(self.breedte)
         self.r_stralen = np.zeros((self.breedte, 2))
         self.car = 0
-        self.in_auto = True
+        self.in_auto = False
         self.aantal_hartjes = 5
         self.tile = math.floor(self.p_x/9), math.floor(self.p_y/9)
 

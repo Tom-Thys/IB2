@@ -302,7 +302,7 @@ def wheelSprite(renderer, sprite):
     renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250))
 
 
-def render_sprites(renderer, sprites, player, afstanden):
+def render_sprites(renderer, sprites, player, d):
     global world_map
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player))  # Sorteren op afstand
     # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
@@ -336,7 +336,7 @@ def render_sprites(renderer, sprites, player, afstanden):
 
 
         # grootte
-        sprite_size_breedte = sprite.breedte / sprite_distance * 10
+        sprite_size_breedte = int(sprite.breedte / sprite_distance * 10)
         sprite_size_hoogte = sprite.hoogte / sprite_distance * 10
 
         """a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
@@ -346,13 +346,22 @@ def render_sprites(renderer, sprites, player, afstanden):
 
         screen_y = (sprite.height - sprite_size_hoogte) / 2  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
-        renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
-        """"
+        #renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
+
         
-        for kolom in range(sprite_size_breedte):
-            renderer.copy(sprite.image, srcrect=(5, 0, 1, sprite_size_hoogte),
+        for i in range(sprite_size_breedte):
+            kolom = i+ screen_x
+            if kolom >= BREEDTE:
+                continue
+            if d[kolom] <= sprite.afstand:
+                continue
+            renderer.copy(kleuren_textures[2], dstrect=(kolom, screen_y, 1, sprite_size_hoogte))
+
+            renderer.copy(sprite.image, srcrect=(i, 0, 1, sprite_size_hoogte*sprite.afstand),
                 dstrect=(kolom, screen_y, 1, sprite_size_hoogte))
-        """
+
+
+
 
 
 def collision_detection(renderer, speler,sprites,hartje):
