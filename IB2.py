@@ -513,6 +513,14 @@ def pathfinding_gps(eindpositie=(8, 8)):
                 continue
             # indien niet al in open list, nu toevoegen
             open_list.append(child)
+"""def bestemming_selector():
+    lijst_mogelijke_bestemmingen = np.transpose((world_map == -1).nonzero())
+    y,x = speler.position
+    if y-50<0:
+        y = 50
+    if x-50<0:
+        x = 50
+    checkmap = world_map[y-50:y+50,x-50:x+50] """
 
 
 def positie_check():
@@ -702,6 +710,7 @@ def main():
                 z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
             render_sprites(renderer, sprites, speler)
             # t.append(time.time()-t1)
+            #bestemming_selector()
             if pad == None:
                 pass
                 #pad = (speler.position)
