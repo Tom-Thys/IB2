@@ -74,18 +74,18 @@ def renderen(renderer, d, d_v, k, soort_muren, muren_info):
     for kolom in range(BREEDTE):
         d_muur = d[kolom]
         unit_d = d_v[kolom]
-        k_muur = (k[kolom]-1)
+        k_muur = k[kolom]
         if k_muur >= 0:
             wall_texture = soort_muren[k_muur]
             breedte, hoogte = muren_info[k_muur]
             rij = unit_d * breedte
-            # d_muur = 10 / d_muur
             scherm_y = HOOGTE / 2
             renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
 def z_renderen(renderer, d, d_v, k, soort_muren, muren_info, deuren):
+    return
     for kolom in range(BREEDTE):
         if k[kolom] == 0: continue;
         deur = deuren[k[kolom]]

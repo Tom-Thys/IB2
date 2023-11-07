@@ -92,6 +92,9 @@ def main():
 
 def world_generation(openingen=[]):
     kaart = np.zeros((9, 9), dtype='int32')
+    pakjes_plekken = [(1,3),(3,1),(7,3),(3,7),(1,5),(5,1),(7,5),(5,7)]
+    for plekx,pleky in pakjes_plekken:
+        kaart[plekx,pleky] = -1
     kleur = randint(2, 6)
     kaart[:3, :3] = kleur
     kleur = randint(2, 6)
@@ -122,7 +125,7 @@ def world_generation(openingen=[]):
                     kaart[3:-3, -3:] = 6
                 else:
                     kaart[-3:, 3:-3] = 6
-    # print(kaart)
+    #print(kaart)
     return kaart, openingen
 
 

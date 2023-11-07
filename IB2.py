@@ -51,6 +51,7 @@ main_menu_positie = [0, 0]
 settings_menu_positie = [0, 0]
 pauze_index = 0
 pauze_positie = POSITIE_PAUZE[0]
+sprites = []
 # verwerking van config file: ook globale variabelen
 config.read("config.ini")
 volume = int(config.get("settings", "volume"))
@@ -65,7 +66,7 @@ moet_afsluiten = False
 p_speler_x, p_speler_y =  50.4 * 9, 49 * 9
 
 # richting waarin de speler kijkt
-r_speler_hoek = -math.pi / 4
+r_speler_hoek = math.pi / 4
 # FOV
 d_camera = 1
 #
@@ -118,7 +119,8 @@ geluiden = [
 #
 
 def verwerk_input(delta,events=0):
-    global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity, sensitivity_rw, paused, pauze_index
+    global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
+    global sensitivity_rw, paused, pauze_index, sprites
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
@@ -243,6 +245,10 @@ def verwerk_input(delta,events=0):
                         speler.reset()
                     if pauze_index == 3 and key == sdl2.SDLK_SPACE:
                         moet_afsluiten = True
+                else:
+                    if key == sdl2.SDLK_SPACE:
+                        geworpen_doos = speler.trow(world_map)
+                        sprites.append(geworpen_doos)
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
@@ -295,11 +301,14 @@ def wheelSprite(renderer, sprite):
 
 
 def render_sprites(renderer, sprites, player):
+    global world_map
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player))  # Sorteren op afstand
     # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
 
-    for sprite in sprites:
-
+    for i,sprite in enumerate(sprites):
+        if sprite.update(world_map):
+            sprites.pop(i)
+            continue
 
         # hoek
         rx = sprite.x - player.p_x
@@ -337,7 +346,7 @@ def render_sprites(renderer, sprites, player):
         print(np.linalg.solve(a,b)[1])
         c = np.linalg.solve(a,b)[1]"""
 
-        screen_y = (HOOGTE - sprite_size_hoogte) / 2  # wordt in het midden gezet
+        screen_y = (sprite.height - sprite_size_hoogte) / 2  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
         renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
         """"
@@ -414,6 +423,7 @@ def menu_nav():
             pauze_index = 3
         pauze_positie = POSITIE_PAUZE[pauze_index]
 
+#@profile
 def pathfinding_gps(eindpositie=(8, 8)):
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
     # Begin- en eindnodes initialiseren met 0 cost
@@ -520,9 +530,9 @@ def quit(button, event):
     global moet_afsluiten
     moet_afsluiten = True
 
-
+#@profile
 def main():
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites
 
     inf_world = Map()
     inf_world.start()
@@ -573,12 +583,13 @@ def main():
 
     # Inladen sprites
     wheel = factory.from_image(resources.get_path("Wheel.png"))
-    sprites = []
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
+    doos = factory.from_image(resources.get_path("doos.png"))
+    speler.doos = doos
 
-    sprites.append(Sprite(tree, x=50.4 * 9, y=50 * 9))
-    sprites.append(Sprite(tree, x=49.5 * 9, y=50 * 9))
-    sprites.append(Sprite(tree, x=49 * 9, y=49.5 * 9))
+    sprites.append(Sprite(tree, 50.4 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, 49.5 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, (49 * 9), (49.5 * 9), HOOGTE))
 
 
 
@@ -682,7 +693,7 @@ def main():
             renderer.clear()
             render_floor_and_sky(renderer, kleuren_textures)
             # Render de huidige frame
-            (d, v, kl), (z_d, z_v, z_k) = speler.n_raycasting(world_map, deuren)
+            (d, v, kl), (z_d, z_v, z_k) = (speler.n_raycasting(world_map, deuren))
 
             # t1 = time.time()
             renderen(renderer, d, v, kl, soort_muren, muren_info)
@@ -695,7 +706,7 @@ def main():
                 #pad = (speler.position)
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 pad = pathfinding_gps((50 * 9, 50 * 9))
-                print(len(pad))
+                #print(len(pad))
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             #draw_path(renderer, pad)
             delta = time.time() - start_time

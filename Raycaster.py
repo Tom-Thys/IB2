@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from Classes import Deur
+#from Classes import Deur
 
 
 def nr_rond(nr, tol=5):
@@ -310,31 +310,3 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
         # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
         d_v += dist_cond * ~muren_check * delta_x
         d_h += (~dist_cond) * ~muren_check * delta_y
-
-
-deuren = {-1000: Deur(), -1001: Deur()}
-
-class Deur():
-    def __init__(self,kleur = 0):
-        self.moving = False
-        self.open = False
-        self.richting = 1
-        self.positie = 0
-        self.kleur = kleur
-
-    def update(self):
-        if self.moving:
-            self.positie += self.richting/500
-            if self.positie >= 1:
-                self.moving = False
-                self.open = True
-                self.richting = -1
-                self.positie = 1
-            elif self.positie <= 0:
-                self.moving = False
-                self.richting = 1
-                self.positie = 0
-
-    def moving(self):
-        self.moving = True
-        self.open = False

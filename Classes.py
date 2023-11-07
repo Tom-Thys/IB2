@@ -1,27 +1,61 @@
 import math
 import numpy as np
-from sdl2 import *
+from line_profiler_pycharm import profile
 
-moving_stappen = False
+from sdl2 import *
 
 
 
 class Sprite():
-    def __init__(self, image, x, y):
+    def __init__(self, image, x, y, height):
         self.image = image  # The image of the sprite
         self.x = x  # The x-coordinate of the sprite
         self.y = y  # The y-coordinate of the sprite
         self.position = (x, y)
         self.breedte = image.size[0]
         self.hoogte = image.size[1]
+        self.height = height
+        self.updatebaar = False
+        self.deletable = False
+        self.vector = (1,0)
+        self.tick = 0
         self.afstand = 1
 
     def afstanden(self, player):
         self.afstand = ((self.x - player.p_x) ** 2 + (self.y - player.p_y) ** 2)**(1/2)
         return self.afstand
 
+    def update(self, world_map):
+        if self.updatebaar:
+            time = self.tick/50
+            self.height -= (4*time-time**2)
+            x = (self.x + 0.1 * self.vector[0])
+            y = (self.y + 0.1 * self.vector[1])
+            if world_map[math.floor(y)][math.floor(x)] == 0:
+                self.x = x
+                self.y = y
+                self.position = (x, y)
+
+            if world_map[math.floor(y)][math.floor(self.x)] == 0:
+                self.y = y
+                self.position = (self.x, y)
+            if world_map[math.floor(self.y)][math.floor(x)] == 0:
+                self.x = x
+                self.position = (x, self.y)
+            if self.height > 800:
+                self.height = 800
+                self.updatebaar = False
+
+        self.tick += 1
+
+        if self.deletable and self.tick > 500:
+            return True
+        else:
+            return False
+
+
+
 class Player():
-    global moving_stappen
     def __init__(self, x, y, hoek, breedte=800):
         """Player is gedefinieerd door zijn start x-, y-coördinaten (floats), kijkhoek (rad) en
          de breedte (int) van het scherm dat hij opneemt"""
@@ -52,8 +86,6 @@ class Player():
     def move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
-        # print(self.r_speler,[self.p_x,self.p_y])
-        moving_stappen = False
         if type(self.car) != int:
             if richting == 1:
                 self.car.accelerate(world_map)
@@ -66,7 +98,6 @@ class Player():
             x_2 = (x + atm * richting * self.r_speler[0]) % x_dim
             y_2 = (y + atm * richting * self.r_speler[1]) % y_dim
 
-            moving_stappen = True
             if world_map[math.floor(y)][math.floor(x)] <= 0 and \
                     world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
                 self.p_x = x
@@ -96,6 +127,15 @@ class Player():
         #print(self.hoeken)
         if self.car != 0:
             self.car.draaien(hoek)
+
+    def trow(self, world_map):
+        sprite = Sprite(self.doos, self.p_x, self.p_y, 600)
+        sprite.updatebaar = True
+        sprite.deletable = True
+        sprite.vector = self.r_speler/5
+        for i in range(15):
+            sprite.update(world_map)
+        return sprite
 
 
     def n_raycasting(self, world_map, deuren):
@@ -146,20 +186,20 @@ class Player():
             break_1 = d_v < l
             break_2 = d_h < l
             break_3 = kleuren == 0
-            break_z = z_kleuren == 0
+            #break_z = z_kleuren == 0
             break_cond = (dist_cond * break_1 + ~dist_cond * break_2) * break_3
             # Break 1 enkel tellen als we met d_v werken en d_h enkel als we met d_h werken
             # Binair vermenigvuldigen als break3 = 0 dan wordt break_cond op die plek 0
 
             # Als op alle plekken break_cond == 0 return dan de bekomen waardes
-            if np.all(~break_cond):
+            if (break_cond == False).all():
                 return ((1 / d_muur), (d_muur_vlak % 1), (kleuren - 1)), (
                 (1 / z_d_muur), (z_d_muur_vlak % 1), (z_kleuren))
 
             # x en y berekenen adhv gegeven d_v of d_h en afronden op 3-8 zodat astype(int) niet afrond naar beneden terwijl het naar boven zou moeten
             # AANPASSING: Zolang we geen modulo doen rond float 32 ook perfect af naar boven als het moet en is sneller
-            x = (self.p_x + least_distance * self.r_stralen[:, 0]).astype('float32')
-            y = (self.p_y + least_distance * self.r_stralen[:, 1]).astype('float32')
+            x = (self.p_x + least_distance * self.r_stralen[:, 0])#.astype('float32')
+            y = (self.p_y + least_distance * self.r_stralen[:, 1])#.astype('float32')
 
             """# infinity world try-out
             while np.any(np.logical_and.reduce((-4 * x_dim < x, x <= 0))):
@@ -178,23 +218,22 @@ class Player():
 
             # Logica: x_f moet tussen 0 en x_dim blijven en y_f tussen 0 en y_dim
             # Deze tellen ook enkel maar als de break conditie niet telt
-            valid_indices = np.logical_and.reduce(
-                (0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map), break_cond))
+            #valid_indices = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map), break_cond))
             """HIER LOGICA INVOEGEN VOOR ALS EEN RAY OUT OF BOUND GAAT --> Map herwerken"""
 
-            muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]], True, False)
+            #muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] > 0, True, False)
+            muren_check[break_cond] = np.where(world_map[y_f[break_cond], x_f[break_cond]] > 0, True, False)
             # op de plekken waar logica correct is kijken of we een muur raken
             if False:
-                z_buffer[muren_check] = np.where(world_map[y_f[muren_check], x_f[muren_check]] > 0, True, False)
-            if np.any(muren_check == True):
+                z_buffer[muren_check] = np.where(world_map[y_f[muren_check], x_f[muren_check]] < -10, True, False)
+            if muren_check.any():
                 # We raken op muren_check = True muren en we slaan die data op in de gecreeerde arrays
-                kleuren[muren_check * z_buffer] += world_map[y_f[muren_check * z_buffer], x_f[muren_check * z_buffer]]
-                # r_straal*r_speler voor fish eye eruit te halen
-                d_muur += np.where(break_cond * muren_check * z_buffer,
-                                   least_distance * (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 0)
-                # Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
-                d_muur_vlak += np.where(muren_check * z_buffer * dist_cond, y, 0)
-                d_muur_vlak += np.where(muren_check * z_buffer * ~dist_cond, x, 0)
+                kleuren[muren_check] = world_map[y_f[muren_check], x_f[muren_check]]
+                    # r_straal*r_speler voor fish eye eruit te halen
+                d_muur[muren_check] = least_distance[muren_check] * (self.r_stralen[muren_check, 0] * self.r_speler[0] + self.r_stralen[muren_check, 1] * self.r_speler[1])
+                    # Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
+                d_muur_vlak[muren_check] += np.where(dist_cond[muren_check], y[muren_check], x[muren_check])
+                #d_muur_vlak += np.where(muren_check * ~dist_cond, x, 0)
             if False:
                 z_kleuren[muren_check * ~z_buffer * break_z] += world_map[
                     y_f[muren_check * ~z_buffer * break_z], x_f[muren_check * ~z_buffer * break_z]]
@@ -323,45 +362,4 @@ class Deur():
             self.richting *= -1
         self.moving = True
         self.open = False
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
