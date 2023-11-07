@@ -63,7 +63,7 @@ sensitivity = -2 * sensitivity_rw + 300
 moet_afsluiten = False
 
 # positie van de speler
-p_speler_x, p_speler_y =  50.4 * 9, 49 * 9
+p_speler_x, p_speler_y = 50.4 * 9, 49 * 9
 
 # richting waarin de speler kijkt
 r_speler_hoek = math.pi / 4
@@ -107,7 +107,8 @@ geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_select.wav", "UTF-8")),
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_start.wav", "UTF-8")),
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8"))
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8")),
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/throw sound effect.wav", "UTF-8"))
 ]
 
 
@@ -249,6 +250,7 @@ def verwerk_input(delta,events=0):
                     if key == sdl2.SDLK_SPACE:
                         geworpen_doos = speler.trow(world_map)
                         sprites.append(geworpen_doos)
+                        muziek_spelen("throwing", channel=2)
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
@@ -394,7 +396,8 @@ def muziek_spelen(geluid, looped=False, channel=1):
             "main menu": geluiden[0],
             "main menu select": geluiden[1],
             "game start": geluiden[2],
-            "footsteps": geluiden[3]
+            "footsteps": geluiden[3],
+            "throwing": geluiden[4]
         }
         if looped == False:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
