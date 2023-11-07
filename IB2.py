@@ -506,8 +506,6 @@ def pathfinding_gps(eindpositie=(8, 8)):
                 is_open = True"""
             if any(child == open_node for open_node in open_list):
                 is_open = True
-                if is_open:
-                    break
             if is_open:
                 continue
             # indien niet al in open list, nu toevoegen
