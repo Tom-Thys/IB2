@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from line_profiler_pycharm import profile
+#from line_profiler_pycharm import profile
 
 from sdl2 import *
 
@@ -70,6 +70,7 @@ class Player():
         self.r_stralen = np.zeros((self.breedte, 2))
         self.car = 0
         self.in_auto = False
+        self.aantal_hartjes = 5
         self.tile = math.floor(self.p_x/9), math.floor(self.p_y/9)
 
     def aanmaak_r_stralen(self, d_camera=1):

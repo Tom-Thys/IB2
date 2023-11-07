@@ -318,12 +318,7 @@ def render_sprites(renderer, sprites, player):
         hoek_sprite = math.atan2(ry , rx)%(math.pi*2)
         if sprite.afstand >= 60: continue;
 
-        '''
-        if player.p_x > sprite.x and player.p_y > sprite.y: 0#hoek_sprite += np.pi;
-        elif player.p_x > sprite.x and player.p_y < sprite.y:continue# hoek_sprite += np.pi;
-        elif player.p_x < sprite.x and player.p_y > sprite.y:continue # hoek_sprite +=  np.pi;
-        elif player.p_x < sprite.x and player.p_y < sprite.y:continue # hoek_sprite +=  np.pi;
-        '''
+
 
         hoek_verschil = abs(player.hoek - hoek_sprite)
         if hoek_verschil >= (math.pi / 3.7):
@@ -353,11 +348,25 @@ def render_sprites(renderer, sprites, player):
         renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
         """"
         
-        for kolom in range(BREEDTE):
-            if kolom > screen_x+ sprite_size_breedte and kolom < screen_x: continue
+        for kolom in range(sprite_size_breedte):
             renderer.copy(sprite.image, srcrect=(5, 0, 1, sprite_size_hoogte),
                 dstrect=(kolom, screen_y, 1, sprite_size_hoogte))
         """
+
+
+def collision_detection(renderer, speler,sprites,hartje):
+    for sprite in sprites:
+        if sprite.afstand < 1:
+            sprites.remove(sprite)
+            speler.aantal_hartjes -= 1
+    hartjes = speler.aantal_hartjes
+    i = 1
+    while i <= hartjes:
+        x_pos = BREEDTE - 50  - 50*i
+        y_pos = HOOGTE - 70
+        renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
+        i += 1
+
 def show_fps(font, renderer):
     fps_list = [1]
     loop_time = 0
@@ -583,6 +592,7 @@ def main():
 
 
     # Inladen sprites
+    hartje = factory.from_image(resources.get_path("Hartje.png"))
     wheel = factory.from_image(resources.get_path("Wheel.png"))
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
     doos = factory.from_image(resources.get_path("doos.png"))
@@ -701,6 +711,7 @@ def main():
             if np.any(z_k) != 0:
                 z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
             render_sprites(renderer, sprites, speler)
+            collision_detection(renderer,speler,sprites,hartje)
             # t.append(time.time()-t1)
             if pad == None:
                 pass
