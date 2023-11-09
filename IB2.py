@@ -446,6 +446,7 @@ def menu_nav():
 
 #@profile
 def pathfinding_gps(eindpositie=(8, 8)):
+    return None
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
     # Begin- en eindnodes initialiseren met 0 cost
     begin = Node(None, speler.position)
@@ -629,24 +630,24 @@ def main():
         muren_info.append((muur.size[0], 890))
     kleuren_textures = [factory.from_color(kleur, (1, 1)) for kleur in kleuren]
     # Inladen wereld_mappen
-    """map_resources = sdl2.ext.Resources(__file__, "mappen")
+    map_resources = sdl2.ext.Resources(__file__, "mappen")
     # alle mappen opslaan in sdl2 textures
-    map_textuur = []
-    for i, map in enumerate(worldlijst):
-        naam = f"map{i}.png"
-        map_textuur.append(factory.from_image(map_resources.get_path(naam)))"""
+    inf_world.png = factory.from_image(map_resources.get_path('map.png'))
 
 
     # Inladen sprites
     hartje = factory.from_image(resources.get_path("Hartje.png"))
     wheel = factory.from_image(resources.get_path("Wheel.png"))
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
+    sprite_map_png = factory.from_image(resources.get_path("map_boom.png"))
     doos = factory.from_image(resources.get_path("doos.png"))
+    speler_png = factory.from_image(resources.get_path("speler_sprite.png"))
     speler.doos = doos
+    speler.png = speler_png
 
-    sprites.append(Sprite(tree, 50.4 * 9, 50 * 9, HOOGTE))
-    sprites.append(Sprite(tree, 49.5 * 9, 50 * 9, HOOGTE))
-    sprites.append(Sprite(tree, (49 * 9), (49.5 * 9), HOOGTE))
+    sprites.append(Sprite(tree, sprite_map_png, 50.4 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
 
 
 

@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from line_profiler_pycharm import profile
 from numba import njit
 #from line_profiler_pycharm import profile
 
@@ -8,8 +9,9 @@ from sdl2 import *
 
 
 class Sprite():
-    def __init__(self, image, x, y, height):
+    def __init__(self, image, map_png, x, y, height):
         self.image = image  # The image of the sprite
+        self.map_png = map_png
         self.x = x  # The x-coordinate of the sprite
         self.y = y  # The y-coordinate of the sprite
         self.position = (x, y)
@@ -76,6 +78,7 @@ class Player():
         self.in_auto = False
         self.aantal_hartjes = 5
         self.tile = math.floor(self.p_x/9), math.floor(self.p_y/9)
+        self.initial = (x,y,hoek)
 
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""
@@ -142,7 +145,7 @@ class Player():
             sprite.update(world_map)
         return sprite
 
-
+    @profile
     def n_raycasting(self, world_map, deuren):
         """Gebruik maken van de numpy raycaster om de afstanden en kleuren van muren te bepalen
         Neemt world map in zodat er gemakkelijk van map kan gewisseld worden"""
@@ -150,13 +153,8 @@ class Player():
         #Had circulaire import dus np raycaster in de class
         # print(self.r_speler)
         # variabelen
-        y_dim, x_dim = np.shape(world_map)
-        l = min(50, 3 * (x_dim ** 2 + y_dim ** 2) ** (1 / 2))  # maximale lengte die geraycast wordt
+        l = 60  # maximale lengte die geraycast wordt
 
-        # Aanmaak numpy arrays die terug gestuurd worden
-        kleuren = np.zeros(self.breedte, dtype='int')
-        d_muur = np.ones(self.breedte)*60
-        d_muur_vlak = np.zeros(self.breedte)
 
         z_kleuren = np.zeros(self.breedte, dtype='int')
         z_d_muur = np.ones(self.breedte)
@@ -175,12 +173,12 @@ class Player():
         d_h = np.where(self.r_stralen[:, 1] >= 0, (1 - (self.p_y - math.floor(self.p_y))) * delta_y,
                        (self.p_y - math.floor(self.p_y)) * delta_y)
 
-        muren_check = np.full(self.breedte, False)
+
         z_buffer = np.full(self.breedte, True)
+        checker = np.full(self.breedte, True)
 
         while True:
             # reset van muren_check vormt plekken waarop we muren raken
-            muren_check[:] = False
             z_buffer[:] = True
 
             # kijken of we d_v of d_h nodig hebben deze loop
@@ -190,21 +188,20 @@ class Player():
             # Mogen enkel muren checken die nog niet geraakt zijn en binnen de afstand liggen
             break_1 = d_v < l
             break_2 = d_h < l
-            break_3 = kleuren == 0
             #break_z = z_kleuren == 0
-            break_cond = (dist_cond * break_1 + ~dist_cond * break_2) * break_3
+            break_cond = (dist_cond * break_1 + ~dist_cond * break_2) * checker
             # Break 1 enkel tellen als we met d_v werken en d_h enkel als we met d_h werken
             # Binair vermenigvuldigen als break3 = 0 dan wordt break_cond op die plek 0
 
             # Als op alle plekken break_cond == 0 return dan de bekomen waardes
             if (break_cond == False).all():
-                return (d_muur, (d_muur_vlak % 1), (kleuren - 1)), (
-                (1 / z_d_muur), (z_d_muur_vlak % 1), (z_kleuren))
+                break
+
 
             # x en y berekenen adhv gegeven d_v of d_h en afronden op 3-8 zodat astype(int) niet afrond naar beneden terwijl het naar boven zou moeten
             # AANPASSING: Zolang we geen modulo doen rond float 32 ook perfect af naar boven als het moet en is sneller
-            x = (self.p_x + least_distance * self.r_stralen[:, 0])#.astype('float32')
-            y = (self.p_y + least_distance * self.r_stralen[:, 1])#.astype('float32')
+            x = (self.p_x + least_distance * self.r_stralen[:, 0]).astype('float32')
+            y = (self.p_y + least_distance * self.r_stralen[:, 1]).astype('float32')
 
             """# infinity world try-out
             while np.any(np.logical_and.reduce((-4 * x_dim < x, x <= 0))):
@@ -223,23 +220,14 @@ class Player():
 
             # Logica: x_f moet tussen 0 en x_dim blijven en y_f tussen 0 en y_dim
             # Deze tellen ook enkel maar als de break conditie niet telt
-            #valid_indices = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map), break_cond))
+            valid_indices = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map), break_cond))
             """HIER LOGICA INVOEGEN VOOR ALS EEN RAY OUT OF BOUND GAAT --> Map herwerken"""
 
             #muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] > 0, True, False)
-            muren_check[break_cond] = np.where(world_map[y_f[break_cond], x_f[break_cond]] > 0, True, False)
+            checker[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] > 0, False, True)
             # op de plekken waar logica correct is kijken of we een muur raken
             if False:
                 z_buffer[muren_check] = np.where(world_map[y_f[muren_check], x_f[muren_check]] < -10, True, False)
-            if muren_check.any():
-                # We raken op muren_check = True muren en we slaan die data op in de gecreeerde arrays
-                kleuren[muren_check] = world_map[y_f[muren_check], x_f[muren_check]]
-                    # r_straal*r_speler voor fish eye eruit te halen
-                d_muur[muren_check] = least_distance[muren_check] * (self.r_stralen[muren_check, 0] * self.r_speler[0] + self.r_stralen[muren_check, 1] * self.r_speler[1])
-                    # Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
-                d_muur_vlak[muren_check] += np.where(dist_cond[muren_check], y[muren_check], x[muren_check])
-                #d_muur_vlak += np.where(muren_check * ~dist_cond, x, 0)
-            if False:
                 z_kleuren[muren_check * ~z_buffer * break_z] += world_map[
                     y_f[muren_check * ~z_buffer * break_z], x_f[muren_check * ~z_buffer * break_z]]
                 # r_straal*r_speler voor fish eye eruit te halen
@@ -251,16 +239,21 @@ class Player():
                 #z_kleuren = np.where((z_d_muur_vlak % 1) < deuren[z_kleuren].positie, 0, z_kleuren)
 
             # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
-            d_v += dist_cond * delta_x
-            d_h += (~dist_cond) * delta_y
+            d_v += dist_cond * delta_x * checker
+            d_h += (~dist_cond) * delta_y * checker
+        kleuren = world_map[y_f,x_f]
+        d_muur_vlak= np.where(dist_cond, y, x)
+        d_muur = np.where(checker, 60, least_distance * (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]))
+        return (d_muur, (d_muur_vlak % 1), (kleuren - 1)), (
+            (1 / z_d_muur), (z_d_muur_vlak % 1), (z_kleuren))
         #print(self.r_speler)
     def reset(self):
-        self.p_x = 50.4*9
-        self.p_y = 49*9
-        self.hoek = math.pi / 4
+        self.p_x = self.initial[0]
+        self.p_y = self.initial[1]
+        self.hoek = self.initial[2]
         self.r_speler = np.array([math.cos(self.hoek), math.sin(self.hoek)])
         self.r_camera = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
-        self.aanmaak_r_stralen(d_camera=1)
+        self.aanmaak_r_stralen()
 
 
 class Auto():

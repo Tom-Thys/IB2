@@ -1,5 +1,6 @@
 import numpy as np
 import sdl2.ext
+import math
 from IB2 import kleuren, HOOGTE, BREEDTE
 
 """ALLES RELATED AAN DRAWING OP HET SCHERM"""
@@ -18,11 +19,46 @@ def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
     """
     mid_x, mid_y = speler.position
     width = 200
-    height = 150
+    height = 200
+    midden = 100
+    speler_grootte = 10
     afstand = 20
+    y_dim, x_dim = Map.world_size
+
+    hoek = 2*math.pi - speler.hoek/math.pi * 180 - 48
 
     unit_d = (width / (2 * afstand))
-    for i in range(-afstand, afstand):
+    start_x = 0
+    start_y = 0
+    x_min = speler.p_x - afstand
+    y_min = speler.p_y - afstand
+    x_max = speler.p_x + afstand
+    y_max = speler.p_y + afstand
+    if x_min < 0:
+        w = width
+        width *= x_max / (2 * afstand)
+        start_x = w * (1 - width / w)
+    if y_min < 0:
+        h = height
+        height *= y_max / (2 * afstand)
+        start_y = h * (1 - height / h)
+    if x_max > x_dim:
+        width *= (x_dim - x_min) / (2 * afstand)
+    if y_max > y_dim:
+        height *= (y_dim - y_min) / (2 * afstand)
+
+    renderer.copy(Map.png, srcrect=(x_min, y_min, 2 * afstand, 2 * afstand), dstrect=(start_x, start_y, width, height),
+                  flip=2)
+    for sprite in sprites:
+        if x_min < sprite.x < x_max and y_min < sprite.y < y_max:
+            pos_x = (sprite.x - speler.p_x)/afstand*midden + midden - 10
+            pos_y = (-sprite.y + speler.p_y)/afstand*midden + midden - 10
+            renderer.copy(sprite.map_png, dstrect=(pos_x,pos_y,20,20))
+
+    renderer.copy(speler.png, dstrect=(midden-speler_grootte/2,midden-speler_grootte/2,speler_grootte,speler_grootte),
+                  angle=hoek,flip=2)
+
+    """for i in range(-afstand, afstand):
         for j in range(afstand, -afstand-1,-1):
             x = i + mid_x
             y = j + mid_y
@@ -54,7 +90,7 @@ def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
                 #renderer.fill(((i + afstand) * unit_d, (j + afstand) * unit_d, unit_d, unit_d), kleuren[9])
                 renderer.copy(kleuren_textures[9],
                               srcrect=(0, 0, 1, 1),
-                              dstrect=((i + afstand) * unit_d, (j + afstand) * unit_d, unit_d, unit_d))
+                              dstrect=((i + afstand) * unit_d, (j + afstand) * unit_d, unit_d, unit_d))"""
 
     draw_path(renderer, kleuren_textures, pad, mid_x, mid_y, afstand, unit_d)
 
@@ -71,7 +107,7 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
 
 
 def renderen(renderer, d, d_v, k, soort_muren, muren_info):
-    d = 1/d
+    d = 1 / d
     for kolom in range(BREEDTE):
         d_muur = d[kolom]
         unit_d = d_v[kolom]
@@ -118,40 +154,41 @@ def render_floor_and_sky(renderer, kleuren_textures):
     # SKY in blauw"""
     renderer.copy(kleuren_textures[9],
                   srcrect=(0, 0, 1, 1),
-                  dstrect=(0, 0, BREEDTE, HOOGTE//2))
+                  dstrect=(0, 0, BREEDTE, HOOGTE // 2))
     # Floor in grijs
     renderer.copy(kleuren_textures[6],
                   srcrect=(0, 0, 1, 1),
-                  dstrect=(0, HOOGTE//2, BREEDTE, HOOGTE//2))
+                  dstrect=(0, HOOGTE // 2, BREEDTE, HOOGTE // 2))
+
 
 def draw_path(renderer, kleuren_textures, path, mid_x, mid_y, afstand, unit_d):
     if path == None:
         pass
-        #Moeten we hier niet kijken dat er dan een nieuwe locatie wordt gevonden? Als de eindlocatie in ingesloten ruimte zit
+        # Moeten we hier niet kijken dat er dan een nieuwe locatie wordt gevonden? Als de eindlocatie in ingesloten ruimte zit
     else:
-        for item,locatie in enumerate(path):
+        for item, locatie in enumerate(path):
             x = locatie[1] - mid_y + afstand
             y = locatie[0] - mid_x + afstand
-            if x < 0 or y < 0 or x > 2*afstand or y > 2*afstand:
+            if x < 0 or y < 0 or x > 2 * afstand or y > 2 * afstand:
                 continue
             if locatie[0] == 0:
                 pass
             if item == 0:
-                #renderer.fill(((x * unit_d), (y * unit_d), unit_d, unit_d), kleuren[1])
+                # renderer.fill(((x * unit_d), (y * unit_d), unit_d, unit_d), kleuren[1])
                 renderer.copy(kleuren_textures[1],
                               srcrect=(0, 0, 1, 1),
                               dstrect=((x * unit_d), (y * unit_d), unit_d, unit_d))
             elif item == len(path) - 1:
-                #renderer.fill(((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
-                               #unit_d / 1.5, unit_d / 1.5), kleuren[2])
+                # renderer.fill(((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
+                # unit_d / 1.5, unit_d / 1.5), kleuren[2])
                 renderer.copy(kleuren_textures[2],
                               srcrect=(0, 0, 1, 1),
                               dstrect=((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
-                               unit_d / 1.5, unit_d / 1.5))
+                                       unit_d / 1.5, unit_d / 1.5))
             else:
-                #renderer.fill(((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
-                               #unit_d / 1.5, unit_d / 1.5), kleuren[7])
+                # renderer.fill(((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
+                # unit_d / 1.5, unit_d / 1.5), kleuren[7])
                 renderer.copy(kleuren_textures[7],
                               srcrect=(0, 0, 1, 1),
                               dstrect=((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
-                               unit_d / 1.5, unit_d / 1.5))
+                                       unit_d / 1.5, unit_d / 1.5))

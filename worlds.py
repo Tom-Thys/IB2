@@ -229,7 +229,7 @@ class Map():
         rgbimg = Image.new("RGBA", im.size)
         rgbimg.paste(im)
         new_im = converter(rgbimg)
-        new_im.save('map.png')
+        new_im.save('mappen\map.png')
 
     def update(self):
         for x, y in self.added:
