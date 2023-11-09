@@ -51,9 +51,9 @@ def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
                   flip=2)
     for sprite in sprites:
         if x_min < sprite.x < x_max and y_min < sprite.y < y_max:
-            pos_x = (sprite.x - speler.p_x)/afstand*midden + midden - 10
-            pos_y = (-sprite.y + speler.p_y)/afstand*midden + midden - 10
-            renderer.copy(sprite.map_png, dstrect=(pos_x,pos_y,20,20))
+            pos_x = (sprite.x - speler.p_x)/afstand*midden + midden - sprite.map_grootte/2
+            pos_y = (-sprite.y + speler.p_y)/afstand*midden + midden - sprite.map_grootte/2
+            renderer.copy(sprite.map_png, dstrect=(pos_x,pos_y,sprite.map_grootte,sprite.map_grootte))
 
     renderer.copy(speler.png, dstrect=(midden-speler_grootte/2,midden-speler_grootte/2,speler_grootte,speler_grootte),
                   angle=hoek,flip=2)

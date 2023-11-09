@@ -12,6 +12,7 @@ class Sprite():
     def __init__(self, image, map_png, x, y, height):
         self.image = image  # The image of the sprite
         self.map_png = map_png
+        self.map_grootte = 16
         self.x = x  # The x-coordinate of the sprite
         self.y = y  # The y-coordinate of the sprite
         self.position = (x, y)
@@ -54,10 +55,6 @@ class Sprite():
         if self.deletable and self.tick > 500:
             return True
         return False
-
-
-    def __delete__(self, instance):
-        del self
 
 
 
@@ -137,10 +134,11 @@ class Player():
             self.car.draaien(hoek)
 
     def trow(self, world_map):
-        sprite = Sprite(self.doos, self.p_x, self.p_y, 600)
+        sprite = Sprite(self.doos, self.map_doos, self.p_x, self.p_y, 600)
         sprite.updatebaar = True
         sprite.deletable = True
         sprite.vector = self.r_speler/5
+        sprite.map_grootte = 4
         for i in range(51):
             sprite.update(world_map)
         return sprite

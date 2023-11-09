@@ -310,7 +310,7 @@ def render_sprites(renderer, sprites, player, d):
 
     for i,sprite in enumerate(sprites):
         if sprite.update(world_map):
-            del sprite
+            sprites.pop(i)
             continue
 
         # hoek
@@ -641,8 +641,10 @@ def main():
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
     sprite_map_png = factory.from_image(resources.get_path("map_boom.png"))
     doos = factory.from_image(resources.get_path("doos.png"))
+    map_doos = factory.from_image(resources.get_path("map_doos.png"))
     speler_png = factory.from_image(resources.get_path("speler_sprite.png"))
     speler.doos = doos
+    speler.map_doos = map_doos
     speler.png = speler_png
 
     sprites.append(Sprite(tree, sprite_map_png, 50.4 * 9, 50 * 9, HOOGTE))
