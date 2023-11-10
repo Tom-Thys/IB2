@@ -19,42 +19,53 @@ class Sprite():
         self.breedte = image.size[0]
         self.hoogte = image.size[1]
         self.height = height
-        self.updatebaar = False
-        self.deletable = False
-        self.vector = (1,0)
-        self.tick = 0
         self.afstand = 1
+        self.schadelijk = True
 
     def afstanden(self, player):
         self.afstand = ((self.x - player.p_x) ** 2 + (self.y - player.p_y) ** 2)**(1/2)
         return self.afstand
 
+    def update(self, *args):
+        return False
+class Doos_Sprite(Sprite):
+    def __init__(self, image, map_png, x, y, height, vector, deletable = True):
+        super().__init__(image, map_png, x, y, height)
+        self.deletable = deletable
+        self.vector = vector
+        self.map_grootte = 4
+        self.tick = 1
+        self.schadelijk = True
     def update(self, world_map):
-        if self.updatebaar:
+        self.tick += 1
+        if self.height < 800:
             time = self.tick/50
             self.height -= (1/2)*(4*time-time**2)
             x = (self.x + 0.1 * self.vector[0])
             y = (self.y + 0.1 * self.vector[1])
-            if world_map[math.floor(y)][math.floor(x)] == 0:
+            atm = 0.3  # afstand_tot_muur zelfde bij auto
+            x_2 = x + atm * self.vector[0]
+            y_2 = y + atm * self.vector[1]
+            if world_map[math.floor(y)][math.floor(x)] <= 0 and \
+                    world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
                 self.x = x
                 self.y = y
                 self.position = (x, y)
-
-            if world_map[math.floor(y)][math.floor(self.x)] == 0:
+            if world_map[math.floor(y)][math.floor(self.x)] <= 0 and \
+                    world_map[math.floor(y_2)][math.floor(self.x)] <= 0:
                 self.y = y
                 self.position = (self.x, y)
-            if world_map[math.floor(self.y)][math.floor(x)] == 0:
+            if world_map[math.floor(self.y)][math.floor(x)] <= 0 and \
+                    world_map[math.floor(self.y)][math.floor(x_2)] <= 0:
                 self.x = x
                 self.position = (x, self.y)
-            if self.height > 800:
-                self.height = 800
-                self.updatebaar = False
-
-        self.tick += 1
-
-        if self.deletable and self.tick > 500:
+        else:
+            self.height = 800
+        if self.deletable and self.tick > 600:
             return True
+
         return False
+
 
 
 
@@ -134,11 +145,7 @@ class Player():
             self.car.draaien(hoek)
 
     def trow(self, world_map):
-        sprite = Sprite(self.doos, self.map_doos, self.p_x, self.p_y, 600)
-        sprite.updatebaar = True
-        sprite.deletable = True
-        sprite.vector = self.r_speler/5
-        sprite.map_grootte = 4
+        sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, 600, self.r_speler/5)
         for i in range(51):
             sprite.update(world_map)
         return sprite
@@ -152,6 +159,8 @@ class Player():
         # print(self.r_speler)
         # variabelen
         l = 60  # maximale lengte die geraycast wordt
+
+        kleuren = np.zeros(self.breedte, dtype='int')
 
 
         z_kleuren = np.zeros(self.breedte, dtype='int')
@@ -239,7 +248,7 @@ class Player():
             # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
             d_v += dist_cond * delta_x * checker
             d_h += (~dist_cond) * delta_y * checker
-        kleuren = world_map[y_f,x_f]
+        kleuren[~checker] = world_map[y_f[~checker],x_f[~checker]]
         d_muur_vlak= np.where(dist_cond, y, x)
         d_muur = np.where(checker, 60, least_distance * (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]))
         return (d_muur, (d_muur_vlak % 1), (kleuren - 1)), (

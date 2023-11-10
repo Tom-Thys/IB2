@@ -365,7 +365,7 @@ def render_sprites(renderer, sprites, player, d):
 
 def collision_detection(renderer, speler,sprites,hartje):
     for sprite in sprites:
-        if sprite.afstand < 1:
+        if sprite.afstand < 1 and sprite.schadelijk:
             sprites.remove(sprite)
             speler.aantal_hartjes -= 1
     hartjes = speler.aantal_hartjes
@@ -446,7 +446,7 @@ def menu_nav():
 
 #@profile
 def pathfinding_gps(eindpositie=(8, 8)):
-    return None
+    return [(450, 450), (451, 450), (451, 449), (452, 449), (452, 448), (453, 448), (453, 447), (453, 446), (453, 445), (453, 444), (453, 443), (453, 442), (453, 441)]
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
     # Begin- en eindnodes initialiseren met 0 cost
     begin = Node(None, speler.position)
@@ -763,7 +763,7 @@ def main():
             collision_detection(renderer,speler,sprites,hartje)
             # t.append(time.time()-t1)
             if pad == None:
-                pass
+                print('NONE')
                 #pad = (speler.position)
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 #pad = pathfinding_gps((50 * 9, 50 * 9))
