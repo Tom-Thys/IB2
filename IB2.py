@@ -6,7 +6,7 @@ import math
 import time
 import random
 import numpy as np
-
+import heapq
 import sdl2.ext
 import sys
 import sdl2.sdlimage
@@ -508,8 +508,8 @@ def pathfinding_gps(eindpositie=(8, 8)):
             if is_closed:
                 continue
             # cost waarden berekenen
-            #child.g = current_node.g + 1  # afstand tot begin node
-            child.g = current_node.g + 10
+            child.g = current_node.g + 1  # afstand tot begin node
+            #child.g = current_node.g + 10
             #child.h = int(10*np.linalg.norm((child.positie[0] - eind.positie[0], child.positie[1]-eind.positie[1])))  # afstand tot eind node
             y = abs(child.positie[0] - eind.positie[0])
             x = abs(child.positie[1] - eind.positie[1])
@@ -533,6 +533,49 @@ def pathfinding_gps(eindpositie=(8, 8)):
                 continue
             # indien niet al in open list, nu toevoegen
             open_list.append(child)
+
+def heuristiek(a, b):
+    y = abs(a[0]-b[0])
+    x = abs(a[1]-b[1])
+    return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
+def pathfinding_gps2(eindpositie):
+    start = speler.position
+    buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # nu definieren, oogt beter bij de for loop
+    close_set = set()  # set is ongeorderd, onveranderbaar en niet geïndexeerd
+    came_from = {}  # dictionary die "parents" van de node klasse vervangt, aangezien zelfgemaakte klassen niet zo goed meespelen met heaps
+    g_score = {start: 0}  # dictionary die g scores bijhoudt van alle posities
+    f_score = {start: heuristiek(start, eindpositie)}  # dictionary die onze f scores bijhoudt bij iteratie
+    oheap = []  # ~open_list van eerste pathfinding algoritme, bevat alle posities die we behandelen voor het kortste pad te vinden
+    heapq.heappush(oheap, (f_score[start], start))  # we pushen de startpositie en f score op de oheap (f score later nodig)
+
+    while oheap:  # kijken dat er posities zijn die we kunnen behandelen
+        current = heapq.heappop(oheap)[1]  # pop en return kleinste item van de heap: hier bekijken we de kleinste f score, [1] betekent dat we de positie terug willen
+        if current == eindpositie:
+            pad = []
+            while current in came_from:
+                pad.append(current)
+                current = came_from[current]
+            return pad
+        close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
+
+        for positie in buren:  # door alle buren gaan + hun g score berekenen
+            buur = (current[0] + positie[0], current[1] + positie[1])
+            buur_g_score = g_score[current] + heuristiek(current, buur)
+            if buur[0] > world_map.shape[1] or buur[0] < 0 or buur[1] > world_map.shape[0] or \
+                    buur[1] < 0:
+                continue  # gaat naar de volgende buur
+            # kijken of we op deze positie kunnen stappen
+            if world_map[buur[1]][buur[0]] > 0:
+                continue
+            if buur in close_set and buur_g_score >= g_score.get(buur, 0):  # dictionary.get(): buur: de positie van waar we de g score van terug willen, 0 indien er geen buur bestaat
+                continue  # kijken of de buur al behandeld is en ofdat de g score van de buur die we nu berekenen groter is als een vorige buur (indien kleiner kan dit wel een beter pad geven)
+            if buur_g_score < g_score.get(buur, 0) or buur not in [i[1] for i in oheap]:  # indien huidige buur g score lager is als een vorige buur of als de buur niet in de heap zit
+                came_from[buur] = current  # buur komt van huidige positie
+                g_score[buur] = buur_g_score
+                f_score[buur] = buur_g_score + heuristiek(buur, eindpositie)
+                heapq.heappush(oheap, (f_score[buur], buur))
+
+
 
 
 def positie_check():
@@ -735,7 +778,7 @@ def main():
             muziek_spelen(0)
             muziek_spelen("game start", channel=3)
             bestemming_selector("start")
-            pad = pathfinding_gps((50 * 9, 50 * 9))
+            pad = pathfinding_gps2((50 * 9, 50 * 9))
         if game_state != 1:
             config.set("settings", "volume",
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
@@ -760,7 +803,7 @@ def main():
             if np.any(z_k) != 0:
                 z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
             render_sprites(renderer, sprites, speler, d)
-            collision_detection(renderer,speler,sprites,hartje)
+            collision_detection(renderer, speler, sprites, hartje)
             # t.append(time.time()-t1)
             if pad == None:
                 print('NONE')
@@ -768,7 +811,7 @@ def main():
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 #pad = pathfinding_gps((50 * 9, 50 * 9))
                 #bestemming_selector()
-                pad = pathfinding_gps(bestemming_selector())
+                pad = pathfinding_gps2((50*9, 50*9))
                 #print(len(pad))
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             #draw_path(renderer, pad)
