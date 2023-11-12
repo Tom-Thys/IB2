@@ -107,11 +107,15 @@ sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  #
 sdl2.sdlmixer.Mix_AllocateChannels(6)
 sdl2.sdlmixer.Mix_MasterVolume(80)
 geluiden = [
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_select.wav", "UTF-8")),
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_start.wav", "UTF-8")),
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8")),
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/throw sound effect.wav", "UTF-8"))
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),  # 0
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_select.wav", "UTF-8")),  # 1
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_start.wav", "UTF-8")),  # 2
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8")),  # 3
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/throw sound effect.wav", "UTF-8")),  # 4
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/cartoon_doorbell.wav", "UTF-8")),  # 5
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/regular_doorbell.wav", "UTF-8")),  # 6
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/door_knocking.wav", "UTF-8")),  # 7
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/dogs_barking.wav", "UTF-8"))  # 8
 ]
 
 
@@ -356,6 +360,8 @@ def render_sprites(renderer, sprites, player, d):
             kolom = i+ screen_x
             if kolom >= BREEDTE:
                 continue
+            if kolom < 0:
+                continue
             if d[kolom] <= sprite.afstand:
                 continue
             renderer.copy(sprite.image, srcrect=(i/sprite_size_breedte*sprite.breedte, 0, 1*sprite.afstand, sprite_size_hoogte*sprite.afstand),
@@ -368,15 +374,17 @@ def render_sprites(renderer, sprites, player, d):
 def collision_detection(renderer, speler,sprites,hartje):
     global eindbestemming, pad
     for sprite in sprites:
-        if sprite.afstand < 1 and sprite.schadelijk:
+        if sprite.afstand < 1 and sprite.schadelijk and not sprite.is_doos:
             sprites.remove(sprite)
             speler.aantal_hartjes -= 1
         sprite_pos = (math.floor(sprite.position[0]), math.floor(sprite.position[1]))
-        if sprite.is_doos:
-            print(f"sprite pos: {sprite_pos}")
-            print(f"eindbestemming: {eindbestemming}")
         if sprite_pos == eindbestemming and sprite.is_doos:
-            print("test")
+            lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
+            rnd = randint(0, len(lijst_objective_complete)-1)
+            muziek_spelen(lijst_objective_complete[rnd], channel=4)
+            print(randint(0, 10))
+            if randint(0, 10) <= 1:
+                muziek_spelen("dogs barking", channel=5)
             eindbestemming = bestemming_selector()
             pad = pathfinding_gps2(eindbestemming)
             sprites.remove(sprite)
@@ -427,7 +435,11 @@ def muziek_spelen(geluid, looped=False, channel=1):
             "main menu select": geluiden[1],
             "game start": geluiden[2],
             "footsteps": geluiden[3],
-            "throwing": geluiden[4]
+            "throwing": geluiden[4],
+            "cartoon doorbell": geluiden[5],
+            "doorbell": geluiden[6],
+            "door knocking": geluiden[7],
+            "dogs barking": geluiden[8]
         }
         if looped == False:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
@@ -599,36 +611,19 @@ def bestemming_selector(mode=""):
         lijst_mogelijke_bestemmingen = np.transpose((world_map == -1).nonzero()).tolist()
         return
     x, y = speler.position
-    """checkmap = world_map[y-5:y+4, x-5:x+4]
-    """
     spelerpositie = list(speler.position)
-    range_min = [spelerpositie[0] - 20, spelerpositie[1] - 20]
-    range_max = [spelerpositie[0] + 20, spelerpositie[1] + 20]
-    """
-    dichte_bestemmingen_bool = np.any() """
 
-    dichte_locaties = list(filter(lambda m: m[0] >= range_min[0] and m[1] >= range_min[1] and m[0] <= range_max[0] and m[1] <= range_max[1], lijst_mogelijke_bestemmingen))
-    print(f"len dichte locaties = {len(dichte_locaties)}")
+    range_min = [spelerpositie[1]-20, spelerpositie[0]-20]  # "linkerbovenhoek" v/d de matrix
+    range_max = [spelerpositie[1]+20, spelerpositie[0]+20]  # "rechteronderhoek" v/d matrix
+    range_te_dicht_min = [spelerpositie[1]-5, spelerpositie[0]-5]
+    range_te_dicht_max = [spelerpositie[1]+5, spelerpositie[0]+5]
+
+    dichte_locaties = list(filter(lambda m: m[0] >= range_min[0] and m[1] >= range_min[1] and m[0] <= range_max[0] and m[1] <= range_max[1]\
+                                   and (m[0] >= range_te_dicht_max[0] and m[1] >= range_te_dicht_max[1] or m[0] <= range_te_dicht_min[0] and m[1] <= range_te_dicht_min[1]\
+                                        ), lijst_mogelijke_bestemmingen))
     rnd = randint(0, len(dichte_locaties)-1)  # len(dichte_locaties) kan 0 zijn indien er geen dichte locaties zijn: vermijden door groot genoeg gebied te zoeken
-    print(rnd)
-    bestemming = tuple(dichte_locaties[rnd])
-    print(spelerpositie)
-    print(bestemming)
+    bestemming = (dichte_locaties[rnd][1], dichte_locaties[rnd][0])
     return bestemming
-    """
-    lijst = []
-    for i in range(-10,11):
-        for j in range(-10,11):
-            if world_map[y+i][x+j] == -1:
-                lijst.append((y+i,x+j))
-    if len(lijst) == 0:
-        bestemming = (50*9, 50*9)
-        return bestemming
-    rnd = randint(0, len(lijst)-1)
-    bestemming = lijst[rnd]
-    print(bestemming)
-    return bestemming
-    print(checkmap)"""
 
 """Functies voor interactieve knoppen"""
 def start(button, event):
@@ -819,13 +814,14 @@ def main():
             collision_detection(renderer, speler, sprites, hartje)
             # t.append(time.time()-t1)
             if pad == None:
+                print(f"EINDBESTEMMING NONE: {eindbestemming}")
                 print('NONE')
                 eindbestemming = bestemming_selector()
                 pad = pathfinding_gps2(eindbestemming)
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
                 #bestemming_selector()
                 pad = pathfinding_gps2(eindbestemming)
-                print(len(pad))
+                #print(len(pad))
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
             if speler.in_auto:
