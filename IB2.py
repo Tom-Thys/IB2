@@ -382,7 +382,6 @@ def collision_detection(renderer, speler,sprites,hartje):
             lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
             rnd = randint(0, len(lijst_objective_complete)-1)
             muziek_spelen(lijst_objective_complete[rnd], channel=4)
-            print(randint(0, 10))
             if randint(0, 10) <= 1:
                 muziek_spelen("dogs barking", channel=5)
             eindbestemming = bestemming_selector()
