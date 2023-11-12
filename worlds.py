@@ -196,7 +196,8 @@ class Map():
     def start(self):
         y, x = np.shape(self.tile_map)
         self.added = []
-        map = np.ones((9, 9), dtype='int32')
+        #map = np.ones((9, 9), dtype='int32')
+        map = np.full((9, 9), fill_value=7, dtype='int32')
         openingen = []
         surrounding_tiles = Tile((map, openingen))
         self.tile_map[0, :] = surrounding_tiles

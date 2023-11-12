@@ -671,7 +671,8 @@ def main():
         factory.from_image(resources.get_path("Pink_house.png")),  # 3
         factory.from_image(resources.get_path("yellow_house.png")),  # 4
         factory.from_image(resources.get_path("Gruis_house.png")),  # 5
-        factory.from_image(resources.get_path("hedge.png"))  # 6
+        factory.from_image(resources.get_path("hedge.png")),  # 6
+        factory.from_image(resources.get_path("stop bord pixel art.png"))  # 7
     ]
     muren_info = []
     for i, muur in enumerate(soort_muren):
