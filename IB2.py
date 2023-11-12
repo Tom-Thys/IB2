@@ -104,7 +104,7 @@ kleuren_textures = []
 # Start Audio
 sdl2.sdlmixer.Mix_Init(0)
 sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
-sdl2.sdlmixer.Mix_AllocateChannels(6)
+sdl2.sdlmixer.Mix_AllocateChannels(8)
 sdl2.sdlmixer.Mix_MasterVolume(80)
 geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),  # 0
@@ -137,10 +137,10 @@ def verwerk_input(delta,events=0):
     key_states = sdl2.SDL_GetKeyboardState(None)
     if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2 and not paused:
         speler.move(1, 0.1, world_map)
-        muziek_spelen("footsteps", False, 4)
+        muziek_spelen("footsteps", channel=4)
     if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2 and not paused:
         speler.move(-1, 0.1, world_map)
-        muziek_spelen("footsteps", False, 4)
+        muziek_spelen("footsteps", channel=4)
     if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2 and not paused:
         speler.draaien(-math.pi / sensitivity)
     if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2 and not paused:
@@ -193,10 +193,10 @@ def verwerk_input(delta,events=0):
             if not moet_afsluiten and game_state == 1:
                 if key == sdl2.SDLK_DOWN:
                     settings_menu_index += 1
-                    muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", channel=2)
                 if key == sdl2.SDLK_UP:
                     settings_menu_index -= 1
-                    muziek_spelen("main menu select", False, 2)
+                    muziek_spelen("main menu select", channel=2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
                     if settings_menu_index == 0:
                         game_state = 0 if not paused else 2
@@ -239,10 +239,10 @@ def verwerk_input(delta,events=0):
                 if paused:
                     if key == sdl2.SDLK_UP or key == sdl2.SDLK_e:
                         pauze_index -= 1
-                        muziek_spelen("main menu select", False, 2)
+                        muziek_spelen("main menu select", channel=2)
                     if key == sdl2.SDLK_DOWN or key == sdl2.SDLK_d:
                         pauze_index += 1
-                        muziek_spelen("main menu select", False, 2)
+                        muziek_spelen("main menu select", channel=2)
                     if pauze_index == 0 and key == sdl2.SDLK_SPACE:
                         paused = False
                     if pauze_index == 1 and key == sdl2.SDLK_SPACE:
@@ -381,9 +381,9 @@ def collision_detection(renderer, speler,sprites,hartje):
         if sprite_pos == eindbestemming and sprite.is_doos:
             lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
             rnd = randint(0, len(lijst_objective_complete)-1)
-            muziek_spelen(lijst_objective_complete[rnd], channel=4)
+            muziek_spelen(lijst_objective_complete[rnd], channel=5)
             if randint(0, 10) <= 1:
-                muziek_spelen("dogs barking", channel=5)
+                muziek_spelen("dogs barking", channel=6)
             eindbestemming = bestemming_selector()
             pad = pathfinding_gps2(eindbestemming)
             sprites.remove(sprite)
