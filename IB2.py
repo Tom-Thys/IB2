@@ -50,6 +50,8 @@ settings_menu_index = 0
 main_menu_positie = [0, 0]
 settings_menu_positie = [0, 0]
 pauze_index = 0
+eindbestemming = (50*9, 50*9)
+pad = []
 pauze_positie = POSITIE_PAUZE[0]
 sprites = []
 lijst_mogelijke_bestemmingen = []
@@ -364,10 +366,20 @@ def render_sprites(renderer, sprites, player, d):
 
 
 def collision_detection(renderer, speler,sprites,hartje):
+    global eindbestemming, pad
     for sprite in sprites:
         if sprite.afstand < 1 and sprite.schadelijk:
             sprites.remove(sprite)
             speler.aantal_hartjes -= 1
+        sprite_pos = (math.floor(sprite.position[0]), math.floor(sprite.position[1]))
+        if sprite.is_doos:
+            print(f"sprite pos: {sprite_pos}")
+            print(f"eindbestemming: {eindbestemming}")
+        if sprite_pos == eindbestemming and sprite.is_doos:
+            print("test")
+            eindbestemming = bestemming_selector()
+            pad = pathfinding_gps2(eindbestemming)
+            sprites.remove(sprite)
     hartjes = speler.aantal_hartjes
     i = 1
     while i <= hartjes:
@@ -444,7 +456,6 @@ def menu_nav():
             pauze_index = 3
         pauze_positie = POSITIE_PAUZE[pauze_index]
 
-#@profile
 def pathfinding_gps(eindpositie=(8, 8)):
     return [(450, 450), (451, 450), (451, 449), (452, 449), (452, 448), (453, 448), (453, 447), (453, 446), (453, 445), (453, 444), (453, 443), (453, 442), (453, 441)]
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
@@ -591,12 +602,12 @@ def bestemming_selector(mode=""):
     """checkmap = world_map[y-5:y+4, x-5:x+4]
     """
     spelerpositie = list(speler.position)
-    range_min = [spelerpositie[0] - 5, spelerpositie[1] - 5]
-    range_max = [spelerpositie[0] + 5, spelerpositie[1] + 5]
+    range_min = [spelerpositie[0] - 20, spelerpositie[1] - 20]
+    range_max = [spelerpositie[0] + 20, spelerpositie[1] + 20]
     """
     dichte_bestemmingen_bool = np.any() """
 
-    dichte_locaties = list(filter(lambda m: m[0] >= range_min[0] and m[1] >= range_min[1] and m[0] <= range_max[0]and m[1] <= range_max[1], lijst_mogelijke_bestemmingen))
+    dichte_locaties = list(filter(lambda m: m[0] >= range_min[0] and m[1] >= range_min[1] and m[0] <= range_max[0] and m[1] <= range_max[1], lijst_mogelijke_bestemmingen))
     print(f"len dichte locaties = {len(dichte_locaties)}")
     rnd = randint(0, len(dichte_locaties)-1)  # len(dichte_locaties) kan 0 zijn indien er geen dichte locaties zijn: vermijden door groot genoeg gebied te zoeken
     print(rnd)
@@ -632,7 +643,7 @@ def quit(button, event):
 
 #@profile
 def main():
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, eindbestemming, pad
 
     inf_world = Map()
     inf_world.start()
@@ -778,7 +789,9 @@ def main():
             muziek_spelen(0)
             muziek_spelen("game start", channel=3)
             bestemming_selector("start")
-            pad = pathfinding_gps2((50 * 9, 50 * 9))
+            #pad = pathfinding_gps2((50 * 9, 50 * 9))
+            eindbestemming = bestemming_selector()
+            pad = pathfinding_gps2(eindbestemming)
         if game_state != 1:
             config.set("settings", "volume",
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
@@ -807,14 +820,13 @@ def main():
             # t.append(time.time()-t1)
             if pad == None:
                 print('NONE')
-                #pad = (speler.position)
+                eindbestemming = bestemming_selector()
+                pad = pathfinding_gps2(eindbestemming)
             elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
-                #pad = pathfinding_gps((50 * 9, 50 * 9))
                 #bestemming_selector()
-                pad = pathfinding_gps2((50*9, 50*9))
-                #print(len(pad))
+                pad = pathfinding_gps2(eindbestemming)
+                print(len(pad))
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
-            #draw_path(renderer, pad)
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)

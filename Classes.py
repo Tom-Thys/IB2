@@ -9,7 +9,7 @@ from sdl2 import *
 
 
 class Sprite():
-    def __init__(self, image, map_png, x, y, height):
+    def __init__(self, image, map_png, x, y, height, is_doos = False):
         self.image = image  # The image of the sprite
         self.map_png = map_png
         self.map_grootte = 16
@@ -21,6 +21,7 @@ class Sprite():
         self.height = height
         self.afstand = 1
         self.schadelijk = True
+        self.is_doos = is_doos
 
     def afstanden(self, player):
         self.afstand = ((self.x - player.p_x) ** 2 + (self.y - player.p_y) ** 2)**(1/2)
@@ -30,7 +31,7 @@ class Sprite():
         return False
 class Doos_Sprite(Sprite):
     def __init__(self, image, map_png, x, y, height, vector, deletable = True):
-        super().__init__(image, map_png, x, y, height)
+        super().__init__(image, map_png, x, y, height, is_doos=True)
         self.deletable = deletable
         self.vector = vector
         self.map_grootte = 4
