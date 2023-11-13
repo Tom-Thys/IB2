@@ -17,6 +17,7 @@ from Classes import *
 from Raycaster import *
 from rendering import *
 from configparser import ConfigParser
+from PIL import Image
 
 config = ConfigParser()
 
@@ -345,7 +346,7 @@ def render_sprites(renderer, sprites, player, d):
 
         player_hoek = math.atan2(speler.p_x,speler.p_y)%(math.pi*2)
 
-        grond_hoek_verschil = abs(hoek_sprite - player_hoek)
+        grond_hoek_verschil = abs(player_hoek - hoek_sprite)
         hoek_verschil = abs(player.hoek - hoek_sprite)
         image = kies_sprite_afbeelding(grond_hoek_verschil,sprite)
         if hoek_verschil >= (math.pi / 3.7):
@@ -364,15 +365,15 @@ def render_sprites(renderer, sprites, player, d):
         spriteHoogte = image.size[1]
 
         # grootte
-        sprite_size_breedte = int(spriteBreedte / sprite_distance * 10)
-        sprite_size_hoogte = spriteHoogte / sprite_distance * 10
+        sprite_size_breedte = int(spriteBreedte / sprite_distance * 2)
+        sprite_size_hoogte = spriteHoogte / sprite_distance * 2
 
         """a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
         b = np.array([speler.r_speler[0]+speler.r_camera[0]/1000,speler.r_speler[1]+speler.r_camera[1]/1000])
         print(np.linalg.solve(a,b)[1])
         c = np.linalg.solve(a,b)[1]"""
 
-        screen_y = (sprite.height - sprite_size_hoogte) / 2  # wordt in het midden gezet
+        screen_y = (sprite.height - sprite_size_hoogte) / 2 # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
         #renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
 
@@ -391,6 +392,8 @@ def render_sprites(renderer, sprites, player, d):
 
 def kies_sprite_afbeelding(hoek_verschil,sprite):
     index = 360 - round((hoek_verschil)/(math.pi*2)*360)
+    if index == 0: index += 1
+    #print (index)
     image = sprite.images[index]
     return image
 
@@ -736,18 +739,23 @@ def main():
     gps_grote_map = factory.from_image(resources.get_path("gps_grote_map.png"))
 
     boom = sdl2.ext.Resources(__file__, "resources/boom")
+    auto = sdl2.ext.Resources(__file__, "resources/Auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
     bomen = []
-
     for i in range(361):
         afbeelding_naam = "map" + str(i + 1) + ".png"
         image = factory.from_image(boom.get_path(afbeelding_naam))
         bomen.append(image)
+    autos = []
+    for i in range(361):
+        afbeelding_naam = "map" + str(i + 1) + ".png"
+        image = factory.from_image(auto.get_path(afbeelding_naam))
+        autos.append(image)
 
-    sprites.append(Sprite(tree, bomen, sprite_map_png, 50.4 * 9, 50 * 9, HOOGTE))
-    sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
-    sprites.append(Sprite(tree, bomen, sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
+    sprites.append(Sprite(tree, autos, sprite_map_png, 50.4 * 9, 50 * 9, HOOGTE))
+    #sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
+    #sprites.append(Sprite(tree, bomen, sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
 
 
 
