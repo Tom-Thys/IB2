@@ -9,7 +9,8 @@ from sdl2 import *
 
 
 class Sprite():
-    def __init__(self, image, map_png, x, y, height, is_doos = False):
+    def __init__(self, image,images, map_png, x, y, height, is_doos = False):
+        self.images = images
         self.image = image  # The image of the sprite
         self.map_png = map_png
         self.map_grootte = 16
