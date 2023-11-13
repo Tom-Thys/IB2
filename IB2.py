@@ -45,10 +45,13 @@ POSITIE_PAUZE = [
 game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
 paused = False
+show_map = False
 main_menu_index = 0
 settings_menu_index = 0
 main_menu_positie = [0, 0]
 settings_menu_positie = [0, 0]
+map_positie = [0, 0]
+afstand_map = 50
 pauze_index = 0
 eindbestemming = (50*9, 50*9)
 pad = []
@@ -128,23 +131,37 @@ geluiden = [
 
 def verwerk_input(delta,events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
-    global sensitivity_rw, paused, pauze_index, sprites
+    global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie, afstand_map
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     if events == 0:
         events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
-    if (key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]) and game_state == 2 and not paused:
-        speler.move(1, 0.1, world_map)
-        muziek_spelen("footsteps", channel=4)
-    if (key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]) and game_state == 2 and not paused:
-        speler.move(-1, 0.1, world_map)
-        muziek_spelen("footsteps", channel=4)
-    if (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]) and game_state == 2 and not paused:
-        speler.draaien(-math.pi / sensitivity)
-    if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]) and game_state == 2 and not paused:
-        speler.draaien(math.pi / sensitivity)
+    if game_state == 2 and not paused and not show_map:
+        if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
+            speler.move(1, 0.1, world_map)
+            muziek_spelen("footsteps", channel=4)
+        if key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]:
+            speler.move(-1, 0.1, world_map)
+            muziek_spelen("footsteps", channel=4)
+        if key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]:
+            speler.draaien(-math.pi / sensitivity)
+        if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
+            speler.draaien(math.pi / sensitivity)
+    if game_state == 2 and show_map:
+        if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
+            map_positie[1] += 1
+        if key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]:
+            map_positie[1] -= 1
+        if key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]:
+            map_positie[0] += 1
+        if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
+            map_positie[0] -= 1
+        if key_states[sdl2.SDL_SCANCODE_LSHIFT]:
+            afstand_map -= 1
+        if key_states[sdl2.SDL_SCANCODE_LCTRL]:
+            afstand_map += 1
 
     for event in events:
         # Een SDL_QUIT event wordt afgeleverd als de gebruiker de applicatie
@@ -230,8 +247,7 @@ def verwerk_input(delta,events=0):
                     game_state = 0 if not paused else 2
             if not moet_afsluiten and game_state == 2:
                 if key == sdl2.SDLK_m and not paused:
-                    game_state = 0
-                    speler.reset()
+                    show_map = True if not show_map else False
                 if key == sdl2.SDLK_p:
                     paused = True if not paused else False
                 if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
@@ -253,6 +269,8 @@ def verwerk_input(delta,events=0):
                         speler.reset()
                     if pauze_index == 3 and key == sdl2.SDLK_SPACE:
                         moet_afsluiten = True
+                elif show_map:
+                    pass
                 else:
                     if key == sdl2.SDLK_SPACE:
                         geworpen_doos = speler.trow(world_map)
@@ -282,7 +300,7 @@ def verwerk_input(delta,events=0):
         # Wordt afgeleverd als de gebruiker de muis heeft bewogen.
         # Aangezien we relative motion gebruiken zijn alle coordinaten
         # relatief tegenover de laatst gerapporteerde positie van de muis.
-        elif event.type == sdl2.SDL_MOUSEMOTION and game_state == 2 and not paused:
+        elif event.type == sdl2.SDL_MOUSEMOTION and game_state == 2 and not paused and not show_map:
             # Aangezien we in onze game maar 1 as hebben waarover de camera
             # kan roteren zijn we enkel geinteresseerd in bewegingen over de
             # X-as
@@ -447,7 +465,7 @@ def muziek_spelen(geluid, looped=False, channel=1):
 
 
 def menu_nav():
-    global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie, pauze_index, pauze_positie
+    global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie, pauze_index, pauze_positie, map_positie, afstand_map
     if game_state == 0:
         if main_menu_index > 2:
             main_menu_index = 0
@@ -466,7 +484,19 @@ def menu_nav():
         if pauze_index < 0:
             pauze_index = 3
         pauze_positie = POSITIE_PAUZE[pauze_index]
-
+    elif show_map:
+        if map_positie[0] < afstand_map:
+            map_positie[0] = afstand_map
+        if map_positie[0] > world_map.shape[1]-afstand_map:
+            map_positie[0] = world_map.shape[1]-afstand_map
+        if map_positie[1] < afstand_map:
+            map_positie[1] = afstand_map
+        if map_positie[1] > world_map.shape[0]-afstand_map:
+            map_positie[1] = world_map.shape[0]-afstand_map
+        if afstand_map < 10:
+            afstand_map = 10
+        if afstand_map > 200:
+            afstand_map = 200
 def pathfinding_gps(eindpositie=(8, 8)):
     return [(450, 450), (451, 450), (451, 449), (452, 449), (452, 448), (453, 448), (453, 447), (453, 446), (453, 445), (453, 444), (453, 443), (453, 442), (453, 441)]
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
@@ -604,6 +634,7 @@ def positie_check():
     if speler.position == (450, 450):
         print("bestemming bereikt")
 
+
 def bestemming_selector(mode=""):
     global world_map, lijst_mogelijke_bestemmingen
     if mode == "start":
@@ -616,11 +647,11 @@ def bestemming_selector(mode=""):
     range_max = [spelerpositie[1]+20, spelerpositie[0]+20]  # "rechteronderhoek" v/d matrix
     range_te_dicht_min = [spelerpositie[1]-5, spelerpositie[0]-5]
     range_te_dicht_max = [spelerpositie[1]+5, spelerpositie[0]+5]
-
     dichte_locaties = list(filter(lambda m: m[0] >= range_min[0] and m[1] >= range_min[1] and m[0] <= range_max[0] and m[1] <= range_max[1]\
                                    and (m[0] >= range_te_dicht_max[0] and m[1] >= range_te_dicht_max[1] or m[0] <= range_te_dicht_min[0] and m[1] <= range_te_dicht_min[1]\
                                         ), lijst_mogelijke_bestemmingen))
     rnd = randint(0, len(dichte_locaties)-1)  # len(dichte_locaties) kan 0 zijn indien er geen dichte locaties zijn: vermijden door groot genoeg gebied te zoeken
+    lijst_mogelijke_bestemmingen.remove(dichte_locaties[rnd])
     bestemming = (dichte_locaties[rnd][1], dichte_locaties[rnd][0])
     return bestemming
 
@@ -637,13 +668,13 @@ def quit(button, event):
 
 #@profile
 def main():
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, eindbestemming, pad
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, eindbestemming, pad, map_positie
 
     inf_world = Map()
     inf_world.start()
     # inf_world.map_making(speler)
     world_map = inf_world.world_map
-
+    map_positie = [50, world_map.shape[0]-50]
 
 
     # Initialiseer de SDL2 bibliotheek
@@ -662,6 +693,7 @@ def main():
 
     # resources inladen
     resources = sdl2.ext.Resources(__file__, "resources")
+    resources_mappen = sdl2.ext.Resources(__file__, "mappen")
     # Spritefactory aanmaken
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
     # soorten muren opslaan in sdl2 textures
@@ -695,6 +727,7 @@ def main():
     speler.doos = doos
     speler.map_doos = map_doos
     speler.png = speler_png
+    gps_grote_map = factory.from_image(resources.get_path("gps_grote_map.png"))
 
     sprites.append(Sprite(tree, sprite_map_png, 50.4 * 9, 50 * 9, HOOGTE))
     sprites.append(Sprite(tree, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
@@ -711,6 +744,8 @@ def main():
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
     pauze_menu = factory.from_image(resources.get_path("pause_menu.png"))
+
+    map_png = factory.from_image(resources_mappen.get_path("map.png"))
 
     #UI
     uifactory = sdl2.ext.UIFactory(factory)
@@ -834,9 +869,46 @@ def main():
                               srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
                               dstrect=(pauze_positie[0], pauze_positie[1], 80, 50))
                 menu_nav()
+            elif show_map:
+
+                """linker_bovenhoek_x = speler.p_x - afstand if speler.p_x - afstand >= 0 else 0
+                linker_bovenhoek_y = speler.p_y - afstand if speler.p_y - afstand >= 0 else 0
+                #speler_png_x = BREEDTE//2
+                #speler_png_y = HOOGTE//2-10
+                speler_png_x = BREEDTE//2
+                speler_png_y = HOOGTE//2-10
+                if afstand + speler.p_x > np.size(world_map, 1):
+                    linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand
+                if afstand + speler.p_y > np.size(world_map, 0):
+                    linker_bovenhoek_y = np.size(world_map, 0) - 2*afstand """
+
+                linker_bovenhoek_x = map_positie[0]-afstand_map if map_positie[0]-afstand_map >= 0 else 0
+                linker_bovenhoek_y = map_positie[1]-afstand_map if map_positie[1]-afstand_map >= 0 else 0
+                #speler_png_x = map_positie[0]+(speler.p_x//afstand_map)
+                speler_png_x = (BREEDTE//2)-(speler.position[0]-map_positie[0])
+                speler_png_y = (HOOGTE//2)-(speler.position[1]-map_positie[1])
+                speler_grootte = int((-17/190)*(afstand_map-10)+20)
+                print(speler.position[0]-map_positie[0])
+                if afstand_map + map_positie[0] > np.size(world_map, 1):
+                    linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand_map
+                if afstand_map + map_positie[1] > np.size(world_map, 0):
+                    linker_bovenhoek_y = np.size(world_map, 0) - 2*afstand_map
+                renderer.copy(gps_grote_map,
+                              srcrect=(0, 0, gps_grote_map.size[0], gps_grote_map.size[1]),
+                              dstrect=(80, 70, BREEDTE-120, HOOGTE-140),
+                              flip=2)
+                renderer.copy(map_png,
+                              srcrect=(linker_bovenhoek_x, linker_bovenhoek_y, 2*afstand_map, 2*afstand_map),
+                              dstrect=(160, 112, BREEDTE-300, HOOGTE-222),
+                              flip=2)
+                renderer.copy(speler.png,
+                              dstrect=(speler_png_x, speler_png_y, speler_grootte, speler_grootte),
+                              angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)
+                menu_nav()
             else:
                 positie_check()
                 next(fps_generator)
+                map_positie = list(speler.position)
 
             verwerk_input(delta)
 
