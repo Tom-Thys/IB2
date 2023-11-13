@@ -888,7 +888,6 @@ def main():
                 speler_png_x = (BREEDTE//2)-(speler.position[0]-map_positie[0])
                 speler_png_y = (HOOGTE//2)-(speler.position[1]-map_positie[1])
                 speler_grootte = int((-17/190)*(afstand_map-10)+20)
-                print(speler.position[0]-map_positie[0])
                 if afstand_map + map_positie[0] > np.size(world_map, 1):
                     linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand_map
                 if afstand_map + map_positie[1] > np.size(world_map, 0):
