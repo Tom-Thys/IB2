@@ -325,9 +325,11 @@ def render_sprites(renderer, sprites, player, d):
         hoek_sprite = math.atan2(ry , rx)%(math.pi*2)
         if sprite.afstand >= 60: continue;
 
+        player_hoek = math.atan2(speler.p_x,speler.p_y)%(math.pi*2)
 
-
+        grond_hoek_verschil = abs(hoek_sprite - player_hoek)
         hoek_verschil = abs(player.hoek - hoek_sprite)
+        image = kies_sprite_afbeelding(grond_hoek_verschil,sprite)
         if hoek_verschil >= (math.pi / 3.7):
             continue  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
 
@@ -340,11 +342,12 @@ def render_sprites(renderer, sprites, player, d):
         sprite_distance = sprite.afstand*abs(math.cos(hoek_verschil))
         sprite_distance += 0.01
 
-
+        spriteBreedte = image.size[0]
+        spriteHoogte = image.size[1]
 
         # grootte
-        sprite_size_breedte = int(sprite.breedte / sprite_distance * 10)
-        sprite_size_hoogte = sprite.hoogte / sprite_distance * 10
+        sprite_size_breedte = int(spriteBreedte / sprite_distance * 10)
+        sprite_size_hoogte = spriteHoogte / sprite_distance * 10
 
         """a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
         b = np.array([speler.r_speler[0]+speler.r_camera[0]/1000,speler.r_speler[1]+speler.r_camera[1]/1000])
@@ -364,11 +367,14 @@ def render_sprites(renderer, sprites, player, d):
                 continue
             if d[kolom] <= sprite.afstand:
                 continue
-            renderer.copy(sprite.image, srcrect=(i/sprite_size_breedte*sprite.breedte, 0, 1*sprite.afstand, sprite_size_hoogte*sprite.afstand),
+            renderer.copy(image, srcrect=(i/sprite_size_breedte*spriteBreedte, 0, 1*sprite.afstand, sprite_size_hoogte*sprite.afstand),
                 dstrect=(kolom, screen_y, 1, sprite_size_hoogte))
 
 
-
+def kies_sprite_afbeelding(hoek_verschil,sprite):
+    index = 360 - round((hoek_verschil)/(math.pi*2)*360)
+    image = sprite.images[index]
+    return image
 
 
 def collision_detection(renderer, speler,sprites,hartje):
@@ -696,9 +702,19 @@ def main():
     speler.map_doos = map_doos
     speler.png = speler_png
 
-    sprites.append(Sprite(tree, sprite_map_png, 50.4 * 9, 50 * 9, HOOGTE))
-    sprites.append(Sprite(tree, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
-    sprites.append(Sprite(tree, sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
+    boom = sdl2.ext.Resources(__file__, "resources/boom")
+    factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
+
+    bomen = []
+
+    for i in range(361):
+        afbeelding_naam = "map" + str(i + 1) + ".png"
+        image = factory.from_image(boom.get_path(afbeelding_naam))
+        bomen.append(image)
+
+    sprites.append(Sprite(tree, bomen, sprite_map_png, 50.4 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, bomen, sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
 
 
 
