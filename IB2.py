@@ -870,7 +870,6 @@ def main():
                               dstrect=(pauze_positie[0], pauze_positie[1], 80, 50))
                 menu_nav()
             elif show_map:
-
                 """linker_bovenhoek_x = speler.p_x - afstand if speler.p_x - afstand >= 0 else 0
                 linker_bovenhoek_y = speler.p_y - afstand if speler.p_y - afstand >= 0 else 0
                 #speler_png_x = BREEDTE//2
