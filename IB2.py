@@ -7,6 +7,8 @@ import time
 import random
 import numpy as np
 import heapq
+import threading
+import multiprocessing
 import sdl2.ext
 import sys
 import sdl2.sdlimage
@@ -548,7 +550,11 @@ def heuristiek(a, b):
     return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
 
 
-def pathfinding_gps2(eindpositie):
+def pathfinding_gps2(eindbestemming):
+    global pad #, eindbestemming
+    print("TEST")
+    print(f"pad: {pad}, best: {eindbestemming}")
+    eindpositie = eindbestemming
     start = speler.position
     buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # nu definieren, oogt beter bij de for loop
     close_set = set()  # set is ongeorderd, onveranderbaar en niet geïndexeerd
@@ -565,7 +571,7 @@ def pathfinding_gps2(eindpositie):
             while current in came_from:
                 pad.append(current)
                 current = came_from[current]
-            return pad
+            return
         close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
         for positie in buren:  # door alle buren gaan + hun g score berekenen
@@ -588,7 +594,7 @@ def pathfinding_gps2(eindpositie):
 
 def positie_check():
     if speler.position == (450, 450):
-        print("bestemming bereikt")
+        pass
 
 
 def bestemming_selector(mode=""):
@@ -746,6 +752,7 @@ def main():
     spriterenderer = factory.create_sprite_render_system(window)
     uiprocessor = sdl2.ext.UIProcessor()
 
+    oud_speler_pos = speler.position
     while not moet_afsluiten:
         muziek_spelen("main menu", True)
         sdl2.SDL_SetRelativeMouseMode(False)
@@ -800,7 +807,8 @@ def main():
             bestemming_selector("start")
             #pad = pathfinding_gps2((50 * 9, 50 * 9))
             eindbestemming = bestemming_selector()
-            pad = pathfinding_gps2(eindbestemming)
+            #pathfinding_gps2()
+            #pad = pathfinding_gps2(eindbestemming)
         if game_state != 1:
             config.set("settings", "volume",
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
@@ -832,11 +840,12 @@ def main():
                 print(f"EINDBESTEMMING NONE: {eindbestemming}")
                 print('NONE')
                 eindbestemming = bestemming_selector()
-                pad = pathfinding_gps2(eindbestemming)
-            elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
-                #bestemming_selector()
-                pad = pathfinding_gps2(eindbestemming)
-                #print(len(pad))
+                pathfinding_gps2(eindbestemming)
+            if abs(oud_speler_pos[0]-speler.position[0]) >= 1 or abs(oud_speler_pos[1]-speler.position[1]) >= 1:
+                oud_speler_pos = speler.position
+                #threading.Thread(target=pathfinding_gps2, args=(eindbestemming,), daemon=True).start()
+                #proc = multiprocessing.Process(target=pathfinding_gps2, args=(eindbestemming,), daemon=True)
+                #proc.start()
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
             if speler.in_auto:
@@ -866,10 +875,9 @@ def main():
 
                 linker_bovenhoek_x = map_positie[0]-afstand_map if map_positie[0]-afstand_map >= 0 else 0
                 linker_bovenhoek_y = map_positie[1]-afstand_map if map_positie[1]-afstand_map >= 0 else 0
-                #speler_png_x = map_positie[0]+(speler.p_x//afstand_map)
-                speler_png_x = (BREEDTE//2)-(speler.position[0]-map_positie[0])
-                speler_png_y = (HOOGTE//2)-(speler.position[1]-map_positie[1])
-                speler_grootte = int((-17/190)*(afstand_map-10)+20)
+                #speler_grootte = int((-17/190)*(afstand_map-10)+20)
+                #speler_png_x = (BREEDTE//2)-2*(map_positie[0]-speler.position[0])+speler_grootte//2
+                #speler_png_y = (HOOGTE//2)+(map_positie[1]-speler.position[1])-speler_grootte
                 if afstand_map + map_positie[0] > np.size(world_map, 1):
                     linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand_map
                 if afstand_map + map_positie[1] > np.size(world_map, 0):
@@ -882,9 +890,9 @@ def main():
                               srcrect=(linker_bovenhoek_x, linker_bovenhoek_y, 2*afstand_map, 2*afstand_map),
                               dstrect=(160, 112, BREEDTE-300, HOOGTE-222),
                               flip=2)
-                renderer.copy(speler.png,
+                """renderer.copy(speler.png,
                               dstrect=(speler_png_x, speler_png_y, speler_grootte, speler_grootte),
-                              angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)
+                              angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)"""
                 menu_nav()
             else:
                 positie_check()
@@ -902,11 +910,23 @@ def main():
 
     # Sluit SDL2 af
     sdl2.ext.quit()
-
+def printen():
+    print("TESTPRINTEN")
 
 if __name__ == '__main__':
     # profiler = cProfile.Profile()
     # profiler.enable()
+    """
+    t1 = threading.Thread(target=main)
+    t2 = threading.Thread(target=pathfinding_gps2, daemon=True)
+    t3 = threading.Thread(target=printen, daemon=True)
+    t2.start()
+    t1.start()
+    t3.start() """
+    #p1 = multiprocessing.Process(target=main)
+    #p2 = multiprocessing.Process(target=pathfinding_gps2, args=(eindbestemming,))
+    #p1.start()
+    #p2.start()
     main()
     # profiler.disable()
     # stats = pstats.Stats(profiler)
