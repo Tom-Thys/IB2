@@ -14,7 +14,7 @@ import sdl2.sdlmixer
 from sdl2 import *
 from worlds import *
 from Classes import *
-from Raycaster import *
+from Code_niet_langer_in_gebruik import *
 from rendering import *
 from configparser import ConfigParser
 from PIL import Image
@@ -506,99 +506,13 @@ def menu_nav():
             afstand_map = 10
         if afstand_map > 200:
             afstand_map = 200
-def pathfinding_gps(eindpositie=(8, 8)):
-    return [(450, 450), (451, 450), (451, 449), (452, 449), (452, 448), (453, 448), (453, 447), (453, 446), (453, 445), (453, 444), (453, 443), (453, 442), (453, 441)]
-    # Voor het pathfinden van de gps gebruiken we het A* algoritme
-    # Begin- en eindnodes initialiseren met 0 cost
-    begin = Node(None, speler.position)
-    begin.g = begin.h = begin.f = 0
-    eind = Node(None, eindpositie)
-    eind.g = eind.h = eind.f = 0
-    # initialiseer open en closed lijsten
-    open_list = []  # dit is de lijst van punten die geëvalueerd moeten worden
-    closed_list = []  # dit is de lijst van punten die al geëvalueerd zijn
-    open_list.append(begin)  # startnode toevoegen aan openlijst
-    # loopen tot het einde gevonden is
-    while len(open_list) > 0:
-        # tijdelijke variabele current maken, is de node met minste f cost (in begin de beginnode)
-        current_node = open_list[0]
-        current_index = 0
-        # zoeken naar de node met kleinste f cost
-        for index, item in enumerate(open_list):
-            if item.f < current_node.f or (item.f == current_node.f and item.h < current_node.h):
-                current_node = item
-                current_index = index
-        # current in de closed_list steken, aangezien deze geëvalueerd wordt
-        open_list.pop(current_index)
-        closed_list.append(current_node)
-        # als de current node de eindnode is, dan is pathfinding voltooid
-        if current_node == eind:
-            pad = []
-            current = current_node
-            while current is not None:  # enkel het beginnende node heeft geen parent (None)
-                pad.append(current.positie)
-                current = current.parent
-            return pad
-        # nieuwe child nodes creëeren
-        children_list = []
-        for nieuwe_positie in [(0, -1), (0, 1), (-1, 0),
-                               (1, 0)]:  # enkel child nodes aanmaken boven, onder, links of rechts van de current node
-            # positie krijgen
-            node_positie = (current_node.positie[0] + nieuwe_positie[0],
-                            current_node.positie[1] + nieuwe_positie[1])  # huidige node x en y + "verschuiving" x en y
-            # kijken of deze nodes binnen de wereldmap vallen
-            if node_positie[0] > world_map.shape[1] or node_positie[0] < 0 or node_positie[1] > world_map.shape[0] or \
-                    node_positie[1] < 0:
-                continue  # gaat naar de volgende nieuwe_positie
-            # kijken of we op deze node kunnen stappen
-            if world_map[node_positie[1]][node_positie[0]] > 0:
-                continue
-            # nieuwe node creëeren
-            nieuwe_node = Node(current_node, node_positie)
-            children_list.append(nieuwe_node)
-        for child in children_list:
-            # kijken of child_node in de closed lijst zit
-            is_closed = False
-            for closed_child in closed_list:
-                if child == closed_child:
-                    is_closed = True
-                    if is_closed:
-                        break
-            """if any(child == closed for closed in closed_list):
-                is_closed = True """
-            if is_closed:
-                continue
-            # cost waarden berekenen
-            child.g = current_node.g + 1  # afstand tot begin node
-            #child.g = current_node.g + 10
-            #child.h = int(10*np.linalg.norm((child.positie[0] - eind.positie[0], child.positie[1]-eind.positie[1])))  # afstand tot eind node
-            y = abs(child.positie[0] - eind.positie[0])
-            x = abs(child.positie[1] - eind.positie[1])
-            #print(y)
-            #print(x)
-            child.h = 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
-            child.f = child.g + child.h
-            print(f"h = {child.h}, g = {child.g}, f = {child.f}")
-
-            # kijken of child_node in de open lijst zit
-            is_open = False
-            """for open_node in open_list:
-                if child == open_node and child.g > open_node.g:
-                    is_open = True 
-                    break """
-            if any(child == open_node and child.g > open_node.g for open_node in open_list):
-                is_open = True
-            """if any(child == open_node for open_node in open_list):
-                is_open = True """
-            if is_open:
-                continue
-            # indien niet al in open list, nu toevoegen
-            open_list.append(child)
 
 def heuristiek(a, b):
     y = abs(a[0]-b[0])
     x = abs(a[1]-b[1])
     return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
+
+
 def pathfinding_gps2(eindpositie):
     start = speler.position
     buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # nu definieren, oogt beter bij de for loop
@@ -637,8 +551,6 @@ def pathfinding_gps2(eindpositie):
                 heapq.heappush(oheap, (f_score[buur], buur))
 
 
-
-
 def positie_check():
     if speler.position == (450, 450):
         print("bestemming bereikt")
@@ -664,16 +576,22 @@ def bestemming_selector(mode=""):
     bestemming = (dichte_locaties[rnd][1], dichte_locaties[rnd][0])
     return bestemming
 
+
 """Functies voor interactieve knoppen"""
 def start(button, event):
     global game_state
     game_state = 2
+
+
 def settings(button, event):
     global game_state
     game_state = 1
+
+
 def quit(button, event):
     global moet_afsluiten
     moet_afsluiten = True
+
 
 #@profile
 def main():
@@ -738,7 +656,7 @@ def main():
     speler.png = speler_png
     gps_grote_map = factory.from_image(resources.get_path("gps_grote_map.png"))
 
-    boom = sdl2.ext.Resources(__file__, "resources/boom")
+    boom = sdl2.ext.Resources(__file__, "resources/Auto")
     auto = sdl2.ext.Resources(__file__, "resources/Auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
@@ -872,6 +790,7 @@ def main():
             render_sprites(renderer, sprites, speler, d)
             collision_detection(renderer, speler, sprites, hartje)
             # t.append(time.time()-t1)
+
             if pad == None:
                 print(f"EINDBESTEMMING NONE: {eindbestemming}")
                 print('NONE')

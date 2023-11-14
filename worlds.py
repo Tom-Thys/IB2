@@ -104,7 +104,7 @@ def world_generation(openingen=[]):
     kleur = randint(-1, 30)
     kaart[:3, -3:] = (kleur % 4) + 2
     if len(openingen) < 3:
-        extra_openingen = randint(0, 3 - len(openingen))  # Extra openingen
+        extra_openingen = 4#randint(0, 3 - len(openingen))  # Extra openingen
         if extra_openingen == 0 and len(openingen) <= 1:
             extra_openingen = randint(1,3)
         for i in range(extra_openingen):

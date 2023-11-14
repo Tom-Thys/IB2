@@ -28,24 +28,26 @@ def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
     hoek = 2 * math.pi - speler.hoek / math.pi * 180 - 48
 
     unit_d = (width / (2 * afstand))
+    midden += unit_d/2
+
     start_x = 0
     start_y = 0
     x_min = speler.p_x - afstand
     y_min = speler.p_y - afstand
     x_max = speler.p_x + afstand
     y_max = speler.p_y + afstand
-    if x_min < 0:
-        w = width
-        width *= x_max / (2 * afstand)
-        start_x = w * (1 - width / w)
-    if y_min < 0:
-        h = height
-        height *= y_max / (2 * afstand)
-        start_y = h * (1 - height / h)
     if x_max > x_dim:
+        w = width
         width *= (x_dim - x_min) / (2 * afstand)
+        start_x = w * (1 - width / w)
     if y_max > y_dim:
+        h = height
         height *= (y_dim - y_min) / (2 * afstand)
+        start_y = h * (1 - height / h)
+    if x_min < 0:
+        width *= x_max / (2 * afstand)
+    if y_min < 0:
+        height *= y_max / (2 * afstand)
 
     renderer.copy(Map.png, srcrect=(x_min, y_min, 2 * afstand, 2 * afstand), dstrect=(start_x, start_y, width, height),
                   flip=2)
@@ -172,8 +174,8 @@ def draw_path(renderer, kleuren_textures, path, speler, packet):
         x_min, x_max, y_min, y_max, midden, afstand, unit_d = packet
         for item, locatie in enumerate(path):
             if x_min < locatie[0] < x_max and y_min < locatie[1] < y_max:
-                x = (locatie[0] - speler.position[0]) / afstand * midden + midden - unit_d / 2
-                y = (-locatie[1] + speler.position[1]) / afstand * midden + midden - unit_d / 2
+                x = (locatie[0] - speler.position[0]) / afstand * midden + midden - unit_d / (2*1.5)
+                y = (-locatie[1] + speler.position[1]) / afstand * midden + midden - unit_d - unit_d / (2*1.5)
             else:
                 continue
             """x = (locatie[1] - mid_y + afstand)*unit_d
@@ -186,7 +188,7 @@ def draw_path(renderer, kleuren_textures, path, speler, packet):
                 # renderer.fill(((x * unit_d), (y * unit_d), unit_d, unit_d), kleuren[1])
                 renderer.copy(kleuren_textures[1],
                               srcrect=(0, 0, 1, 1),
-                              dstrect=(x, y, unit_d, unit_d))
+                              dstrect=(x, y, unit_d, unit_d/1.5))
             elif item == len(path) - 1:
                 # renderer.fill(((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
                 # unit_d / 1.5, unit_d / 1.5), kleuren[2])
