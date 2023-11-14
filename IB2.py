@@ -342,13 +342,28 @@ def render_sprites(renderer, sprites, player, d):
         rx = sprite.x - player.p_x
         ry = sprite.y - player.p_y
         hoek_sprite = math.atan2(ry , rx)%(math.pi*2)
+        #print("Sprite:" + str(hoek_sprite))
         if sprite.afstand >= 60: continue;
-
         player_hoek = math.atan2(speler.p_x,speler.p_y)%(math.pi*2)
+        #print("Player:" + str(player_hoek))
+
+
+        hoek_verschil = abs(player.hoek - hoek_sprite)
+        if (player.hoek <= 1 and hoek_sprite >= math.pi*7/4):
+            hoek_verschil = math.pi * 2 - hoek_verschil
+        if (player.hoek >= math.pi*7/4 and hoek_sprite <= 1):
+            hoek_verschil = math.pi*2 - hoek_verschil
 
         grond_hoek_verschil = abs(player_hoek - hoek_sprite)
-        hoek_verschil = abs(player.hoek - hoek_sprite)
-        image = kies_sprite_afbeelding(grond_hoek_verschil,sprite)
+        fout = False
+        if (player_hoek <= 0.79 and hoek_sprite <= 0.79):
+            fout = True
+
+        if sprite.images == []:
+            image = sprite.image
+        else:
+            image = kies_sprite_afbeelding(grond_hoek_verschil,sprite,fout)
+
         if hoek_verschil >= (math.pi / 3.7):
             continue  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
 
@@ -365,8 +380,8 @@ def render_sprites(renderer, sprites, player, d):
         spriteHoogte = image.size[1]
 
         # grootte
-        sprite_size_breedte = int(spriteBreedte / sprite_distance * 2)
-        sprite_size_hoogte = spriteHoogte / sprite_distance * 2
+        sprite_size_breedte = int(spriteBreedte / sprite_distance * 10)
+        sprite_size_hoogte = spriteHoogte / sprite_distance * 10
 
         """a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
         b = np.array([speler.r_speler[0]+speler.r_camera[0]/1000,speler.r_speler[1]+speler.r_camera[1]/1000])
@@ -390,9 +405,13 @@ def render_sprites(renderer, sprites, player, d):
                 dstrect=(kolom, screen_y, 1, sprite_size_hoogte))
 
 
-def kies_sprite_afbeelding(hoek_verschil,sprite):
+def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
     index = 360 - round((hoek_verschil)/(math.pi*2)*360)
-    if index == 0: index += 1
+    if index == 0:
+        index += 1
+    if fout:
+        #print("Fout")
+        index = 360 - index
     #print (index)
     image = sprite.images[index]
     return image
@@ -673,7 +692,7 @@ def main():
 
     sprites.append(Sprite(tree, autos, sprite_map_png, 50.4 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
-    #sprites.append(Sprite(tree, bomen, sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
+    #sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
 
 
 

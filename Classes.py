@@ -32,7 +32,7 @@ class Sprite():
         return False
 class Doos_Sprite(Sprite):
     def __init__(self, image, map_png, x, y, height, vector, deletable = True):
-        super().__init__(image, map_png, x, y, height, is_doos=True)
+        super().__init__(image,[], map_png, x, y, height, is_doos=True)
         self.deletable = deletable
         self.vector = vector
         self.map_grootte = 4
