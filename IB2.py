@@ -690,7 +690,7 @@ def main():
         image = factory.from_image(auto.get_path(afbeelding_naam))
         autos.append(image)
 
-    sprites.append(Sprite(tree, autos, sprite_map_png, 50.4 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, autos, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
 
