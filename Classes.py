@@ -137,7 +137,7 @@ class Player():
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
         if self.in_auto:
-            hoek = stap/50*(richting*-1)
+            hoek = stap*(richting*-1)*self.car.speed*2
 
             self.draaien(hoek)
             self.car.draaien(hoek)
@@ -280,6 +280,7 @@ class Player():
             # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
             d_v += dist_cond * delta_x * checker
             d_h += (~dist_cond) * delta_y * checker
+
         kleuren[~checker] = world_map[y_f[~checker],x_f[~checker]]
         d_muur_vlak= np.where(dist_cond, y, x)
         d_muur = np.where(checker, 60, least_distance * (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]))
@@ -314,6 +315,7 @@ class Auto(Sprite):
         self.optrek = 0.001
         self.hoek = 0
         self.player_inside = False
+        self.crashed = False
 
     def beweeg(self, world_map, speler):
         """print(self.hoek, speler.hoek)
@@ -341,7 +343,29 @@ class Auto(Sprite):
                 speler.p_y = y
                 speler.position = (math.floor(x), math.floor(y))
         else:
+            if world_map[math.floor(y)][math.floor(self.x)] <= 0 and \
+                    world_map[math.floor(y_2)][math.floor(self.x)] <= 0:
+                self.y = y
+                self.position = (math.floor(self.x), math.floor(y))
+                if self.vector[1] > 0:
+                    self.hoek = math.pi/2
+                elif self.vector[1] != 0:
+                    self.hoek = -math.pi/2
+                veranderingshoek = self.hoek - speler.hoek
+                speler.draaien(veranderingshoek)
+            if world_map[math.floor(self.y)][math.floor(x)] <= 0 and \
+                    world_map[math.floor(self.y)][math.floor(x_2)] <= 0:
+                self.x = x
+                self.position = (math.floor(x), math.floor(self.y))
+                if self.vector[0] > 0:
+                    self.hoek = 0
+                elif self.vector[1] != 0:
+                    self.hoek = math.pi
+                veranderingshoek = self.hoek - speler.hoek
+                speler.draaien(veranderingshoek)
+
             print("COLLISION",self.hp)
+            self.crashed = True
             self.speed = 0
             self.hp -= 1
             if self.hp == 0:

@@ -464,11 +464,18 @@ def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
 
 
 def collision_detection(renderer, speler,sprites,hartje):
-    global eindbestemming, pad
+    global eindbestemming, pad, world_map
     for sprite in sprites:
         if sprite.afstand < 1 and sprite.schadelijk and not sprite.is_doos:
             sprites.remove(sprite)
-            speler.aantal_hartjes -= 1
+            if speler.in_auto:
+                speler.car.hp -= 1
+                speler.car.crashed = True
+                if speler.car.hp == 0:
+                    speler.car.player_leaving(world_map,speler)
+
+            else:
+                speler.aantal_hartjes -= 1
         sprite_pos = (math.floor(sprite.position[0]), math.floor(sprite.position[1]))
         if sprite_pos == eindbestemming and sprite.is_doos:
             lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
@@ -479,13 +486,32 @@ def collision_detection(renderer, speler,sprites,hartje):
             eindbestemming = bestemming_selector()
             pad = pathfinding_gps2(eindbestemming)
             sprites.remove(sprite)
-    hartjes = speler.aantal_hartjes
-    i = 1
-    while i <= hartjes:
-        x_pos = BREEDTE - 50  - 50*i
-        y_pos = HOOGTE - 70
-        renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
-        i += 1
+    if speler.in_auto:
+        if speler.car.crashed:
+            speler.car.crashed = False
+            pass # Geluidje
+        i = 1
+        while i <= speler.car.hp:
+            x_pos = BREEDTE - 50  - 50*i
+            y_pos = HOOGTE - 70
+            renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
+            i += 1
+    else:
+        hartjes = speler.aantal_hartjes
+        i = 1
+        while i <= hartjes:
+            x_pos = BREEDTE - 50  - 50*i
+            y_pos = HOOGTE - 70
+            renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
+            i += 1
+
+
+def draai_sprites(sprites,draai):
+    aantal_te_verschuiven = draai
+    laatste_items = sprites.images[-aantal_te_verschuiven:]
+    rest_van_de_lijst = sprites.images[:-aantal_te_verschuiven]
+    sprites.images = laatste_items + rest_van_de_lijst
+
 
 def show_fps(font, renderer):
     fps_list = [1]
@@ -749,6 +775,7 @@ def main():
     sprites.append(Sprite(tree, bomen, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
+    draai_sprites(sprites[0],138)
 
     # Eerste Auto aanmaken
     auto = Auto(tree, autos, sprite_map_png,452, 440, HOOGTE, type=0, hp=10, schaal = 0.2)
@@ -936,6 +963,7 @@ def main():
                 map_positie = list(speler.position)
 
             verwerk_input(delta)
+            draai_sprites(sprites[0], 1)
 
             # Toon de fps
             #next(fps_generator)
