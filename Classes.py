@@ -9,7 +9,7 @@ from sdl2 import *
 
 
 class Sprite():
-    def __init__(self, image,images, map_png, x, y, height, is_doos = False):
+    def __init__(self, image,images, map_png, x, y, height, is_doos = False, schaal = 0.4):
         self.images = images
         self.image = image  # The image of the sprite
         self.map_png = map_png
@@ -23,6 +23,7 @@ class Sprite():
         self.afstand = 1
         self.schadelijk = True
         self.is_doos = is_doos
+        self.schaal = schaal
 
     def afstanden(self, player):
         self.afstand = ((self.x - player.p_x) ** 2 + (self.y - player.p_y) ** 2)**(1/2)
@@ -104,9 +105,9 @@ class Player():
     def move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
-        if type(self.car) != int:
-            if richting == 1:
-                self.car.accelerate(world_map)
+        if self.in_auto:
+            if richting == 1 and stap > 0:
+                self.car.accelerate()
             else:
                 self.car.brake()
         else:
@@ -115,6 +116,37 @@ class Player():
             atm = 0.3  # afstand_tot_muur zelfde bij auto
             x_2 = (x + atm * richting * self.r_speler[0]) % x_dim
             y_2 = (y + atm * richting * self.r_speler[1]) % y_dim
+
+            if world_map[math.floor(y)][math.floor(x)] <= 0 and \
+                    world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
+                self.p_x = x
+                self.p_y = y
+                self.position = (math.floor(x),math.floor(y))
+
+            if world_map[math.floor(y)][math.floor(self.p_x)] <= 0 and \
+                    world_map[math.floor(y_2)][math.floor(self.p_x)] <= 0:
+                self.p_y = y
+                self.position = (math.floor(self.p_x),math.floor(y))
+            if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and \
+                    world_map[math.floor(self.p_y)][math.floor(x_2)] <= 0:
+                self.p_x = x
+                self.position = (math.floor(x),math.floor(self.p_y))
+        self.tile = math.floor(self.p_x/9),math.floor(self.p_y/9)
+
+    def sideways_move(self, richting, stap, world_map):
+        """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
+        y_dim, x_dim = np.shape(world_map)
+        if self.in_auto:
+            hoek = stap/50*(richting*-1)
+
+            self.draaien(hoek)
+            self.car.draaien(hoek)
+        else:
+            x = (self.p_x + richting * stap * self.r_camera[0]) % x_dim
+            y = (self.p_y + richting * stap * self.r_camera[1]) % y_dim
+            atm = 0.3  # afstand_tot_muur zelfde bij auto
+            x_2 = (x + atm * richting * self.r_camera[0]) % x_dim
+            y_2 = (y + atm * richting * self.r_camera[1]) % y_dim
 
             if world_map[math.floor(y)][math.floor(x)] <= 0 and \
                     world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
@@ -143,8 +175,6 @@ class Player():
         self.r_stralen[:, 0] = np.cos(self.hoeken)
         self.r_stralen[:, 1] = np.sin(self.hoeken)
         #print(self.hoeken)
-        if self.car != 0:
-            self.car.draaien(hoek)
 
     def trow(self, world_map):
         sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, 600, self.r_speler/5)
@@ -152,7 +182,7 @@ class Player():
             sprite.update(world_map)
         return sprite
 
-    @profile
+
     def n_raycasting(self, world_map, deuren):
         """Gebruik maken van de numpy raycaster om de afstanden en kleuren van muren te bepalen
         Neemt world map in zodat er gemakkelijk van map kan gewisseld worden"""
@@ -160,10 +190,10 @@ class Player():
         #Had circulaire import dus np raycaster in de class
         # print(self.r_speler)
         # variabelen
-        l = 60  # maximale lengte die geraycast wordt
+        l = 100  # maximale lengte die geraycast wordt
+        """AANPASSINGEN DOORTREKKEN NAAR SPRITES"""
 
         kleuren = np.zeros(self.breedte, dtype='int')
-
 
         z_kleuren = np.zeros(self.breedte, dtype='int')
         z_d_muur = np.ones(self.breedte)
@@ -264,27 +294,37 @@ class Player():
         self.r_camera = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
         self.aanmaak_r_stralen()
 
+    def renderen(self,renderer, world_map):
+        if self.in_auto:
+            self.car.beweeg(world_map, self)
+        else:
+            pass
 
-class Auto():
-    def __init__(self, p_x, p_y, type=0, hp=20, Player=0):
-        self.position = (p_x, p_y)
-        self.p_x = p_x
-        self.p_y = p_y
+class Auto(Sprite):
+    def __init__(self, image,images, map_png, x, y, height, type=0, hp=20, schaal=0.2):
+        super().__init__(image,images, map_png, x, y, height, schaal)
+        self.position = (x, y)
+        self.x = x
+        self.y = y
         self.type = type
         self.hp = hp
         self.speed = 0
         self.vector = np.array([1, 0])
-        self.afrem = 0.1
-        self.optrek = 0.1
+        self.afrem = 0.002
+        self.optrek = 0.001
         self.hoek = 0
-        self.Player = Player
         self.player_inside = False
 
-    def update(self, world_map):
+    def beweeg(self, world_map, speler):
+        """print(self.hoek, speler.hoek)
+        print(self.vector, speler.r_speler)
+        print('\n\n')"""
         y_dim, x_dim = np.shape(world_map)
-        x = self.p_x + self.speed * self.vector[0]
-        y = self.p_x + self.speed * self.vector[1]
+        x = self.x + self.speed * self.vector[0]
+        y = self.y + self.speed * self.vector[1]
         atm = 0.3  # afstand_tot_muur
+        x_2 = (x + atm * self.vector[0])
+        y_2 = (y + atm * self.vector[1])
         if x < 0:
             x += x_dim
         elif x > x_dim:
@@ -293,14 +333,20 @@ class Auto():
             y += y_dim
         elif y > y_dim:
             y -= y_dim
-        if world_map[math.floor(y)][math.floor(x)] == 0 and world_map[math.floor(y + atm)][math.floor(x + atm)] == 0:
-            self.p_x = x
-            self.p_y = y
+        if world_map[math.floor(y)][math.floor(x)] <= 0 and world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
+            self.x = x
+            self.y = y
             if self.player_inside:
-                self.Player.p_x = x
-                self.Player.p_y = y
-                self.Player.position = (x, y)
-
+                speler.p_x = x
+                speler.p_y = y
+                speler.position = (math.floor(x), math.floor(y))
+        else:
+            print("COLLISION",self.hp)
+            self.speed = 0
+            self.hp -= 1
+            if self.hp == 0:
+                self.player_leaving(world_map,speler)
+                self.hp = 9
     def brake(self):
         if self.speed > self.afrem:
             self.speed -= self.afrem
@@ -311,23 +357,27 @@ class Auto():
         if self.speed < 5:
             self.speed += self.optrek
 
-    def turning(self, hoek):
-        self.hoek += hoek
+    def draaien(self, hoek):
+        self.hoek = (hoek + self.hoek) % (2*math.pi)
         self.vector = np.array([math.cos(self.hoek), math.sin(self.hoek)])
 
-    def player_enter(self):
+    def player_enter(self,speler):
         self.player_inside = True
-        self.Player.p_x = self.p_x
-        self.Player.p_y = self.p_y
+        speler.p_x = self.x
+        speler.p_y = self.y
+        self.hoek = speler.hoek
+        self.vector = np.array([math.cos(self.hoek), math.sin(self.hoek)])
+        speler.in_auto = True
 
-    def player_leaving(self, world_map):
-        y_dim, x_dim = np.shape(world_map)
+    def player_leaving(self, world_map,speler):
+        #y_dim, x_dim = np.shape(world_map)
         self.player_inside = False
+        speler.in_auto = False
         self.speed = 0
-        if 0 < self.p_x - 0.5 and 0 < self.p_y - 0.5:
-            if world_map[math.floor(self.p_y - 0.5)][math.floor(self.p_x - 0.5)] == 0:
-                self.Player.p_x = self.p_x - 0.5
-                self.Player.p_y = self.p_y - 0.5
+        if 0 < self.x - 0.5 and 0 < self.y - 0.5:
+            if world_map[math.floor(self.y - 0.5)][math.floor(self.x - 0.5)] == 0:
+                speler.p_x = self.x - 0.5
+                speler.p_y = self.y - 0.5
 
     def hitting(self, object):
         self.hp -= 1

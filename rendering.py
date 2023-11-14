@@ -37,15 +37,15 @@ def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
     x_max = speler.p_x + afstand
     y_max = speler.p_y + afstand
     if x_max > x_dim:
-        w = width
         width *= (x_dim - x_min) / (2 * afstand)
-        start_x = w * (1 - width / w)
     if y_max > y_dim:
         h = height
         height *= (y_dim - y_min) / (2 * afstand)
         start_y = h * (1 - height / h)
     if x_min < 0:
+        w = width
         width *= x_max / (2 * afstand)
+        start_x = w * (1 - width / w)
     if y_min < 0:
         height *= y_max / (2 * afstand)
 

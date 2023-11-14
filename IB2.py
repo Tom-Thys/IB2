@@ -81,6 +81,9 @@ d_camera = 1
 speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
 speler.aanmaak_r_stralen(d_camera=d_camera)
 
+
+
+
 # world
 world_map = np.ones((10,10))
 # world_map = worldlijst[wereld_nr]
@@ -147,8 +150,12 @@ def verwerk_input(delta,events=0):
             speler.move(-1, 0.1, world_map)
             muziek_spelen("footsteps", channel=4)
         if key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]:
+            speler.sideways_move(1,0.1, world_map)
+        if key_states[sdl2.SDL_SCANCODE_R] and not speler.in_auto:
             speler.draaien(-math.pi / sensitivity)
         if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
+            speler.sideways_move(-1, 0.1, world_map)
+        if key_states[sdl2.SDL_SCANCODE_W] and not speler.in_auto:
             speler.draaien(math.pi / sensitivity)
     if game_state == 2 and show_map:
         if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
@@ -179,7 +186,7 @@ def verwerk_input(delta,events=0):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
-            if key == sdl2.SDLK_r:
+            if key == sdl2.SDLK_g:
                 x, y = speler.position
                 coords = ((-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1))
                 for coord in coords:
@@ -188,7 +195,7 @@ def verwerk_input(delta,events=0):
                     if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[
                         1] < 0:
                         continue
-                    if world_map[positie] < 0:
+                    if world_map[positie] < -100:
                         deur = deuren[world_map[positie]]
                         deur.start()
             if not moet_afsluiten and game_state == 0:
@@ -279,6 +286,9 @@ def verwerk_input(delta,events=0):
                         muziek_spelen("throwing", channel=2)
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
+            if key == sdl2.SDLK_t:
+                #Auto.playe
+                speler.car.player_enter(speler)
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
                 pass
             if not moet_afsluiten and game_state == 1:
@@ -306,9 +316,13 @@ def verwerk_input(delta,events=0):
             # kan roteren zijn we enkel geinteresseerd in bewegingen over de
             # X-as
             draai = event.motion.xrel
-            speler.draaien(-math.pi / 4000 * draai)
-            beweging = event.motion.yrel
-            speler.move(1, beweging / 1000, world_map)
+            if speler.in_auto:
+                speler.sideways_move(1,math.pi / 40 * draai, world_map)
+            else:
+                speler.draaien(-math.pi / 4000 * draai)
+                beweging = event.motion.yrel
+
+                speler.move(1, beweging / 1000, world_map)
             continue
 
     # Polling-gebaseerde input. Dit gebruiken we bij voorkeur om bv het ingedrukt
@@ -332,6 +346,8 @@ def render_sprites(renderer, sprites, player, d):
     global world_map
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player))  # Sorteren op afstand
     # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
+    max_dist = 100
+    """AANPASSINGEN DOORTREKKEN NAAR RAYCASTER"""
 
     for i,sprite in enumerate(sprites):
         if sprite.update(world_map):
@@ -342,8 +358,8 @@ def render_sprites(renderer, sprites, player, d):
         rx = sprite.x - player.p_x
         ry = sprite.y - player.p_y
         hoek_sprite = math.atan2(ry , rx)%(math.pi*2)
-        #print("Sprite:" + str(hoek_sprite))
-        if sprite.afstand >= 60: continue;
+        if sprite.afstand >= max_dist: continue;
+
         player_hoek = math.atan2(speler.p_x,speler.p_y)%(math.pi*2)
         #print("Player:" + str(player_hoek))
 
@@ -380,15 +396,15 @@ def render_sprites(renderer, sprites, player, d):
         spriteHoogte = image.size[1]
 
         # grootte
-        sprite_size_breedte = int(spriteBreedte / sprite_distance * 10)
-        sprite_size_hoogte = spriteHoogte / sprite_distance * 10
+        sprite_size_breedte = int(spriteBreedte / sprite_distance * 10 * sprite.schaal)
+        sprite_size_hoogte = int(spriteHoogte / sprite_distance * 10 * sprite.schaal)
 
         """a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
         b = np.array([speler.r_speler[0]+speler.r_camera[0]/1000,speler.r_speler[1]+speler.r_camera[1]/1000])
         print(np.linalg.solve(a,b)[1])
         c = np.linalg.solve(a,b)[1]"""
 
-        screen_y = (sprite.height - sprite_size_hoogte) / 2 # wordt in het midden gezet
+        screen_y = int((sprite.height - sprite_size_hoogte) / 2) # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
         #renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
 
@@ -675,7 +691,7 @@ def main():
     speler.png = speler_png
     gps_grote_map = factory.from_image(resources.get_path("gps_grote_map.png"))
 
-    boom = sdl2.ext.Resources(__file__, "resources/Auto")
+    boom = sdl2.ext.Resources(__file__, "resources/boom")
     auto = sdl2.ext.Resources(__file__, "resources/Auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
@@ -690,11 +706,13 @@ def main():
         image = factory.from_image(auto.get_path(afbeelding_naam))
         autos.append(image)
 
-    sprites.append(Sprite(tree, autos, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, bomen, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
 
-
+    # Eerste Auto aanmaken
+    auto = Auto(tree, autos, sprite_map_png,452, 440, HOOGTE, type=0, hp=10, schaal = 0.2)
+    speler.car = auto
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
@@ -823,6 +841,9 @@ def main():
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)
+                speler.renderen(renderer, world_map)
+            elif speler.car != 0:
+                render_sprites(renderer, [speler.car], speler, d)
             if paused:
                 renderer.copy(pauze_menu,
                               srcrect=(0, 0, pauze_menu.size[0], pauze_menu.size[1]),
