@@ -440,7 +440,11 @@ def collision_detection(renderer, speler,sprites,hartje):
         y_pos = HOOGTE - 70
         renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
         i += 1
-
+def draai_sprites(sprites,draai):
+    aantal_te_verschuiven = draai
+    laatste_items = sprites.images[-aantal_te_verschuiven:]
+    rest_van_de_lijst = sprites.images[:-aantal_te_verschuiven]
+    sprites.images = laatste_items + rest_van_de_lijst
 def show_fps(font, renderer):
     fps_list = [1]
     loop_time = 0
@@ -693,6 +697,7 @@ def main():
     sprites.append(Sprite(tree, autos, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
+    draai_sprites(sprites[0],138)
 
 
 
@@ -871,6 +876,7 @@ def main():
                 map_positie = list(speler.position)
 
             verwerk_input(delta)
+            draai_sprites(sprites[0], 1)
 
             # Toon de fps
             #next(fps_generator)
