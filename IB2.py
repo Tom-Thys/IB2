@@ -124,7 +124,13 @@ geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/cartoon_doorbell.wav", "UTF-8")),  # 5
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/regular_doorbell.wav", "UTF-8")),  # 6
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/door_knocking.wav", "UTF-8")),  # 7
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/dogs_barking.wav", "UTF-8"))  # 8
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/dogs_barking.wav", "UTF-8")),  # 8
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_start.wav", "UTF-8")),  # 9
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_1.wav", "UTF-8")),  # 10
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_2.wav", "UTF-8")),  # 11
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_3.wav", "UTF-8")),  # 12
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_4.wav", "UTF-8")),  # 13
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_loop.wav", "UTF-8"))  # 14
 ]
 
 
@@ -147,16 +153,32 @@ def verwerk_input(delta,events=0):
     if game_state == 2 and not paused and not show_map:
         if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
             speler.move(1, 0.1, world_map)
-            muziek_spelen("footsteps", channel=4)
+            if not speler.in_auto:
+                muziek_spelen("footsteps", channel=4)
+            else:
+                #print(speler.car.speed)
+                if 0 < speler.car.speed < 0.12:
+                    muziek_spelen("car gear 1", channel=4)
+                elif 0.12 < speler.car.speed < 0.25:
+                    muziek_spelen("car gear 2", channel=4)
+                elif 0.25 < speler.car.speed < 0.4:
+                    muziek_spelen("car gear 3", channel=4)
+                elif speler.car.speed > 0.4:
+                    muziek_spelen("car gear 4", channel=4)
         if key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]:
             speler.move(-1, 0.1, world_map)
-            muziek_spelen("footsteps", channel=4)
+            if not speler.in_auto:
+                muziek_spelen("footsteps", channel=4)
         if key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]:
             speler.sideways_move(1,0.1, world_map)
+            if not speler.in_auto:
+                muziek_spelen("footsteps", channel=4)
         if key_states[sdl2.SDL_SCANCODE_R] and not speler.in_auto:
             speler.draaien(-math.pi / sensitivity)
         if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
             speler.sideways_move(-1, 0.1, world_map)
+            if not speler.in_auto:
+                muziek_spelen("footsteps", channel=4)
         if key_states[sdl2.SDL_SCANCODE_W] and not speler.in_auto:
             speler.draaien(math.pi / sensitivity)
     if game_state == 2 and show_map:
@@ -291,13 +313,19 @@ def verwerk_input(delta,events=0):
             if key == sdl2.SDLK_t:
                 #Auto.playe
                 speler.car.player_enter(speler)
+                muziek_spelen("car start", channel=7)
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
                 pass
             if not moet_afsluiten and game_state == 1:
                 pass
             if not moet_afsluiten and game_state == 2:
-                if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
-                    muziek_spelen(0, False, 4)
+                if not speler.in_auto:
+                    if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d or key == sdl2.SDLK_RIGHT\
+                            or key == sdl2.SDLK_LEFT or key == sdl2.SDLK_s or key == sdl2.SDLK_f:
+                        muziek_spelen(0, False, 4)
+                if speler.in_auto:
+                    if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
+                        muziek_spelen(0, channel=4)
         # Analoog aan SDL_KEYDOWN. Dit event wordt afgeleverd wanneer de
         # gebruiker een muisknop indrukt
         elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
@@ -502,7 +530,13 @@ def muziek_spelen(geluid, looped=False, channel=1):
             "cartoon doorbell": geluiden[5],
             "doorbell": geluiden[6],
             "door knocking": geluiden[7],
-            "dogs barking": geluiden[8]
+            "dogs barking": geluiden[8],
+            "car start": geluiden[9],
+            "car gear 1": geluiden[10],
+            "car gear 2": geluiden[11],
+            "car gear 3": geluiden[12],
+            "car gear 4": geluiden[13],
+            "car loop": geluiden[14]
         }
         if looped == False:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
@@ -851,6 +885,8 @@ def main():
             if speler.in_auto:
                 wheelSprite(renderer, wheel)
                 speler.renderen(renderer, world_map)
+                if speler.car.speed > 0:
+                    muziek_spelen("car loop", channel=2)
             elif speler.car != 0:
                 render_sprites(renderer, [speler.car], speler, d)
             if paused:
