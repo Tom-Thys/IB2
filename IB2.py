@@ -7,6 +7,8 @@ import time
 import random
 import numpy as np
 import heapq
+import threading
+import multiprocessing
 import sdl2.ext
 import sys
 import sdl2.sdlimage
@@ -81,6 +83,9 @@ d_camera = 1
 speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
 speler.aanmaak_r_stralen(d_camera=d_camera)
 
+
+
+
 # world
 world_map = np.ones((10,10))
 # world_map = worldlijst[wereld_nr]
@@ -147,8 +152,12 @@ def verwerk_input(delta,events=0):
             speler.move(-1, 0.1, world_map)
             muziek_spelen("footsteps", channel=4)
         if key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_F]:
+            speler.sideways_move(1,0.1, world_map)
+        if key_states[sdl2.SDL_SCANCODE_R] and not speler.in_auto:
             speler.draaien(-math.pi / sensitivity)
         if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
+            speler.sideways_move(-1, 0.1, world_map)
+        if key_states[sdl2.SDL_SCANCODE_W] and not speler.in_auto:
             speler.draaien(math.pi / sensitivity)
     if game_state == 2 and show_map:
         if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
@@ -179,7 +188,7 @@ def verwerk_input(delta,events=0):
             if key == sdl2.SDLK_q:
                 moet_afsluiten = True
                 break
-            if key == sdl2.SDLK_r:
+            if key == sdl2.SDLK_g:
                 x, y = speler.position
                 coords = ((-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1))
                 for coord in coords:
@@ -188,7 +197,7 @@ def verwerk_input(delta,events=0):
                     if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[
                         1] < 0:
                         continue
-                    if world_map[positie] < 0:
+                    if world_map[positie] < -100:
                         deur = deuren[world_map[positie]]
                         deur.start()
             if not moet_afsluiten and game_state == 0:
@@ -279,6 +288,9 @@ def verwerk_input(delta,events=0):
                         muziek_spelen("throwing", channel=2)
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
+            if key == sdl2.SDLK_t:
+                #Auto.playe
+                speler.car.player_enter(speler)
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
                 pass
             if not moet_afsluiten and game_state == 1:
@@ -306,9 +318,13 @@ def verwerk_input(delta,events=0):
             # kan roteren zijn we enkel geinteresseerd in bewegingen over de
             # X-as
             draai = event.motion.xrel
-            speler.draaien(-math.pi / 4000 * draai)
-            beweging = event.motion.yrel
-            speler.move(1, beweging / 1000, world_map)
+            if speler.in_auto:
+                speler.sideways_move(1,math.pi / 40 * draai, world_map)
+            else:
+                speler.draaien(-math.pi / 4000 * draai)
+                beweging = event.motion.yrel
+
+                speler.move(1, beweging / 1000, world_map)
             continue
 
     # Polling-gebaseerde input. Dit gebruiken we bij voorkeur om bv het ingedrukt
@@ -332,6 +348,8 @@ def render_sprites(renderer, sprites, player, d):
     global world_map
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player))  # Sorteren op afstand
     # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
+    max_dist = 100
+    """AANPASSINGEN DOORTREKKEN NAAR RAYCASTER"""
 
     for i,sprite in enumerate(sprites):
         if sprite.update(world_map):
@@ -342,8 +360,8 @@ def render_sprites(renderer, sprites, player, d):
         rx = sprite.x - player.p_x
         ry = sprite.y - player.p_y
         hoek_sprite = math.atan2(ry , rx)%(math.pi*2)
-        #print("Sprite:" + str(hoek_sprite))
-        if sprite.afstand >= 60: continue;
+        if sprite.afstand >= max_dist: continue;
+
         player_hoek = math.atan2(speler.p_x,speler.p_y)%(math.pi*2)
         #print("Player:" + str(player_hoek))
 
@@ -380,15 +398,15 @@ def render_sprites(renderer, sprites, player, d):
         spriteHoogte = image.size[1]
 
         # grootte
-        sprite_size_breedte = int(spriteBreedte / sprite_distance * 10)
-        sprite_size_hoogte = spriteHoogte / sprite_distance * 10
+        sprite_size_breedte = int(spriteBreedte / sprite_distance * 10 * sprite.schaal)
+        sprite_size_hoogte = int(spriteHoogte / sprite_distance * 10 * sprite.schaal)
 
         """a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
         b = np.array([speler.r_speler[0]+speler.r_camera[0]/1000,speler.r_speler[1]+speler.r_camera[1]/1000])
         print(np.linalg.solve(a,b)[1])
         c = np.linalg.solve(a,b)[1]"""
 
-        screen_y = (sprite.height - sprite_size_hoogte) / 2 # wordt in het midden gezet
+        screen_y = int((sprite.height - sprite_size_hoogte) / 2) # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
         #renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
 
@@ -536,7 +554,11 @@ def heuristiek(a, b):
     return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
 
 
-def pathfinding_gps2(eindpositie):
+def pathfinding_gps2(eindbestemming):
+    global pad #, eindbestemming
+    print("TEST")
+    print(f"pad: {pad}, best: {eindbestemming}")
+    eindpositie = eindbestemming
     start = speler.position
     buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # nu definieren, oogt beter bij de for loop
     close_set = set()  # set is ongeorderd, onveranderbaar en niet geïndexeerd
@@ -553,7 +575,7 @@ def pathfinding_gps2(eindpositie):
             while current in came_from:
                 pad.append(current)
                 current = came_from[current]
-            return pad
+            return
         close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
         for positie in buren:  # door alle buren gaan + hun g score berekenen
@@ -576,7 +598,7 @@ def pathfinding_gps2(eindpositie):
 
 def positie_check():
     if speler.position == (450, 450):
-        print("bestemming bereikt")
+        pass
 
 
 def bestemming_selector(mode=""):
@@ -679,7 +701,7 @@ def main():
     speler.png = speler_png
     gps_grote_map = factory.from_image(resources.get_path("gps_grote_map.png"))
 
-    boom = sdl2.ext.Resources(__file__, "resources/Auto")
+    boom = sdl2.ext.Resources(__file__, "resources/boom")
     auto = sdl2.ext.Resources(__file__, "resources/Auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
@@ -694,12 +716,14 @@ def main():
         image = factory.from_image(auto.get_path(afbeelding_naam))
         autos.append(image)
 
-    sprites.append(Sprite(tree, autos, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, bomen, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
     #sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
     draai_sprites(sprites[0],138)
 
-
+    # Eerste Auto aanmaken
+    auto = Auto(tree, autos, sprite_map_png,452, 440, HOOGTE, type=0, hp=10, schaal = 0.2)
+    speler.car = auto
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
@@ -733,6 +757,7 @@ def main():
     spriterenderer = factory.create_sprite_render_system(window)
     uiprocessor = sdl2.ext.UIProcessor()
 
+    oud_speler_pos = speler.position
     while not moet_afsluiten:
         muziek_spelen("main menu", True)
         sdl2.SDL_SetRelativeMouseMode(False)
@@ -787,7 +812,8 @@ def main():
             bestemming_selector("start")
             #pad = pathfinding_gps2((50 * 9, 50 * 9))
             eindbestemming = bestemming_selector()
-            pad = pathfinding_gps2(eindbestemming)
+            #pathfinding_gps2()
+            #pad = pathfinding_gps2(eindbestemming)
         if game_state != 1:
             config.set("settings", "volume",
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
@@ -819,15 +845,19 @@ def main():
                 print(f"EINDBESTEMMING NONE: {eindbestemming}")
                 print('NONE')
                 eindbestemming = bestemming_selector()
-                pad = pathfinding_gps2(eindbestemming)
-            elif abs(pad[-1][0] - speler.p_x) > 3 or abs(pad[-1][1] - speler.p_y) > 3:
-                #bestemming_selector()
-                pad = pathfinding_gps2(eindbestemming)
-                #print(len(pad))
+                pathfinding_gps2(eindbestemming)
+            if abs(oud_speler_pos[0]-speler.position[0]) >= 1 or abs(oud_speler_pos[1]-speler.position[1]) >= 1:
+                oud_speler_pos = speler.position
+                #threading.Thread(target=pathfinding_gps2, args=(eindbestemming,), daemon=True).start()
+                #proc = multiprocessing.Process(target=pathfinding_gps2, args=(eindbestemming,), daemon=True)
+                #proc.start()
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
             if speler.in_auto:
                 wheelSprite(renderer, wheel)
+                speler.renderen(renderer, world_map)
+            elif speler.car != 0:
+                render_sprites(renderer, [speler.car], speler, d)
             if paused:
                 renderer.copy(pauze_menu,
                               srcrect=(0, 0, pauze_menu.size[0], pauze_menu.size[1]),
@@ -850,10 +880,9 @@ def main():
 
                 linker_bovenhoek_x = map_positie[0]-afstand_map if map_positie[0]-afstand_map >= 0 else 0
                 linker_bovenhoek_y = map_positie[1]-afstand_map if map_positie[1]-afstand_map >= 0 else 0
-                #speler_png_x = map_positie[0]+(speler.p_x//afstand_map)
-                speler_png_x = (BREEDTE//2)-(speler.position[0]-map_positie[0])
-                speler_png_y = (HOOGTE//2)-(speler.position[1]-map_positie[1])
-                speler_grootte = int((-17/190)*(afstand_map-10)+20)
+                #speler_grootte = int((-17/190)*(afstand_map-10)+20)
+                #speler_png_x = (BREEDTE//2)-2*(map_positie[0]-speler.position[0])+speler_grootte//2
+                #speler_png_y = (HOOGTE//2)+(map_positie[1]-speler.position[1])-speler_grootte
                 if afstand_map + map_positie[0] > np.size(world_map, 1):
                     linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand_map
                 if afstand_map + map_positie[1] > np.size(world_map, 0):
@@ -866,9 +895,9 @@ def main():
                               srcrect=(linker_bovenhoek_x, linker_bovenhoek_y, 2*afstand_map, 2*afstand_map),
                               dstrect=(160, 112, BREEDTE-300, HOOGTE-222),
                               flip=2)
-                renderer.copy(speler.png,
+                """renderer.copy(speler.png,
                               dstrect=(speler_png_x, speler_png_y, speler_grootte, speler_grootte),
-                              angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)
+                              angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)"""
                 menu_nav()
             else:
                 positie_check()
@@ -887,11 +916,23 @@ def main():
 
     # Sluit SDL2 af
     sdl2.ext.quit()
-
+def printen():
+    print("TESTPRINTEN")
 
 if __name__ == '__main__':
     # profiler = cProfile.Profile()
     # profiler.enable()
+    """
+    t1 = threading.Thread(target=main)
+    t2 = threading.Thread(target=pathfinding_gps2, daemon=True)
+    t3 = threading.Thread(target=printen, daemon=True)
+    t2.start()
+    t1.start()
+    t3.start() """
+    #p1 = multiprocessing.Process(target=main)
+    #p2 = multiprocessing.Process(target=pathfinding_gps2, args=(eindbestemming,))
+    #p1.start()
+    #p2.start()
     main()
     # profiler.disable()
     # stats = pstats.Stats(profiler)
