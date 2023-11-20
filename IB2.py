@@ -20,6 +20,14 @@ from Code_niet_langer_in_gebruik import *
 from rendering import *
 from configparser import ConfigParser
 from PIL import Image
+from pydub import AudioSegment
+import pydub
+#import pyrubberband
+import soundfile
+import ctypes
+import librosa
+
+
 
 config = ConfigParser()
 
@@ -130,7 +138,8 @@ geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_2.wav", "UTF-8")),  # 11
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_3.wav", "UTF-8")),  # 12
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_4.wav", "UTF-8")),  # 13
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_loop.wav", "UTF-8"))  # 14
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_loop.wav", "UTF-8")),  # 14
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car crash.wav", "UTF-8"))
 ]
 
 
@@ -489,7 +498,7 @@ def collision_detection(renderer, speler,sprites,hartje):
     if speler.in_auto:
         if speler.car.crashed:
             speler.car.crashed = False
-            pass # Geluidje
+            muziek_spelen("car crash", channel=5)
         i = 1
         while i <= speler.car.hp:
             x_pos = BREEDTE - 50  - 50*i
@@ -547,6 +556,10 @@ def muziek_spelen(geluid, looped=False, channel=1):
         sdl2.sdlmixer.Mix_MasterVolume(volume)
         if sdl2.sdlmixer.Mix_Playing(channel) == 1:
             return
+        elif type(geluid) != str:
+            chunk = sdl2.sdlmixer.Mix_QuickLoad_RAW(geluid, len(geluid))
+            sdl2.sdlmixer.Mix_PlayChannel(channel, chunk, 0)
+            return
         liedjes = {
             "main menu": geluiden[0],
             "main menu select": geluiden[1],
@@ -562,13 +575,21 @@ def muziek_spelen(geluid, looped=False, channel=1):
             "car gear 2": geluiden[11],
             "car gear 3": geluiden[12],
             "car gear 4": geluiden[13],
-            "car loop": geluiden[14]
+            "car loop": geluiden[14],
+            "car crash": geluiden[15]
         }
         if looped == False:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
         else:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], -1)
-
+def pitch_shift(semitones):
+    y, sr = librosa.load("muziek/car_gear_1.wav")
+    semitones = 1
+    y_shifted = librosa.effects.pitch_shift(y, sr=sr, n_steps=semitones)
+    y_shifted_PCM = (y_shifted * 32767).astype(np.int16)
+    shifted_audio_bytes = y_shifted_PCM.tobytes()
+    shifted_audio_ctypes = (ctypes.c_ubyte * len(shifted_audio_bytes)).from_buffer_copy(shifted_audio_bytes)
+    return shifted_audio_ctypes
 
 def menu_nav():
     global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie, pauze_index, pauze_positie, map_positie, afstand_map
@@ -703,7 +724,6 @@ def main():
     # inf_world.map_making(speler)
     world_map = inf_world.world_map
     map_positie = [50, world_map.shape[0]-50]
-
 
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()

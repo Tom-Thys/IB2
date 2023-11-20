@@ -401,3 +401,12 @@ def pathfinding_gps(eindpositie=(8, 8)):
                 continue
             # indien niet al in open list, nu toevoegen
             open_list.append(child)
+
+def pitch_shift(semitones):
+    y, sr = librosa.load("muziek/car_gear_1.wav")
+    semitones = 1
+    y_shifted = librosa.effects.pitch_shift(y, sr=sr, n_steps=semitones)
+    y_shifted_PCM = (y_shifted * 32767).astype(np.int16)
+    shifted_audio_bytes = y_shifted_PCM.tobytes()
+    shifted_audio_ctypes = (ctypes.c_ubyte * len(shifted_audio_bytes)).from_buffer_copy(shifted_audio_bytes)
+    return shifted_audio_ctypes
