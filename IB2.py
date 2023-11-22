@@ -582,14 +582,6 @@ def muziek_spelen(geluid, looped=False, channel=1):
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
         else:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], -1)
-def pitch_shift(semitones):
-    y, sr = librosa.load("muziek/car_gear_1.wav")
-    semitones = 1
-    y_shifted = librosa.effects.pitch_shift(y, sr=sr, n_steps=semitones)
-    y_shifted_PCM = (y_shifted * 32767).astype(np.int16)
-    shifted_audio_bytes = y_shifted_PCM.tobytes()
-    shifted_audio_ctypes = (ctypes.c_ubyte * len(shifted_audio_bytes)).from_buffer_copy(shifted_audio_bytes)
-    return shifted_audio_ctypes
 
 def menu_nav():
     global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie, pauze_index, pauze_positie, map_positie, afstand_map
@@ -634,7 +626,7 @@ def heuristiek(a, b):
 def pathfinding_gps2(pad, eindbestemming, spelerpositie):
     print("PROCESS PATHFINDING")
     oud_speler_positie = (0, 0)
-    spelerpos = list(spelerpositie)
+    spelerpos = tuple(spelerpositie)
     while True:
         print("TEST")
         print(spelerpos)
@@ -723,7 +715,6 @@ def quit(button, event):
 #@profile
 def main(pad, eindbestemming, spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
-
     inf_world = Map()
     inf_world.start()
     # inf_world.map_making(speler)
@@ -904,6 +895,7 @@ def main(pad, eindbestemming, spelerpositie):
                 config.write(f)
 
         while game_state == 2 and not moet_afsluiten:
+            spelerpositie = speler.position
             for key in deuren:
                 deuren[key].update()
             # Onthoud de huidige tijd
@@ -1007,10 +999,9 @@ if __name__ == '__main__':
     # profiler = cProfile.Profile()
     # profiler.enable()
     p1 = Process(target=main, args=(pad, eindbstm, spelerpositie))
-    p2 = Process(target=pathfinding_gps2, args=(pad, eindbestemming, spelerpositie))
+    p2 = Process(target=pathfinding_gps2, args=(pad, eindbestemming, spelerpositie), daemon=True)
     p1.start()
     p2.start()
-    p2.join()
     p1.join()
     # main()
     # profiler.disable()
