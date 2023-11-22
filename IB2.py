@@ -19,13 +19,13 @@ from Classes import *
 from Code_niet_langer_in_gebruik import *
 from rendering import *
 from configparser import ConfigParser
-from PIL import Image
+"""from PIL import Image
 from pydub import AudioSegment
 import pydub
 #import pyrubberband
-import soundfile
+import soundfile"""
 import ctypes
-import librosa
+#import librosa
 
 
 
@@ -375,10 +375,13 @@ def verwerk_input(delta,events=0):
         moet_afsluiten = True
 
 
-def wheelSprite(renderer, sprite):
+def wheelSprite(renderer, sprite, car):
+    """Rendert stuur op scherm midden onder.\n
+    Draait ifv car.stuurhoek."""
     x_pos = (BREEDTE - 250) // 2
     y_pos = HOOGTE - 230
-    renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250))
+    hoek = -car.stuurhoek * 180 / math.pi * 100 * car.speed
+    renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250), angle=hoek)
 
 
 def render_sprites(renderer, sprites, player, d):
@@ -648,6 +651,7 @@ def menu_nav():
         if afstand_map > 200:
             afstand_map = 200
 
+
 def heuristiek(a, b):
     y = abs(a[0]-b[0])
     x = abs(a[1]-b[1])
@@ -761,7 +765,6 @@ def main():
     # Maak een renderer aan zodat we in ons venster kunnen renderen
     renderer = sdl2.ext.Renderer(window, flags=sdl2.render.SDL_RENDERER_ACCELERATED)
 
-
     # resources inladen
     resources = sdl2.ext.Resources(__file__, "resources")
     resources_mappen = sdl2.ext.Resources(__file__, "mappen")
@@ -775,11 +778,12 @@ def main():
         factory.from_image(resources.get_path("yellow_house.png")),  # 4
         factory.from_image(resources.get_path("Gruis_house.png")),  # 5
         factory.from_image(resources.get_path("hedge.png")),  # 6
-        factory.from_image(resources.get_path("stop bord pixel art.png"))  # 7
+        factory.from_image(resources.get_path("stop bord pixel art.png")),  # 7
+        factory.from_image(resources.get_path("warehouse.png")),  # 8
     ]
     muren_info = []
     for i, muur in enumerate(soort_muren):
-        muren_info.append((muur.size[0], 890))
+        muren_info.append((muur, muur.size[0], 890))
     kleuren_textures = [factory.from_color(kleur, (1, 1)) for kleur in kleuren]
     # Inladen wereld_mappen
     map_resources = sdl2.ext.Resources(__file__, "mappen")
@@ -802,27 +806,27 @@ def main():
 
     boom = sdl2.ext.Resources(__file__, "resources/boom")
     auto = sdl2.ext.Resources(__file__, "resources/Auto")
+    politie = sdl2.ext.Resources(__file__, "resources/Politie_auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
     bomen = []
-    for i in range(361):
-        afbeelding_naam = "map" + str(i + 1) + ".png"
-        image = factory.from_image(boom.get_path(afbeelding_naam))
-        bomen.append(image)
     autos = []
+    polities = []
     for i in range(361):
         afbeelding_naam = "map" + str(i + 1) + ".png"
-        image = factory.from_image(auto.get_path(afbeelding_naam))
-        autos.append(image)
-
-    sprites.append(Sprite(tree, bomen, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
-    #sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
-    #sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
-    draai_sprites(sprites[0],138)
+        bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
+        autos.append(factory.from_image(auto.get_path(afbeelding_naam)))
+        polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
 
     # Eerste Auto aanmaken
-    auto = Auto(tree, autos, sprite_map_png,452, 440, HOOGTE, type=0, hp=10, schaal = 0.2)
+    auto = Auto(tree, autos, sprite_map_png, 452, 440, HOOGTE, type=0, hp=10, schaal=0.2)
     speler.car = auto
+
+    sprites.append(Sprite(tree, polities, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
+    sprites.append(speler.car)
+    # sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
+    draai_sprites(sprites[0], 138)
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
@@ -933,9 +937,9 @@ def main():
             (d, v, kl), (z_d, z_v, z_k) = (speler.n_raycasting(world_map, deuren))
 
             # t1 = time.time()
-            renderen(renderer, d, v, kl, soort_muren, muren_info)
+            renderen(renderer, d, v, kl, muren_info)
             if np.any(z_k) != 0:
-                z_renderen(renderer, z_d, z_v, z_k, soort_muren, muren_info, deuren)
+                z_renderen(renderer, z_d, z_v, z_k, muren_info)
             render_sprites(renderer, sprites, speler, d)
             collision_detection(renderer, speler, sprites, hartje)
             # t.append(time.time()-t1)
@@ -953,12 +957,16 @@ def main():
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
             if speler.in_auto:
-                wheelSprite(renderer, wheel)
+                wheelSprite(renderer, wheel, speler.car)
                 speler.renderen(renderer, world_map)
                 if speler.car.speed > 0:
                     muziek_spelen("car loop", channel=2)
+                elif speler.car.speed < 0:
+                    pass
+                    # reversing beep ofz
+
             elif speler.car != 0:
-                render_sprites(renderer, [speler.car], speler, d)
+                pass
             if paused:
                 renderer.copy(pauze_menu,
                               srcrect=(0, 0, pauze_menu.size[0], pauze_menu.size[1]),
@@ -1021,6 +1029,8 @@ def main():
 
     # Sluit SDL2 af
     sdl2.ext.quit()
+
+
 def printen():
     print("TESTPRINTEN")
 
