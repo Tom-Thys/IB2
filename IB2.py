@@ -8,7 +8,7 @@ import random
 import numpy as np
 import heapq
 import threading
-import multiprocessing
+from multiprocessing import Process, Manager
 import sdl2.ext
 import sys
 import sdl2.sdlimage
@@ -20,12 +20,12 @@ from Code_niet_langer_in_gebruik import *
 from rendering import *
 from configparser import ConfigParser
 from PIL import Image
-from pydub import AudioSegment
-import pydub
+#from pydub import AudioSegment
+#import pydub
 #import pyrubberband
-import soundfile
-import ctypes
-import librosa
+#import soundfile
+#import ctypes
+#import librosa
 
 
 
@@ -122,7 +122,7 @@ kleuren_textures = []
 sdl2.sdlmixer.Mix_Init(0)
 sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
 sdl2.sdlmixer.Mix_AllocateChannels(8)
-sdl2.sdlmixer.Mix_MasterVolume(80)
+sdl2.sdlmixer.Mix_MasterVolume(volume)
 geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),  # 0
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_select.wav", "UTF-8")),  # 1
@@ -631,46 +631,51 @@ def heuristiek(a, b):
     return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
 
 
-def pathfinding_gps2(eindbestemming):
-    global pad #, eindbestemming
-    print("TEST")
-    print(f"pad: {pad}, best: {eindbestemming}")
-    eindpositie = eindbestemming
-    start = speler.position
-    buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # nu definieren, oogt beter bij de for loop
-    close_set = set()  # set is ongeorderd, onveranderbaar en niet geïndexeerd
-    came_from = {}  # dictionary die "parents" van de node klasse vervangt, aangezien zelfgemaakte klassen niet zo goed meespelen met heaps
-    g_score = {start: 0}  # dictionary die g scores bijhoudt van alle posities
-    f_score = {start: heuristiek(start, eindpositie)}  # dictionary die onze f scores bijhoudt bij iteratie
-    oheap = []  # ~open_list van eerste pathfinding algoritme, bevat alle posities die we behandelen voor het kortste pad te vinden
-    heapq.heappush(oheap, (f_score[start], start))  # we pushen de startpositie en f score op de oheap (f score later nodig)
+def pathfinding_gps2(pad, eindbestemming, spelerpositie):
+    print("PROCESS PATHFINDING")
+    oud_speler_positie = (0, 0)
+    spelerpos = list(spelerpositie)
+    while True:
+        print("TEST")
+        print(spelerpos)
+        if abs(oud_speler_positie[0]-spelerpos[0]) > 1 or abs(oud_speler_positie[1]-spelerpos[1]) > 1:
+            #print(f"pad: {pad}, best: {eindbestemming}")
+            eindpositie = eindbestemming
+            start = spelerpos
+            buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # nu definieren, oogt beter bij de for loop
+            close_set = set()  # set is ongeorderd, onveranderbaar en niet geïndexeerd
+            came_from = {}  # dictionary die "parents" van de node klasse vervangt, aangezien zelfgemaakte klassen niet zo goed meespelen met heaps
+            g_score = {start: 0}  # dictionary die g scores bijhoudt van alle posities
+            f_score = {start: heuristiek(start, eindpositie)}  # dictionary die onze f scores bijhoudt bij iteratie
+            oheap = []  # ~open_list van eerste pathfinding algoritme, bevat alle posities die we behandelen voor het kortste pad te vinden
+            heapq.heappush(oheap, (f_score[start], start))  # we pushen de startpositie en f score op de oheap (f score later nodig)
 
-    while oheap:  # kijken dat er posities zijn die we kunnen behandelen
-        current = heapq.heappop(oheap)[1]  # pop en return kleinste item van de heap: hier bekijken we de kleinste f score, [1] betekent dat we de positie terug willen
-        if current == eindpositie:
-            pad = []
-            while current in came_from:
-                pad.append(current)
-                current = came_from[current]
-            return
-        close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
+            while oheap:  # kijken dat er posities zijn die we kunnen behandelen
+                current = heapq.heappop(oheap)[1]  # pop en return kleinste item van de heap: hier bekijken we de kleinste f score, [1] betekent dat we de positie terug willen
+                if current == eindpositie:
+                    pad = []
+                    while current in came_from:
+                        pad.append(current)
+                        current = came_from[current]
+                    pass
+                close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
-        for positie in buren:  # door alle buren gaan + hun g score berekenen
-            buur = (current[0] + positie[0], current[1] + positie[1])
-            buur_g_score = g_score[current] + heuristiek(current, buur)
-            if buur[0] > world_map.shape[1] or buur[0] < 0 or buur[1] > world_map.shape[0] or \
-                    buur[1] < 0:
-                continue  # gaat naar de volgende buur
-            # kijken of we op deze positie kunnen stappen
-            if world_map[buur[1]][buur[0]] > 0:
-                continue
-            if buur in close_set and buur_g_score >= g_score.get(buur, 0):  # dictionary.get(): buur: de positie van waar we de g score van terug willen, 0 indien er geen buur bestaat
-                continue  # kijken of de buur al behandeld is en ofdat de g score van de buur die we nu berekenen groter is als een vorige buur (indien kleiner kan dit wel een beter pad geven)
-            if buur_g_score < g_score.get(buur, 0) or buur not in [i[1] for i in oheap]:  # indien huidige buur g score lager is als een vorige buur of als de buur niet in de heap zit
-                came_from[buur] = current  # buur komt van huidige positie
-                g_score[buur] = buur_g_score
-                f_score[buur] = buur_g_score + heuristiek(buur, eindpositie)
-                heapq.heappush(oheap, (f_score[buur], buur))
+                for positie in buren:  # door alle buren gaan + hun g score berekenen
+                    buur = (current[0] + positie[0], current[1] + positie[1])
+                    buur_g_score = g_score[current] + heuristiek(current, buur)
+                    if buur[0] > world_map.shape[1] or buur[0] < 0 or buur[1] > world_map.shape[0] or \
+                            buur[1] < 0:
+                        continue  # gaat naar de volgende buur
+                    # kijken of we op deze positie kunnen stappen
+                    if world_map[buur[1]][buur[0]] > 0:
+                        continue
+                    if buur in close_set and buur_g_score >= g_score.get(buur, 0):  # dictionary.get(): buur: de positie van waar we de g score van terug willen, 0 indien er geen buur bestaat
+                        continue  # kijken of de buur al behandeld is en ofdat de g score van de buur die we nu berekenen groter is als een vorige buur (indien kleiner kan dit wel een beter pad geven)
+                    if buur_g_score < g_score.get(buur, 0) or buur not in [i[1] for i in oheap]:  # indien huidige buur g score lager is als een vorige buur of als de buur niet in de heap zit
+                        came_from[buur] = current  # buur komt van huidige positie
+                        g_score[buur] = buur_g_score
+                        f_score[buur] = buur_g_score + heuristiek(buur, eindpositie)
+                        heapq.heappush(oheap, (f_score[buur], buur))
 
 
 def positie_check():
@@ -716,8 +721,8 @@ def quit(button, event):
 
 
 #@profile
-def main():
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, eindbestemming, pad, map_positie
+def main(pad, eindbestemming, spelerpositie):
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
 
     inf_world = Map()
     inf_world.start()
@@ -921,7 +926,7 @@ def main():
                 print(f"EINDBESTEMMING NONE: {eindbestemming}")
                 print('NONE')
                 eindbestemming = bestemming_selector()
-                pathfinding_gps2(eindbestemming)
+                #pathfinding_gps2(eindbestemming)
             if abs(oud_speler_pos[0]-speler.position[0]) >= 1 or abs(oud_speler_pos[1]-speler.position[1]) >= 1:
                 oud_speler_pos = speler.position
                 #threading.Thread(target=pathfinding_gps2, args=(eindbestemming,), daemon=True).start()
@@ -981,7 +986,6 @@ def main():
                 positie_check()
                 next(fps_generator)
                 map_positie = list(speler.position)
-
             verwerk_input(delta)
             draai_sprites(sprites[0], 1)
 
@@ -994,24 +998,21 @@ def main():
 
     # Sluit SDL2 af
     sdl2.ext.quit()
-def printen():
-    print("TESTPRINTEN")
+
 
 if __name__ == '__main__':
+    pad = Manager().list()
+    eindbstm = Manager().list(eindbestemming)
+    spelerpositie = Manager().list(speler.position)
     # profiler = cProfile.Profile()
     # profiler.enable()
-    """
-    t1 = threading.Thread(target=main)
-    t2 = threading.Thread(target=pathfinding_gps2, daemon=True)
-    t3 = threading.Thread(target=printen, daemon=True)
-    t2.start()
-    t1.start()
-    t3.start() """
-    #p1 = multiprocessing.Process(target=main)
-    #p2 = multiprocessing.Process(target=pathfinding_gps2, args=(eindbestemming,))
-    #p1.start()
-    #p2.start()
-    main()
+    p1 = Process(target=main, args=(pad, eindbstm, spelerpositie))
+    p2 = Process(target=pathfinding_gps2, args=(pad, eindbestemming, spelerpositie))
+    p1.start()
+    p2.start()
+    p2.join()
+    p1.join()
+    # main()
     # profiler.disable()
     # stats = pstats.Stats(profiler)
     # stats.dump_stats('data.prof')
