@@ -623,14 +623,16 @@ def heuristiek(a, b):
     return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
 
 
-def pathfinding_gps2(shared_pad, shared_eindbestemming, shared_spelerpositie):
+def pathfinding_gps2(lock, shared_pad, shared_eindbestemming, shared_spelerpositie):
     print("PROCESS PATHFINDING")
     oud_speler_positie = (0, 0)
     while True:
-        spelerpos = tuple(shared_spelerpositie)
-        eindbestemming = tuple(shared_eindbestemming)
+        with lock:
+            spelerpos = tuple(shared_spelerpositie)
+            eindbestemming = tuple(shared_eindbestemming)
         #print("TEST")
-        print(f"spelerpositie pathfinding: {spelerpos}")
+        #print(f"spelerpositie pathfinding: {spelerpos}")
+        #print(f"eindbestemming pathfinding: {eindbestemming}")
         #print(f"eindbestemming: {eindbestemming}")
         if abs(oud_speler_positie[0]-spelerpos[0]) > 1 or abs(oud_speler_positie[1]-spelerpos[1]) > 1:
             #print(f"pad: {pad}, best: {eindbestemming}")
@@ -715,7 +717,7 @@ def quit(button, event):
 
 
 #@profile
-def main(shared_pad, shared_eindbestemming, shared_spelerpositie):
+def main(lock, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
     inf_world = Map()
     inf_world.start()
@@ -897,11 +899,9 @@ def main(shared_pad, shared_eindbestemming, shared_spelerpositie):
                 config.write(f)
 
         while game_state == 2 and not moet_afsluiten:
-            """
-            with spelerpositie.get_lock():
-                spelerpositie.value = speler.position
-            """
-            shared_spelerpositie = speler.position
+            with lock:
+                shared_spelerpositie[:] = speler.position[:]
+                shared_eindbestemming[:] = eindbestemming[:]
             print(f"speler pos: {shared_spelerpositie}")
             for key in deuren:
                 deuren[key].update()
@@ -1005,8 +1005,9 @@ if __name__ == '__main__':
     shared_spelerpositie = Manager().list(speler.position)
     # profiler = cProfile.Profile()
     # profiler.enable()
-    p1 = Process(target=main, args=(shared_pad, shared_eindbestemming, shared_spelerpositie))
-    p2 = Process(target=pathfinding_gps2, args=(shared_pad, shared_eindbestemming, shared_spelerpositie), daemon=True)
+    lock = Manager().Lock()
+    p1 = Process(target=main, args=(lock, shared_pad, shared_eindbestemming, shared_spelerpositie))
+    p2 = Process(target=pathfinding_gps2, args=(lock, shared_pad, shared_eindbestemming, shared_spelerpositie), daemon=True)
     p1.start()
     p2.start()
     p1.join()
