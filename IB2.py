@@ -623,13 +623,15 @@ def heuristiek(a, b):
     return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
 
 
-def pathfinding_gps2(pad, eindbestemming, spelerpositie):
+def pathfinding_gps2(shared_pad, shared_eindbestemming, shared_spelerpositie):
     print("PROCESS PATHFINDING")
     oud_speler_positie = (0, 0)
-    spelerpos = tuple(spelerpositie)
     while True:
-        print("TEST")
-        print(spelerpos)
+        spelerpos = tuple(shared_spelerpositie)
+        eindbestemming = tuple(shared_eindbestemming)
+        #print("TEST")
+        print(f"spelerpositie pathfinding: {spelerpos}")
+        #print(f"eindbestemming: {eindbestemming}")
         if abs(oud_speler_positie[0]-spelerpos[0]) > 1 or abs(oud_speler_positie[1]-spelerpos[1]) > 1:
             #print(f"pad: {pad}, best: {eindbestemming}")
             eindpositie = eindbestemming
@@ -649,7 +651,7 @@ def pathfinding_gps2(pad, eindbestemming, spelerpositie):
                     while current in came_from:
                         pad.append(current)
                         current = came_from[current]
-                    pass
+                    return
                 close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
                 for positie in buren:  # door alle buren gaan + hun g score berekenen
@@ -713,7 +715,7 @@ def quit(button, event):
 
 
 #@profile
-def main(pad, eindbestemming, spelerpositie):
+def main(shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
     inf_world = Map()
     inf_world.start()
@@ -895,7 +897,12 @@ def main(pad, eindbestemming, spelerpositie):
                 config.write(f)
 
         while game_state == 2 and not moet_afsluiten:
-            spelerpositie = speler.position
+            """
+            with spelerpositie.get_lock():
+                spelerpositie.value = speler.position
+            """
+            shared_spelerpositie = speler.position
+            print(f"speler pos: {shared_spelerpositie}")
             for key in deuren:
                 deuren[key].update()
             # Onthoud de huidige tijd
@@ -993,13 +1000,13 @@ def main(pad, eindbestemming, spelerpositie):
 
 
 if __name__ == '__main__':
-    pad = Manager().list()
-    eindbstm = Manager().list(eindbestemming)
-    spelerpositie = Manager().list(speler.position)
+    shared_pad = Manager().list()
+    shared_eindbestemming = Manager().list(eindbestemming)
+    shared_spelerpositie = Manager().list(speler.position)
     # profiler = cProfile.Profile()
     # profiler.enable()
-    p1 = Process(target=main, args=(pad, eindbstm, spelerpositie))
-    p2 = Process(target=pathfinding_gps2, args=(pad, eindbestemming, spelerpositie), daemon=True)
+    p1 = Process(target=main, args=(shared_pad, shared_eindbestemming, shared_spelerpositie))
+    p2 = Process(target=pathfinding_gps2, args=(shared_pad, shared_eindbestemming, shared_spelerpositie), daemon=True)
     p1.start()
     p2.start()
     p1.join()
