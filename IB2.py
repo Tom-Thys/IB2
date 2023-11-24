@@ -9,6 +9,8 @@ import numpy as np
 import heapq
 import threading
 from multiprocessing import Process, Manager
+#from multiprocessing import shared_memory
+import ctypes
 import sdl2.ext
 import sys
 import sdl2.sdlimage
@@ -486,14 +488,17 @@ def collision_detection(renderer, speler,sprites,hartje):
             else:
                 speler.aantal_hartjes -= 1
         sprite_pos = (math.floor(sprite.position[0]), math.floor(sprite.position[1]))
-        if sprite_pos == eindbestemming and sprite.is_doos:
+        if sprite.is_doos:
+            print(f"sprite pos: {sprite_pos}")
+            print(f"eindbestemming: {eindbestemming}")
+        if sprite_pos[:] == eindbestemming[:] and sprite.is_doos:
+            print("TEST COLLISON BOX")
             lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
             rnd = randint(0, len(lijst_objective_complete)-1)
             muziek_spelen(lijst_objective_complete[rnd], channel=5)
             if randint(0, 10) <= 1:
                 muziek_spelen("dogs barking", channel=6)
             eindbestemming = bestemming_selector()
-            pad = pathfinding_gps2(eindbestemming)
             sprites.remove(sprite)
     if speler.in_auto:
         if speler.car.crashed:
@@ -623,19 +628,18 @@ def heuristiek(a, b):
     return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
 
 
-def pathfinding_gps2(lock, shared_pad, shared_eindbestemming, shared_spelerpositie):
-    print("PROCESS PATHFINDING")
-    oud_speler_positie = (0, 0)
+def pathfinding_gps2(lock, world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
+    time.sleep(1)  # wachten tot game volledig gestart en eindbestemming besloten is
+    oud_speler_positie = [0, 0]
+    oud_eindbestemming = [0, 0]
     while True:
         with lock:
             spelerpos = tuple(shared_spelerpositie)
             eindbestemming = tuple(shared_eindbestemming)
-        #print("TEST")
-        #print(f"spelerpositie pathfinding: {spelerpos}")
-        #print(f"eindbestemming pathfinding: {eindbestemming}")
-        #print(f"eindbestemming: {eindbestemming}")
-        if abs(oud_speler_positie[0]-spelerpos[0]) > 1 or abs(oud_speler_positie[1]-spelerpos[1]) > 1:
+        if abs(oud_speler_positie[0]-spelerpos[0]) > 1 or abs(oud_speler_positie[1]-spelerpos[1]) > 1\
+                or (eindbestemming[0] != oud_eindbestemming[0] or eindbestemming[1] != oud_eindbestemming[1]):
             #print(f"pad: {pad}, best: {eindbestemming}")
+            oud_speler_positie[:] = spelerpos[:]
             eindpositie = eindbestemming
             start = spelerpos
             buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # nu definieren, oogt beter bij de for loop
@@ -653,7 +657,11 @@ def pathfinding_gps2(lock, shared_pad, shared_eindbestemming, shared_spelerposit
                     while current in came_from:
                         pad.append(current)
                         current = came_from[current]
-                    return
+                    with lock:
+                        shared_pad[:] = pad[:]
+                    if shared_pad[:] == pad[:]:
+                        time.sleep(0.5)
+                    break
                 close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
                 for positie in buren:  # door alle buren gaan + hun g score berekenen
@@ -717,17 +725,16 @@ def quit(button, event):
 
 
 #@profile
-def main(lock, shared_pad, shared_eindbestemming, shared_spelerpositie):
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
-    inf_world = Map()
-    inf_world.start()
-    # inf_world.map_making(speler)
-    world_map = inf_world.world_map
+def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, eindbestemming
     map_positie = [50, world_map.shape[0]-50]
-
+    world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
-
+    bestemming_selector("start")
+    eindbestemming = bestemming_selector()
+    with lock:
+        shared_eindbestemming[:] = eindbestemming[:]
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
     window.show()
@@ -885,9 +892,7 @@ def main(lock, shared_pad, shared_eindbestemming, shared_spelerpositie):
         if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
             muziek_spelen("game start", channel=3)
-            bestemming_selector("start")
             #pad = pathfinding_gps2((50 * 9, 50 * 9))
-            eindbestemming = bestemming_selector()
             #pathfinding_gps2()
             #pad = pathfinding_gps2(eindbestemming)
         if game_state != 1:
@@ -901,8 +906,8 @@ def main(lock, shared_pad, shared_eindbestemming, shared_spelerpositie):
         while game_state == 2 and not moet_afsluiten:
             with lock:
                 shared_spelerpositie[:] = speler.position[:]
-                shared_eindbestemming[:] = eindbestemming[:]
-            print(f"speler pos: {shared_spelerpositie}")
+                shared_eindbestemming[:] = list(eindbestemming[:])
+                pad[:] = shared_pad[:]
             for key in deuren:
                 deuren[key].update()
             # Onthoud de huidige tijd
@@ -926,11 +931,13 @@ def main(lock, shared_pad, shared_eindbestemming, shared_spelerpositie):
                 print('NONE')
                 eindbestemming = bestemming_selector()
                 #pathfinding_gps2(eindbestemming)
+            """
             if abs(oud_speler_pos[0]-speler.position[0]) >= 1 or abs(oud_speler_pos[1]-speler.position[1]) >= 1:
                 oud_speler_pos = speler.position
                 #threading.Thread(target=pathfinding_gps2, args=(eindbestemming,), daemon=True).start()
                 #proc = multiprocessing.Process(target=pathfinding_gps2, args=(eindbestemming,), daemon=True)
                 #proc.start()
+                """
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
             if speler.in_auto:
@@ -1000,14 +1007,20 @@ def main(lock, shared_pad, shared_eindbestemming, shared_spelerpositie):
 
 
 if __name__ == '__main__':
-    shared_pad = Manager().list()
     shared_eindbestemming = Manager().list(eindbestemming)
     shared_spelerpositie = Manager().list(speler.position)
+    shared_pad = Manager().list(pad)
+
+    inf_world = Map()
+    inf_world.start()
+    # inf_world.map_making(speler)
+    shared_world_map = inf_world.world_map
+
     # profiler = cProfile.Profile()
     # profiler.enable()
     lock = Manager().Lock()
-    p1 = Process(target=main, args=(lock, shared_pad, shared_eindbestemming, shared_spelerpositie))
-    p2 = Process(target=pathfinding_gps2, args=(lock, shared_pad, shared_eindbestemming, shared_spelerpositie), daemon=True)
+    p1 = Process(target=main, args=(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie))
+    p2 = Process(target=pathfinding_gps2, args=(lock, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie), daemon=True)
     p1.start()
     p2.start()
     p1.join()
