@@ -336,7 +336,9 @@ class Player:
             # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
             d_v += dist_cond * delta_x * checker
             d_h += (~dist_cond) * delta_y * checker
-        valid_indices = np.logical_and.reduce((0 <= x_f,x_f < len(world_map[0]),y_f < len(world_map),~checker))
+        valid_indices = np.logical_and.reduce(
+            (0 <= x_f, x_f < len(world_map[0]), y_f < len(world_map), ~checker)
+        )
         kleuren[valid_indices] = world_map[y_f[valid_indices], x_f[valid_indices]]
         d_muur_vlak = np.where(dist_cond, y, x)
         d_muur = np.where(
@@ -486,7 +488,7 @@ class Auto(Sprite):
     def player_enter(self, speler):
         """Kijkt of speler dicht genoeg tegen auto staat om in te stappen.\n
         zet alle settings correct"""
-        if self.afstanden(speler) < 1:
+        if self.afstanden(speler) < 1.5:
             self.player_inside = True
             speler.p_x = self.x
             speler.p_y = self.y
@@ -545,13 +547,26 @@ class Deur:
 
 
 class Politie(Sprite):
-    def __init__(self, image, images, map_png, x, y, height, schaal=0.2):
+    def __init__(self, image, images, map_png, x, y, height, speler, schaal=0.2):
         super().__init__(image, images, map_png, x, y, height, schaal)
         self.pad = (0, 0)
+        self.speler = speler
         self.achtervolgen = False
         self.hoek = 0  # set to initial of 3D SPRITE
 
     def update(self, world_map):
         if self.achtervolgen:
             if len(self.pad) > 2:
-                pass
+                self.hoek = math.atan2(self.pad[-2][1], self.pad[-2][0])
+            else:
+                self.hoek = math.atan2(self.y - self.speler.p_y, self.x - self.speler.p_x)
+
+            if self.speler.in_auto:
+                speed = abs(self.speler.car.speed - 0.002)
+            else:
+                speed = 0.05
+
+            vector = (self.pad[-1][1] - self.pad[-2][1],self.pad[-1][0] - self.pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
+
+            self.x += speed * vector[0]
+            self.y += speed * vector[1]

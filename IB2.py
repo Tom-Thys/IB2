@@ -454,6 +454,8 @@ def render_sprites(renderer, sprites, player, d):
         for i in range(sprite_size_breedte):
             kolom = i + screen_x
             if kolom >= BREEDTE:
+                break
+            if kolom < 0:
                 continue
             if not d[kolom] <= sprite.afstand:
                 # Voeg de geschikte i-waarden toe aan de lijst
@@ -464,26 +466,19 @@ def render_sprites(renderer, sprites, player, d):
         print("geschikt :" + str(geschikte_i_waarden[len(geschikte_i_waarden)-1]))
         print("breedte :" + str(sprite_size_breedte))
         if geschikte_i_waarden[0]==0:
-            renderer.copy(image,   srcrect=(
-                           geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, len(geschikte_i_waarden) * sprite.afstand, sprite_size_hoogte * sprite.afstand),
-                    dstrect=(
-                        screen_x , screen_y, len(geschikte_i_waarden),
-                        sprite_size_hoogte))
+            renderer.copy(image,srcrect=(geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, len(geschikte_i_waarden) * sprite.afstand, sprite_size_hoogte * sprite.afstand),
+                    dstrect=(screen_x , screen_y, len(geschikte_i_waarden),sprite_size_hoogte))
 
 
         elif (geschikte_i_waarden[len(geschikte_i_waarden)-1]) == sprite_size_breedte-1:
 
-            renderer.copy(image, srcrect=(
-            geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, len(geschikte_i_waarden) * sprite.afstand, sprite_size_hoogte * sprite.afstand),
+            renderer.copy(image, srcrect=(geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, len(geschikte_i_waarden) * sprite.afstand, sprite_size_hoogte * sprite.afstand),
                           dstrect=(screen_x+sprite_size_breedte-len(geschikte_i_waarden), screen_y, len(geschikte_i_waarden), sprite_size_hoogte))
 
         else:
             print(geschikte_i_waarden[0])
-            renderer.copy(image,   srcrect=(
-                           geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, len(geschikte_i_waarden) * sprite.afstand, sprite_size_hoogte * sprite.afstand),
-                          dstrect=(
-                          screen_x  + geschikte_i_waarden[0], screen_y, len(geschikte_i_waarden),
-                          sprite_size_hoogte))
+            renderer.copy(image,srcrect=(geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, len(geschikte_i_waarden) * sprite.afstand, sprite_size_hoogte * sprite.afstand),
+                          dstrect=(screen_x  + geschikte_i_waarden[0], screen_y, len(geschikte_i_waarden),sprite_size_hoogte))
 
 
 def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
