@@ -488,11 +488,7 @@ def collision_detection(renderer, speler,sprites,hartje):
             else:
                 speler.aantal_hartjes -= 1
         sprite_pos = (math.floor(sprite.position[0]), math.floor(sprite.position[1]))
-        if sprite.is_doos:
-            print(f"sprite pos: {sprite_pos}")
-            print(f"eindbestemming: {eindbestemming}")
         if sprite_pos[:] == eindbestemming[:] and sprite.is_doos:
-            print("TEST COLLISON BOX")
             lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
             rnd = randint(0, len(lijst_objective_complete)-1)
             muziek_spelen(lijst_objective_complete[rnd], channel=5)
