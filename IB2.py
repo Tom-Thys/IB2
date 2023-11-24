@@ -653,10 +653,11 @@ def pathfinding_gps2(lock, world_map, shared_pad, shared_eindbestemming, shared_
                     while current in came_from:
                         pad.append(current)
                         current = came_from[current]
-                    with lock:
-                        shared_pad[:] = pad[:]
                     if shared_pad[:] == pad[:]:
                         time.sleep(0.5)
+                    else:
+                        with lock:
+                            shared_pad[:] = pad[:]
                     break
                 close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
