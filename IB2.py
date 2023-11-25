@@ -852,6 +852,7 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
     pauze_menu = factory.from_image(resources.get_path("pause_menu.png"))
+    handen_doos = factory.from_image(resources.get_path("box_hands.png"))
 
     map_png = factory.from_image(resources_mappen.get_path("map.png"))
 
@@ -985,7 +986,9 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
                     # reversing beep ofz
 
             elif speler.car != 0:
-                pass
+                renderer.copy(handen_doos,
+                              srcrect=(0, 0, handen_doos.size[0], handen_doos.size[1]),
+                              dstrect=(200, 230, BREEDTE-400, HOOGTE))
             if paused:
                 renderer.copy(pauze_menu,
                               srcrect=(0, 0, pauze_menu.size[0], pauze_menu.size[1]),
