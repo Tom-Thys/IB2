@@ -111,32 +111,30 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
     return
 
 
-def renderen(renderer, d, d_v, k, soort_muren, muren_info):
+def renderen(renderer, d, d_v, k, muren_info):
     d = 1 / d
     for kolom in range(BREEDTE):
-        d_muur = d[kolom]
-        unit_d = d_v[kolom]
         k_muur = k[kolom]
         if k_muur >= 0:
-            wall_texture = soort_muren[k_muur]
-            breedte, hoogte = muren_info[k_muur]
+            d_muur = d[kolom]
+            unit_d = d_v[kolom]
+            wall_texture, breedte, hoogte = muren_info[k_muur]
             rij = unit_d * breedte
             scherm_y = HOOGTE / 2
             renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def z_renderen(renderer, d, d_v, k, soort_muren, muren_info, deuren):
-    return
+def z_renderen(renderer, d, d_v, k, muren_info):
     for kolom in range(BREEDTE):
-        if k[kolom] == 0: continue;
-        deur = deuren[k[kolom]]
+        kleur = k[kolom]
+        if kleur == 0:
+            continue
         d_muur = d[kolom]
         unit_d = d_v[kolom]
-        if unit_d < deur.positie: continue;
-        wall_texture = soort_muren[deur.kleur]
-        breedte, hoogte = muren_info[deur.kleur]
-        rij = (unit_d - deur.positie) % 1 * breedte
+        wall_texture, breedte, hoogte = muren_info[kleur]
+        rij = unit_d * breedte
+        #rij = (unit_d - deur.positie) % 1 * breedte
         # d_muur = 10 / d_muur
         scherm_y = HOOGTE / 2
         renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
@@ -152,6 +150,7 @@ def renderText(font, renderer, text, x, y, midden=0):
 
 
 def render_floor_and_sky(renderer, kleuren_textures):
+    """Rendert achtergrond top half blauw bottem grijs"""
     """# SKY in blauw
     renderer.fill((0, 0, BREEDTE, HOOGTE // 2), kleuren[9])
     # Floor in grijs

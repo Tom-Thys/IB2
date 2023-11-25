@@ -5,7 +5,7 @@ from random import randint
 from Classes import Deur
 from PIL import Image
 
-from Classes import Player
+
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
@@ -104,7 +104,7 @@ def world_generation(openingen=[]):
     kleur = randint(-1, 30)
     kaart[:3, -3:] = (kleur % 4) + 2
     if len(openingen) < 3:
-        extra_openingen = 4#randint(0, 3 - len(openingen))  # Extra openingen
+        extra_openingen = randint(0, 3 - len(openingen))  # Extra openingen
         if extra_openingen == 0 and len(openingen) <= 1:
             extra_openingen = randint(1,3)
         for i in range(extra_openingen):
@@ -185,7 +185,7 @@ class Tile():
 
 class Map():
     def __init__(self):
-        self.tile_map = np.full((60, 60), Tile((0, 0)))
+        self.tile_map = np.full((120, 120), Tile((0, 0)))
         self.tile_map[:, :] = 0
         self.tiles_size = np.shape(self.tile_map)
         y, x = self.tiles_size
@@ -219,7 +219,10 @@ class Map():
         tile_3 = Tile(world_generation([1, 2, 3, 4]))
         self.tile_map[48, 50] = tile_3
         self.tile_map[49, 50] = tile_2
+        self.tile_map[49, 51] = tile_2
+        self.tile_map[49, 49] = tile_2
         self.tile_map[50, 50] = intiele_tile
+        #self.world_map[450,450] = -5
         self.size = (np.shape(map_initieel))[0]
         for i in range(1, x - 1):
             for j in range(1, y - 1):
