@@ -222,7 +222,7 @@ class Map():
         self.tile_map[49, 51] = tile_2
         self.tile_map[49, 49] = tile_2
         self.tile_map[50, 50] = intiele_tile
-        self.world_map[450,450] = -5
+        #self.world_map[450,450] = -5
         self.size = (np.shape(map_initieel))[0]
         for i in range(1, x - 1):
             for j in range(1, y - 1):
