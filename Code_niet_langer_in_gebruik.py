@@ -402,6 +402,17 @@ def pathfinding_gps(eindpositie=(8, 8)):
             # indien niet al in open list, nu toevoegen
             open_list.append(child)
 
+
+class Node:  # A* algoritme
+    def __init__(self, parent=None, positie=None):
+        self.parent = parent
+        self.positie = positie
+        self.g = 0  # g_cost: afstand van beginnende node
+        self.h = 0  # h_cost: afstand van eind node
+        self.f = 0  # f_cost: g_cost + h_cost = totale cost
+    def __eq__(self, other):
+        return self.positie == other.positie
+
 def pitch_shift(semitones):
     y, sr = librosa.load("muziek/car_gear_1.wav")
     semitones = 1

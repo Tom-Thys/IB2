@@ -448,30 +448,39 @@ def render_sprites(renderer, sprites, player, d):
         #renderer.copy(sprite.image, dstrect=(screen_x, screen_y, sprite_size_breedte, sprite_size_hoogte))
         geschikte_i_waarden = []
 
-        tuplelijst = []
         for i in range(sprite_size_breedte):
             kolom = i + screen_x
             if kolom >= BREEDTE:
-                break
-            if kolom < 0:
                 continue
             if not d[kolom] <= sprite.afstand:
-                if tuplelijst == []:
-                    tuplelijst.append([kolom, 1, i])
-                elif kolom == tuplelijst[-1][0] + tuplelijst[-1][1]:
-                    tuplelijst[-1][1] += 1
-                else:
-                    tuplelijst.append([kolom, 1, i])
+                # Voeg de geschikte i-waarden toe aan de lijst
+                geschikte_i_waarden.append(i)
+        if geschikte_i_waarden == []:
+            continue
+        # Render de sprites voor de geschikte i-waarden in één keer
+        print("geschikt :" + str(geschikte_i_waarden[len(geschikte_i_waarden)-1]))
+        print("breedte :" + str(sprite_size_breedte))
+        if geschikte_i_waarden[0]==0:
+            renderer.copy(image,   srcrect=(
+                           geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, len(geschikte_i_waarden) * sprite.afstand, sprite_size_hoogte * sprite.afstand),
+                    dstrect=(
+                        screen_x , screen_y, len(geschikte_i_waarden),
+                        sprite_size_hoogte))
 
-        for kolom, breedte, initieel in tuplelijst:
-            if breedte + kolom != BREEDTE:
-                breedte2 = breedte
-            else:
-                breedte2 = sprite_size_breedte
+
+        elif (geschikte_i_waarden[len(geschikte_i_waarden)-1]) == sprite_size_breedte-1:
+
             renderer.copy(image, srcrect=(
-                initieel / sprite_size_breedte * spriteBreedte, 0, breedte * sprite.afstand,
-                sprite_size_hoogte * sprite.afstand),
-                          dstrect=(kolom, screen_y, breedte2, sprite_size_hoogte))
+            geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, len(geschikte_i_waarden) * sprite.afstand, sprite_size_hoogte * sprite.afstand),
+                          dstrect=(screen_x+sprite_size_breedte-len(geschikte_i_waarden), screen_y, len(geschikte_i_waarden), sprite_size_hoogte))
+
+        else:
+            print(geschikte_i_waarden[0])
+            renderer.copy(image,   srcrect=(
+                           geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, len(geschikte_i_waarden) * sprite.afstand, sprite_size_hoogte * sprite.afstand),
+                          dstrect=(
+                          screen_x  + geschikte_i_waarden[0], screen_y, len(geschikte_i_waarden),
+                          sprite_size_hoogte))
 
 
 def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
@@ -807,8 +816,8 @@ def main():
         autos.append(image)
 
     sprites.append(Sprite(tree, bomen, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
-    sprites.append(Sprite(tree, bomen, sprite_map_png, 50.5 * 9, 48.2 * 9, HOOGTE))
-    sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
+    #sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
+    #sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
     draai_sprites(sprites[0],138)
 
     # Eerste Auto aanmaken
@@ -1000,7 +1009,7 @@ def main():
             if sprites == []:
                 0
             else:
-                 #draai_sprites(sprites[1], 1)
+                #draai_sprites(sprites[0], 1)
                  draai_sprites(speler.car,1)
             print(str(speler.p_x)+" "+str(speler.p_y))
             # Toon de fps
