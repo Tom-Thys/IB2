@@ -5,7 +5,7 @@ from random import randint
 from Classes import Deur
 from PIL import Image
 
-from Classes import Player
+
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
@@ -103,28 +103,41 @@ def world_generation(openingen=[]):
     kaart[-3:, :3] = kleur
     kleur = randint(-1, 30)
     kaart[:3, -3:] = (kleur % 4) + 2
-    if len(openingen) < 4:
-        extra_openingen = randint(0, 4 - len(openingen))  # Extra openingen
-        # print(extra_openingen)
+    if len(openingen) < 3:
+        extra_openingen = randint(0, 3 - len(openingen))  # Extra openingen
+        if extra_openingen == 0 and len(openingen) <= 1:
+            extra_openingen = randint(1,3)
         for i in range(extra_openingen):
             loops = 0
-            while loops < 5:
+            while loops < 6:
                 loops += 1
                 opening = randint(1, 4)
                 if opening not in openingen:
                     openingen.append(opening)
                     continue
-        for i in range(1, 5):
-            if i not in openingen:
-                kleur = randint(2, 6)
-                if i == 1:
-                    kaart[3:-3, :3] = 6
-                elif i == 2:
-                    kaart[:3, 3:-3] = 6
-                elif i == 3:
-                    kaart[3:-3, -3:] = 6
-                else:
-                    kaart[-3:, 3:-3] = 6
+    elif len(openingen) == 3:
+        openingen.pop(randint(0,2))
+        if randint(0,10) == 0:
+            openingen.pop(randint(0,1))
+            if randint(0,20) == 0:
+                openingen.pop(0)
+    else:
+        openingen.pop(randint(0, 3))
+        if randint(0, 2) == 0:
+            openingen.pop(randint(0, 2))
+            if randint(0, 6) == 6:
+                openingen.pop(randint(0, 1))
+    for i in range(1, 5):
+        if i not in openingen:
+            kleur = randint(2, 6)
+            if i == 1:
+                kaart[3:-3, :3] = 6
+            elif i == 2:
+                kaart[:3, 3:-3] = 6
+            elif i == 3:
+                kaart[3:-3, -3:] = 6
+            else:
+                kaart[-3:, 3:-3] = 6
     #print(kaart)
     return kaart, openingen
 
@@ -172,7 +185,7 @@ class Tile():
 
 class Map():
     def __init__(self):
-        self.tile_map = np.full((111, 111), Tile((0, 0)))
+        self.tile_map = np.full((120, 120), Tile((0, 0)))
         self.tile_map[:, :] = 0
         self.tiles_size = np.shape(self.tile_map)
         y, x = self.tiles_size
@@ -183,7 +196,8 @@ class Map():
     def start(self):
         y, x = np.shape(self.tile_map)
         self.added = []
-        map = np.ones((9, 9), dtype='int32')
+        #map = np.ones((9, 9), dtype='int32')
+        map = np.full((9, 9), fill_value=7, dtype='int32')
         openingen = []
         surrounding_tiles = Tile((map, openingen))
         self.tile_map[0, :] = surrounding_tiles
@@ -205,7 +219,10 @@ class Map():
         tile_3 = Tile(world_generation([1, 2, 3, 4]))
         self.tile_map[48, 50] = tile_3
         self.tile_map[49, 50] = tile_2
+        self.tile_map[49, 51] = tile_2
+        self.tile_map[49, 49] = tile_2
         self.tile_map[50, 50] = intiele_tile
+        #self.world_map[450,450] = -5
         self.size = (np.shape(map_initieel))[0]
         for i in range(1, x - 1):
             for j in range(1, y - 1):
@@ -216,7 +233,7 @@ class Map():
         rgbimg = Image.new("RGBA", im.size)
         rgbimg.paste(im)
         new_im = converter(rgbimg)
-        new_im.save('map.png')
+        new_im.save('mappen\map.png')
 
     def update(self):
         for x, y in self.added:
