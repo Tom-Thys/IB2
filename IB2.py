@@ -412,7 +412,7 @@ def render_sprites(renderer, sprites, player, d):
 
     for i,sprite in enumerate(sprites):
         if sprite.afstand >= max_dist: continue;
-        if sprite.update():
+        if sprite.update(world_map):
             sprites.pop(i)
             continue
 
@@ -421,7 +421,8 @@ def render_sprites(renderer, sprites, player, d):
         ry = sprite.y - player.p_y
         hoek_sprite = math.atan2(ry , rx)%(math.pi*2)
         player_hoek = math.atan2(speler.p_x,speler.p_y)%(math.pi*2)
-        #print("Player:" + str(player_hoek))
+        print("Player:" + str(player_hoek))
+        print("Sprite:" + str(hoek_sprite))
 
 
         hoek_verschil = abs(player.hoek - hoek_sprite)
@@ -432,7 +433,8 @@ def render_sprites(renderer, sprites, player, d):
 
         grond_hoek_verschil = abs(player_hoek - hoek_sprite)
         fout = False
-        if (player_hoek <= 0.79 and hoek_sprite <= 0.79):
+
+        if (player_hoek <= 0.8 and hoek_sprite <= 0.79):
             fout = True
 
         if sprite.images == []:
@@ -1046,7 +1048,8 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
                 0
             else:
                 #draai_sprites(sprites[0], 1)
-                 draai_sprites(speler.car,1)
+                 #draai_sprites(speler.car,1)
+                0
             #print(str(speler.p_x)+" "+str(speler.p_y))
             # Toon de fps
             #next(fps_generator)
