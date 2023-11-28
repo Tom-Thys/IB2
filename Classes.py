@@ -54,7 +54,7 @@ class Doos_Sprite(Sprite):
     def update(self, world_map):
         self.tick += 1
         if self.height < 800:
-            time = self.tick / 50
+            time = self.tick / 5
             self.height -= (1 / 2) * (4 * time - time**2)
             x = self.x + 0.1 * self.vector[0]
             y = self.y + 0.1 * self.vector[1]
@@ -81,6 +81,7 @@ class Player:
         """Player is gedefinieerd door zijn start x-, y-coördinaten (floats), kijkhoek (rad) en
         de breedte (int) van het scherm dat hij opneemt"""
         self.position = [math.floor(x), math.floor(y)]
+        self.oude_pos = (x,y)
         self.p_x = x
         self.p_y = y
         self.hoek = hoek
@@ -129,6 +130,7 @@ class Player:
                 self.p_y = y
             if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and world_map[math.floor(self.p_y)][math.floor(x_2)] <= 0:
                 self.p_x = x
+        self.oude_pos = (self.x, self.y)
         self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)
 
@@ -153,6 +155,7 @@ class Player:
                 self.p_y = y
             if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and world_map[math.floor(self.p_y)][math.floor(x_2)] <= 0:
                 self.p_x = x
+        self.oude_pos = (self.x, self.y)
         self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)
 
