@@ -421,8 +421,7 @@ def render_sprites(renderer, sprites, player, d):
         ry = sprite.y - player.p_y
         hoek_sprite = math.atan2(ry , rx)%(math.pi*2)
         player_hoek = math.atan2(speler.p_x,speler.p_y)%(math.pi*2)
-        print("Player:" + str(player_hoek))
-        print("Sprite:" + str(hoek_sprite))
+        #print("Player:" + str(player_hoek))
 
 
         hoek_verschil = abs(player.hoek - hoek_sprite)
@@ -513,7 +512,7 @@ def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
     if index == 0:
         index += 1
     if fout:
-        print("Fout")
+        #print("Fout")
         index = 360 - index
     #print (index)
     image = sprite.images[index]
@@ -847,7 +846,7 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
     sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE, schaal= 0.2))
     sprites.append(speler.car)
     # sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
-    draai_sprites(sprites[0], 138)
+    #draai_sprites(sprites[0], 138)
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])

@@ -54,7 +54,7 @@ class Doos_Sprite(Sprite):
     def update(self, world_map):
         self.tick += 1
         if self.height < 800:
-            time = self.tick / 50
+            time = self.tick / 5
             self.height -= (1 / 2) * (4 * time - time**2)
             x = self.x + 0.1 * self.vector[0]
             y = self.y + 0.1 * self.vector[1]
@@ -81,6 +81,7 @@ class Player:
         """Player is gedefinieerd door zijn start x-, y-coördinaten (floats), kijkhoek (rad) en
         de breedte (int) van het scherm dat hij opneemt"""
         self.position = [math.floor(x), math.floor(y)]
+        self.oude_pos = (x,y)
         self.p_x = x
         self.p_y = y
         self.hoek = hoek
@@ -110,6 +111,7 @@ class Player:
     def move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
+        self.oude_pos = (self.p_x, self.p_y)
         if self.in_auto:
             if richting == 1 and stap > 0:
                 self.car.accelerate()
@@ -135,6 +137,7 @@ class Player:
     def sideways_move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
+        self.oude_pos = (self.p_x, self.p_y)
         if self.in_auto:
             self.car.stuurhoek = (stap * (richting * -1) * self.car.speed * self.car.turning_mult)
             self.draaien(self.car.stuurhoek)
