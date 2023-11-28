@@ -465,8 +465,9 @@ def render_sprites(renderer, sprites, player, d):
         print(np.linalg.solve(a,b)[1])
         c = np.linalg.solve(a,b)[1]"""
 
-        screen_y = int((sprite.height - sprite_size_hoogte) / 2) # wordt in het midden gezet
+        screen_y = int((sprite.height - sprite_size_hoogte) / 2) + 0.4/sprite_distance*850 - 1/sprite_distance*40# wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
+
 
 
         geschikte_i_waarden = []
@@ -839,11 +840,11 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
         #polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
 
     # Eerste Auto aanmaken
-    auto = Auto(tree, autos, sprite_map_png, 452, 440, HOOGTE, type=0, hp=10, schaal=0.2)
+    auto = Auto(tree, autos, sprite_map_png, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
     speler.car = auto
 
     sprites.append(Sprite(tree, autos, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
-    sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE))
+    sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE, schaal= 0.2))
     sprites.append(speler.car)
     # sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
     draai_sprites(sprites[0], 138)
