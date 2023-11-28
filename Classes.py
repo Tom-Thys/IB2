@@ -54,8 +54,8 @@ class Doos_Sprite(Sprite):
     def update(self, world_map):
         self.tick += 1
         if self.height < 800:
-            time = self.tick / 5
-            self.height -= (1 / 2) * (4 * time - time**2)
+            time = self.tick / 50
+            self.height += 4 * time
             x = self.x + 0.1 * self.vector[0]
             y = self.y + 0.1 * self.vector[1]
             atm = 0.3  # afstand_tot_muur zelfde bij auto
@@ -182,7 +182,7 @@ class Player:
         """Maakt Doos sprite aan en update deze zodat een paar keer voor betere visuals
         :return: Doos_Sprite"""
         self.laatste_doos = time.time()
-        sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, 600, self.r_speler / 5)
+        sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, -600, self.r_speler / 5)
         for i in range(51):
             sprite.update(world_map)
         return sprite
@@ -443,6 +443,7 @@ class Auto(Sprite):
                 speler.p_x = self.x - 0.5
                 speler.p_y = self.y - 0.5
                 speler.position[:] = math.floor(speler.p_x), math.floor(speler.p_y)
+        speler.aantal_hartjes -= 1
 
     def hitting(self, object):
         self.hp -= 1

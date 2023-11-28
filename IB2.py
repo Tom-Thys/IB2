@@ -574,6 +574,8 @@ def collision_detection(renderer, speler,sprites,hartje):
             i += 1
     else:
         hartjes = speler.aantal_hartjes
+        if hartjes == 0:
+            return True
         i = 1
         while i <= hartjes:
             x_pos = BREEDTE - 50  - 50*i
@@ -787,7 +789,8 @@ def quit(button, event):
 
 #@profile
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, eindbestemming
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
+    global eindbestemming, paused, show_map
     map_positie = [50, world_map.shape[0]-50]
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
@@ -812,6 +815,12 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # Spritefactory aanmaken
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
     # soorten muren opslaan in sdl2 textures
+
+    achtergrond = factory.from_image(resources.get_path("game_main_menu_wh_tekst.png"))
+    renderer.copy(achtergrond)
+    renderer.present()
+
+
     soort_muren = [
         factory.from_image(resources.get_path("muur_test.png")),  # 1
         factory.from_image(resources.get_path("Red_house.png")),  # 2
@@ -871,13 +880,13 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     fps_generator = show_fps(font, renderer)
 
 
-    achtergrond = factory.from_image(resources.get_path("game_main_menu_wh_tekst.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
     pauze_menu = factory.from_image(resources.get_path("pause_menu.png"))
     handen_doos = factory.from_image(resources.get_path("box_hands.png"))
 
     map_png = factory.from_image(resources_mappen.get_path("map.png"))
+    pngs_mappen = (map_png,gps_grote_map)
 
     #UI
     uifactory = sdl2.ext.UIFactory(factory)
@@ -979,7 +988,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             if np.any(z_k) != 0:
                 z_renderen(renderer, z_d, z_v, z_k, muren_info)
             render_sprites(renderer, sprites, speler, d)
-            collision_detection(renderer, speler, sprites, hartje)
+            if collision_detection(renderer, speler, sprites, hartje):
+                print("GAME OVER")
+                show_map = True
+                speler.aantal_hartjes += 5
             # t.append(time.time()-t1)
             verwerk_input(delta)
             if pad == None:
@@ -1020,48 +1032,19 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                               dstrect=(pauze_positie[0], pauze_positie[1], 80, 50))
                 menu_nav()
             elif show_map:
-                """linker_bovenhoek_x = speler.p_x - afstand if speler.p_x - afstand >= 0 else 0
-                linker_bovenhoek_y = speler.p_y - afstand if speler.p_y - afstand >= 0 else 0
-                #speler_png_x = BREEDTE//2
-                #speler_png_y = HOOGTE//2-10
-                speler_png_x = BREEDTE//2
-                speler_png_y = HOOGTE//2-10
-                if afstand + speler.p_x > np.size(world_map, 1):
-                    linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand
-                if afstand + speler.p_y > np.size(world_map, 0):
-                    linker_bovenhoek_y = np.size(world_map, 0) - 2*afstand """
-
-                linker_bovenhoek_x = map_positie[0]-afstand_map if map_positie[0]-afstand_map >= 0 else 0
-                linker_bovenhoek_y = map_positie[1]-afstand_map if map_positie[1]-afstand_map >= 0 else 0
-                speler_grootte = int((-17/190)*(afstand_map-10)+20)
-                speler_png_x = (BREEDTE//2)-2*(map_positie[0]-speler.position[0])+speler_grootte//2
-                speler_png_y = (HOOGTE//2)+(map_positie[1]-speler.position[1])-speler_grootte
-                if afstand_map + map_positie[0] > np.size(world_map, 1):
-                    linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand_map
-                if afstand_map + map_positie[1] > np.size(world_map, 0):
-                    linker_bovenhoek_y = np.size(world_map, 0) - 2*afstand_map
-                renderer.copy(gps_grote_map,
-                              srcrect=(0, 0, gps_grote_map.size[0], gps_grote_map.size[1]),
-                              dstrect=(80, 70, BREEDTE-120, HOOGTE-140),
-                              flip=2)
-                renderer.copy(map_png,
-                              srcrect=(linker_bovenhoek_x, linker_bovenhoek_y, 2*afstand_map, 2*afstand_map),
-                              dstrect=(160, 112, BREEDTE-300, HOOGTE-222),
-                              flip=2)
-                renderer.copy(speler.png,
-                              dstrect=(speler_png_x, speler_png_y, speler_grootte, speler_grootte),
-                              angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)
+                map_settings = (map_positie,afstand_map,np.shape(world_map))
+                render_map(renderer, pngs_mappen, map_settings, speler, sprites)
                 menu_nav()
             else:
                 positie_check()
                 next(fps_generator)
                 map_positie = list(speler.position)
             if sprites == []:
-                0
+                pass
             else:
                 #draai_sprites(sprites[0], 1)
                  #draai_sprites(speler.car,1)
-                0
+                pass
             #print(str(speler.p_x)+" "+str(speler.p_y))
             # Toon de fps
             #next(fps_generator)

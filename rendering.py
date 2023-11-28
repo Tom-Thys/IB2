@@ -200,3 +200,28 @@ def draw_path(renderer, kleuren_textures, path, speler, packet):
                 renderer.copy(kleuren_textures[7],
                               srcrect=(0, 0, 1, 1),
                               dstrect=(x, y, unit_d / 1.5, unit_d / 1.5))
+
+
+def render_map(renderer,pngs_mappen, map_settings,speler,sprites):
+    map_png, gps_grote_map = pngs_mappen
+    map_positie, afstand_map, worldshape = map_settings
+
+    linker_bovenhoek_x = map_positie[0] - afstand_map if map_positie[0] - afstand_map >= 0 else 0
+    linker_bovenhoek_y = map_positie[1] - afstand_map if map_positie[1] - afstand_map >= 0 else 0
+
+    # speler_grootte = int((-17/190)*(afstand_map-10)+20)
+    # speler_png_x = (BREEDTE//2)-2*(map_positie[0]-speler.position[0])+speler_grootte//2
+    # speler_png_y = (HOOGTE//2)+(map_positie[1]-speler.position[1])-speler_grootte
+
+    if afstand_map + map_positie[0] > worldshape[1]:
+        linker_bovenhoek_x = worldshape[1] - 2 * afstand_map
+    if afstand_map + map_positie[1] > worldshape[0]:
+        linker_bovenhoek_y = worldshape[0] - 2 * afstand_map
+    renderer.copy(gps_grote_map,
+                  srcrect=(0, 0, gps_grote_map.size[0], gps_grote_map.size[1]),
+                  dstrect=(80, 70, BREEDTE - 120, HOOGTE - 140),
+                  flip=2)
+    renderer.copy(map_png,
+                  srcrect=(linker_bovenhoek_x, linker_bovenhoek_y, 2 * afstand_map, 2 * afstand_map),
+                  dstrect=(160, 112, BREEDTE - 300, HOOGTE - 222),
+                  flip=2)

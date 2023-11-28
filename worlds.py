@@ -45,16 +45,16 @@ kleuren = [
     sdl2.ext.Color(0, 255, 0, 0),  # 2 = Groen
     sdl2.ext.Color(0, 0, 255, 100),  # 3 = Blauw
     sdl2.ext.Color(225, 165, 0, 0),  # 4 = oranje
-    sdl2.ext.Color(64, 64, 64, 100),  # 4 = Donker grijs
-    sdl2.ext.Color(128, 128, 128, 100),  # 5 = Grijs
-    sdl2.ext.Color(192, 192, 192, 100),  # 6 = Licht grijs
-    sdl2.ext.Color(255, 255, 255, 100),  # 7 = Wit
-    sdl2.ext.Color(120, 200, 250, 100),  # 8 = Blauw_lucht
-    sdl2.ext.Color(106, 13, 173, 0)  # 9 = Purple
+    sdl2.ext.Color(64, 64, 64, 100),  # 5 = Donker grijs
+    sdl2.ext.Color(128, 128, 128, 100),  # 6 = Grijs
+    sdl2.ext.Color(192, 192, 192, 100),  # 7 = Licht grijs
+    sdl2.ext.Color(255, 255, 255, 100),  # 8 = Wit
+    sdl2.ext.Color(120, 200, 250, 100),  # 9 = Blauw_lucht
+    sdl2.ext.Color(106, 13, 173, 100),  # 10 = Purple
+    sdl2.ext.Color( 255, 255, 0, 100),  # 11 = Yellow
 ]
 colors = [0, 0, 0, 102, 102, 102, 176, 176, 176, 255, 255, 255]
-kleur_dict = {0: [0, 0, 0, 0], 25: [255, 0, 20, 0], 50: [0, 255, 0, 0], 75: [0, 0, 255, 100], 100: [225, 165, 0, 0], 125: [64, 64, 64, 100], 150: [128, 128, 128, 100], 175: [192, 192, 192, 100], 200: [255, 255, 255, 100], 225: [120, 200, 250, 100], 250: [106, 13, 173, 0]}
-
+kleur_dict = {0: (0, 0, 0), 25: (255, 0, 20), 50: (255, 0, 20), 75: (106, 13, 173), 100: (255, 255, 0), 125: (128, 128, 128), 150: (0, 255, 0), 175: (255, 0, 20)}
 def make_world_png(worldmap, unit_d=1):
     """
     Creëert een PNG die weer geeft, welk gebouw waar staat op de wereldmap
@@ -158,6 +158,7 @@ def converter(input_image):
 
     for i in range(11):
         mask = r_in == (i*25)
+
         if np.any(mask):
             r_out[mask] = kleur_dict[i * 25][0]
             g_out[mask] = kleur_dict[i * 25][1]
@@ -222,6 +223,12 @@ class Map():
         self.tile_map[49, 51] = tile_2
         self.tile_map[49, 49] = tile_2
         self.tile_map[50, 50] = intiele_tile
+        if False:
+            for i in range(5):
+                x = randint(1,self.tiles_size[1]-1)
+                y = randint(1, self.tiles_size[0]-1)
+                print(x,y)
+                self.tile_map[y,x] = Tile(world_generation([1, 2, 3, 4]))
         #self.world_map[450,450] = -5
         self.size = (np.shape(map_initieel))[0]
         for i in range(1, x - 1):
@@ -229,11 +236,12 @@ class Map():
                 self.direct_map_making(i, j)
         self.update()
 
-        im = Image.fromarray(self.world_map * 25)
-        rgbimg = Image.new("RGBA", im.size)
-        rgbimg.paste(im)
-        new_im = converter(rgbimg)
-        new_im.save('mappen\map.png')
+        if True:
+            im = Image.fromarray(self.world_map * 25)
+            rgbimg = Image.new("RGBA", im.size)
+            rgbimg.paste(im)
+            new_im = converter(rgbimg)
+            new_im.save('mappen\map.png')
 
     def update(self):
         for x, y in self.added:
@@ -243,6 +251,11 @@ class Map():
 
     def direct_map_making(self, x_pos, y_pos):
         if self.tile_map[x_pos, y_pos] == 0:
+            if randint(0,100) == 0:
+                self.tile_map[x_pos, y_pos] = Tile((np.zeros((9, 9), dtype='int32'), []))
+                self.added.append((x_pos, y_pos))
+                return
+
             openingen = []
             if self.tile_map[x_pos + 1, y_pos] != 0:
                 if 3 in self.tile_map[x_pos + 1, y_pos].openingen:
@@ -258,6 +271,7 @@ class Map():
                     openingen.append(2)
             self.tile_map[x_pos, y_pos] = Tile(world_generation(openingen))
             self.added.append((x_pos, y_pos))
+
 
     def map_making(self, speler):
         lengte = 7
