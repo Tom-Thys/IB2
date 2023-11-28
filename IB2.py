@@ -8,7 +8,7 @@ import random
 import numpy as np
 import heapq
 import threading
-from multiprocessing import Process, Manager
+from multiprocessing import Process, Manager, set_start_method
 import sdl2.ext
 import sys
 import sdl2.sdlimage
@@ -1033,9 +1033,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
                 linker_bovenhoek_x = map_positie[0]-afstand_map if map_positie[0]-afstand_map >= 0 else 0
                 linker_bovenhoek_y = map_positie[1]-afstand_map if map_positie[1]-afstand_map >= 0 else 0
-                #speler_grootte = int((-17/190)*(afstand_map-10)+20)
-                #speler_png_x = (BREEDTE//2)-2*(map_positie[0]-speler.position[0])+speler_grootte//2
-                #speler_png_y = (HOOGTE//2)+(map_positie[1]-speler.position[1])-speler_grootte
+                speler_grootte = int((-17/190)*(afstand_map-10)+20)
+                speler_png_x = (BREEDTE//2)-2*(map_positie[0]-speler.position[0])+speler_grootte//2
+                speler_png_y = (HOOGTE//2)+(map_positie[1]-speler.position[1])-speler_grootte
                 if afstand_map + map_positie[0] > np.size(world_map, 1):
                     linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand_map
                 if afstand_map + map_positie[1] > np.size(world_map, 0):
@@ -1048,9 +1048,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                               srcrect=(linker_bovenhoek_x, linker_bovenhoek_y, 2*afstand_map, 2*afstand_map),
                               dstrect=(160, 112, BREEDTE-300, HOOGTE-222),
                               flip=2)
-                """renderer.copy(speler.png,
+                renderer.copy(speler.png,
                               dstrect=(speler_png_x, speler_png_y, speler_grootte, speler_grootte),
-                              angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)"""
+                              angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)
                 menu_nav()
             else:
                 positie_check()
@@ -1075,7 +1075,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
 
 if __name__ == '__main__':
-
     with Manager() as manager:
         shared_eindbestemming = manager.list(eindbestemming)
         shared_spelerpositie = manager.list(speler.position)
@@ -1088,11 +1087,10 @@ if __name__ == '__main__':
 
         # profiler = cProfile.Profile()
         # profiler.enable()
-        p1 = Process(target=main, args=(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie))
-        p2 = Process(target=pathfinding_gps2, args=(shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie), daemon=True)
-        p1.start()
+        p2 = Process(target=pathfinding_gps2, args=(shared_world_map, shared_pad,
+                                                    shared_eindbestemming, shared_spelerpositie), daemon=True)
         p2.start()
-        p1.join()
+        main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie)
         p2.kill()
         # main()
         # profiler.disable()
