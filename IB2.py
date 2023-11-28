@@ -61,6 +61,7 @@ game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
 paused = False
 show_map = False
+verandering = 1
 main_menu_index = 0
 settings_menu_index = 0
 main_menu_positie = [0, 0]
@@ -403,6 +404,26 @@ def wheelSprite(renderer, sprite, car):
     renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250), angle=hoek)
     car.stuurhoek = 0
 
+
+def handen_sprite(renderer, handen_doos):
+    global verandering
+    x, y = speler.p_x, speler.p_y
+    oud_x, oud_y = speler.oude_pos
+    if speler.isWalking:
+        if verandering < 24:
+            verandering += 1
+        else:
+            verandering = 1
+    else:
+        if verandering > 1:
+            verandering -= 1
+        else:
+            verandering = 1
+    print(verandering)
+    renderer.copy(handen_doos,
+                  srcrect=(0, 0, handen_doos.size[0], handen_doos.size[1]),
+                  dstrect=(200 + 8*math.sin(((2*math.pi)/24)*verandering), 230, BREEDTE - 400, HOOGTE))
+
 def render_sprites(renderer, sprites, player, d):
     global world_map
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player))  # Sorteren op afstand
@@ -669,14 +690,13 @@ def heuristiek(a, b):
     return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
 
 
-def pathfinding_gps2(lock, world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
+def pathfinding_gps2(world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     time.sleep(1)  # wachten tot game volledig gestart en eindbestemming besloten is
     oud_speler_positie = [0, 0]
     oud_eindbestemming = [0, 0]
     while True:
-        with lock:
-            spelerpos = tuple(shared_spelerpositie)
-            eindbestemming = tuple(shared_eindbestemming)
+        spelerpos = tuple(shared_spelerpositie)
+        eindbestemming = tuple(shared_eindbestemming)
         if abs(oud_speler_positie[0]-spelerpos[0]) > 1 or abs(oud_speler_positie[1]-spelerpos[1]) > 1\
                 or (eindbestemming[0] != oud_eindbestemming[0] or eindbestemming[1] != oud_eindbestemming[1]):
             #print(f"pad: {pad}, best: {eindbestemming}")
@@ -701,8 +721,7 @@ def pathfinding_gps2(lock, world_map, shared_pad, shared_eindbestemming, shared_
                     if shared_pad[:] == pad[:]:
                         time.sleep(0.5)
                     else:
-                        with lock:
-                            shared_pad[:] = pad[:]
+                        shared_pad[:] = pad[:]
                     break
                 close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
@@ -767,7 +786,7 @@ def quit(button, event):
 
 
 #@profile
-def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
+def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, eindbestemming
     map_positie = [50, world_map.shape[0]-50]
     world_map = shared_world_map
@@ -775,8 +794,7 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
     sdl2.ext.init()
     bestemming_selector("start")
     eindbestemming = bestemming_selector()
-    with lock:
-        shared_eindbestemming[:] = eindbestemming[:]
+    shared_eindbestemming[:] = eindbestemming[:]
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
     window.show()
@@ -933,9 +951,6 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
         if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
             muziek_spelen("game start", channel=3)
-            #pad = pathfinding_gps2((50 * 9, 50 * 9))
-            #pathfinding_gps2()
-            #pad = pathfinding_gps2(eindbestemming)
         if game_state != 1:
             config.set("settings", "volume",
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
@@ -945,10 +960,10 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
                 config.write(f)
 
         while game_state == 2 and not moet_afsluiten:
-            with lock:
-                shared_spelerpositie[:] = speler.position[:]
-                shared_eindbestemming[:] = list(eindbestemming[:])
-                pad[:] = shared_pad[:]
+            shared_spelerpositie[:] = speler.position[:]
+            shared_eindbestemming[:] = list(eindbestemming[:])
+            pad[:] = shared_pad[:]
+            speler.idle()
             for key in deuren:
                 deuren[key].update()
             # Onthoud de huidige tijd
@@ -966,7 +981,7 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
             render_sprites(renderer, sprites, speler, d)
             collision_detection(renderer, speler, sprites, hartje)
             # t.append(time.time()-t1)
-
+            verwerk_input(delta)
             if pad == None:
                 print(f"EINDBESTEMMING NONE: {eindbestemming}")
                 print('NONE')
@@ -994,10 +1009,8 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
                     pass
                     # reversing beep ofz
 
-            elif speler.car != 0:
-                renderer.copy(handen_doos,
-                              srcrect=(0, 0, handen_doos.size[0], handen_doos.size[1]),
-                              dstrect=(200, 230, BREEDTE-400, HOOGTE))
+            elif not speler.in_auto:
+                handen_sprite(renderer, handen_doos)
             if paused:
                 renderer.copy(pauze_menu,
                               srcrect=(0, 0, pauze_menu.size[0], pauze_menu.size[1]),
@@ -1043,7 +1056,6 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
                 positie_check()
                 next(fps_generator)
                 map_positie = list(speler.position)
-            verwerk_input(delta)
             if sprites == []:
                 0
             else:
@@ -1063,24 +1075,26 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
 
 
 if __name__ == '__main__':
-    shared_eindbestemming = Manager().list(eindbestemming)
-    shared_spelerpositie = Manager().list(speler.position)
-    shared_pad = Manager().list(pad)
 
-    inf_world = Map()
-    inf_world.start()
-    # inf_world.map_making(speler)
-    shared_world_map = inf_world.world_map
+    with Manager() as manager:
+        shared_eindbestemming = manager.list(eindbestemming)
+        shared_spelerpositie = manager.list(speler.position)
+        shared_pad = manager.list(pad)
 
-    # profiler = cProfile.Profile()
-    # profiler.enable()
-    lock = Manager().Lock()
-    p1 = Process(target=main, args=(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie))
-    p2 = Process(target=pathfinding_gps2, args=(lock, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie), daemon=True)
-    p1.start()
-    p2.start()
-    p1.join()
-    # main()
-    # profiler.disable()
-    # stats = pstats.Stats(profiler)
-    # stats.dump_stats('data.prof')
+        inf_world = Map()
+        inf_world.start()
+        # inf_world.map_making(speler)
+        shared_world_map = inf_world.world_map
+
+        # profiler = cProfile.Profile()
+        # profiler.enable()
+        p1 = Process(target=main, args=(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie))
+        p2 = Process(target=pathfinding_gps2, args=(shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie), daemon=True)
+        p1.start()
+        p2.start()
+        p1.join()
+        p2.kill()
+        # main()
+        # profiler.disable()
+        # stats = pstats.Stats(profiler)
+        # stats.dump_stats('data.prof')

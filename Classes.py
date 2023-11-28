@@ -96,6 +96,7 @@ class Player:
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)
         self.initial = (x, y, hoek)
         self.laatste_doos = 0
+        self.isWalking = False
 
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""
@@ -118,6 +119,7 @@ class Player:
             else:
                 self.car.brake()
         else:
+            self.isWalking = True
             x = (self.p_x + richting * stap * self.r_speler[0]) % x_dim
             y = (self.p_y + richting * stap * self.r_speler[1]) % y_dim
             atm = 0.3  # afstand_tot_muur zelfde bij auto
@@ -143,6 +145,7 @@ class Player:
             self.draaien(self.car.stuurhoek)
             self.car.draaien(self.car.stuurhoek)
         else:
+            self.isWalking = True
             x = (self.p_x + richting * stap * self.r_camera[0]) % x_dim
             y = (self.p_y + richting * stap * self.r_camera[1]) % y_dim
             atm = 0.3  # afstand_tot_muur zelfde bij auto
@@ -158,6 +161,10 @@ class Player:
                 self.p_x = x
         self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)
+
+
+    def idle(self):
+        self.isWalking = False
 
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""
