@@ -111,7 +111,7 @@ class Player:
     def move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
-        self.oude_pos = (self.x, self.y)
+        self.oude_pos = (self.p_x, self.p_y)
         if self.in_auto:
             if richting == 1 and stap > 0:
                 self.car.accelerate()
@@ -137,7 +137,7 @@ class Player:
     def sideways_move(self, richting, stap, world_map):
         """Kijkt of speler naar voor kan bewegen zo niet of hij langs de muur kan schuiven"""
         y_dim, x_dim = np.shape(world_map)
-        self.oude_pos = (self.x, self.y)
+        self.oude_pos = (self.p_x, self.p_y)
         if self.in_auto:
             self.car.stuurhoek = (stap * (richting * -1) * self.car.speed * self.car.turning_mult)
             self.draaien(self.car.stuurhoek)
