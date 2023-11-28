@@ -22,7 +22,7 @@ def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
     height = 200
     midden = 100
     speler_grootte = 10
-    afstand = 20
+    afstand = 30
     y_dim, x_dim = Map.world_size
 
     hoek = 2 * math.pi - speler.hoek / math.pi * 180 - 48

@@ -2,6 +2,7 @@ import math
 import time
 
 import numpy as np
+from Code_niet_langer_in_gebruik import pathfinding_gps
 
 # from line_profiler_pycharm import profile
 # from numba import njit
@@ -15,7 +16,7 @@ class Sprite:
         self.images = images
         self.image = image  # The image of the sprite
         self.map_png = map_png
-        self.map_grootte = 16
+        self.map_grootte = 9
         self.x = x  # The x-coordinate of the sprite
         self.y = y  # The y-coordinate of the sprite
         self.position = (x, y)
@@ -45,7 +46,7 @@ class Doos_Sprite(Sprite):
         super().__init__(image, [], map_png, x, y, height)
         self.deletable = deletable
         self.vector = vector
-        self.map_grootte = 4
+        self.map_grootte = 2
         self.tick = 1
         self.schadelijk = True
         self.is_doos = True
@@ -148,7 +149,6 @@ class Player:
             if world_map[math.floor(y)][math.floor(x)] <= 0 and world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
                 self.p_x = x
                 self.p_y = y
-
             if world_map[math.floor(y)][math.floor(self.p_x)] <= 0 and world_map[math.floor(y_2)][math.floor(self.p_x)] <= 0:
                 self.p_y = y
             if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and world_map[math.floor(self.p_y)][math.floor(x_2)] <= 0:
@@ -278,10 +278,15 @@ class Player:
     def reset(self):
         self.p_x = self.initial[0]
         self.p_y = self.initial[1]
+        self.position[:] = math.floor(self.p_x),math.floor(self.p_y)
         self.hoek = self.initial[2]
         self.r_speler = np.array([math.cos(self.hoek), math.sin(self.hoek)])
         self.r_camera = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
         self.aanmaak_r_stralen()
+        if self.in_auto:
+            self.car.hoek = self.hoek
+            self.car.x = self.p_x
+            self.car.y = self.p_y
 
     def renderen(self, renderer, world_map):
         if self.in_auto:
@@ -308,6 +313,7 @@ class Auto(Sprite):
         self.stuurhoek = 0
         self.versnelling = "1"
         self.input_delay = 0
+        self.crash_time = 0
 
     def beweeg(self, world_map, speler):
         """Update positie auto"""
@@ -317,9 +323,11 @@ class Auto(Sprite):
         if self.speed == 0:
             self.turning_mult = 0
         elif self.speed < 0:
-            self.turning_mult = 50
+            self.turning_mult = 40
         else:
             self.turning_mult = (self.optrek/self.speed)**1.2 * 500
+        if self.player_inside == False:
+            self.brake()
 
         y_dim, x_dim = np.shape(world_map)
         x = self.x + self.speed * self.vector[0]
@@ -343,34 +351,30 @@ class Auto(Sprite):
                 speler.p_y = y
                 speler.position[:] = math.floor(x), math.floor(y)
         else:
-            if world_map[math.floor(y)][math.floor(self.x)] <= 0 and world_map[math.floor(y_2)][math.floor(self.x)] <= 0:
-                self.y = y
-                self.position = (math.floor(self.x), math.floor(y))
-                self.vector[1] = 0
-                """if self.vector[1] > 0:
-                    self.hoek = math.pi/2
-                elif self.vector[1] != 0:
-                    self.hoek = -math.pi/2
-                veranderingshoek = self.hoek - speler.hoek
-                speler.draaien(veranderingshoek)"""
-            if world_map[math.floor(self.y)][math.floor(x)] <= 0 and world_map[math.floor(self.y)][math.floor(x_2)] <= 0:
-                self.x = x
-                self.position = (math.floor(x), math.floor(self.y))
-                self.vector[0] = 0
-                """if self.vector[0] > 0:
-                    self.hoek = 0
-                elif self.vector[1] != 0:
-                    self.hoek = math.pi
-                veranderingshoek = self.hoek - speler.hoek
-                speler.draaien(veranderingshoek)
-            """
-            print("COLLISION", self.hp)
-            self.crashed = True
-            self.speed = 0
-            self.hp -= 1
-            if self.hp == 0:
-                self.player_leaving(world_map, speler)
-                self.hp = 9
+            if not self.crash_time < time.time() - 0.2:
+                if world_map[math.floor(y)][math.floor(self.x)] <= 0 and world_map[math.floor(y_2)][math.floor(self.x)] <= 0:
+                    if self.vector[1] > 0:
+                        self.hoek = math.pi/2
+                    elif self.vector[1] != 0:
+                        self.hoek = -math.pi/2
+                    veranderingshoek = self.hoek - speler.hoek
+                    speler.draaien(veranderingshoek)
+                if world_map[math.floor(self.y)][math.floor(x)] <= 0 and world_map[math.floor(self.y)][math.floor(x_2)] <= 0:
+                    if self.vector[0] > 0:
+                        self.hoek = 0
+                    elif self.vector[1] != 0:
+                        self.hoek = math.pi
+                    veranderingshoek = self.hoek - speler.hoek
+                    speler.draaien(veranderingshoek)
+            if self.crash_time < time.time() - 0.01:
+                self.vector = (0,0)
+                self.crashed = True
+                self.crash_time = time.time()
+                self.speed = 0
+                self.hp -= 1
+                if self.hp == 0:
+                    self.player_leaving(world_map, speler)
+                    self.hp = 9
 
     def brake(self):
         if self.speed > self.afrem:
@@ -379,7 +383,6 @@ class Auto(Sprite):
             self.speed = 0.0
 
     def accelerate(self):
-        print(self.speed)
         if self.versnelling == "1":
             if self.speed < 0:
                 self.speed = 0
@@ -471,7 +474,8 @@ class Politie(Sprite):
         self.achtervolgen = False
         self.hoek = 0  # set to initial of 3D SPRITE
 
-    def update(self, world_map):
+    def update(self, *args):
+        self.padfind()
         if self.achtervolgen:
             if len(self.pad) > 2:
                 self.hoek = math.atan2(self.pad[-2][1], self.pad[-2][0])
@@ -487,3 +491,10 @@ class Politie(Sprite):
 
             self.x += speed * vector[0]
             self.y += speed * vector[1]
+
+    def padfind(self):
+        if self.afstand < 25 and self.achtervolgen:
+            self.pad = pathfinding_gps((self.x,self.y))
+        else:
+            self.achtervolgen = False
+

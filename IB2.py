@@ -197,15 +197,6 @@ def verwerk_input(delta,events=0):
         if key_states[sdl2.SDL_SCANCODE_W] and not speler.in_auto:
             speler.draaien(math.pi / sensitivity)
 
-        if key_states[sdl2.SDL_SCANCODE_Y]:
-            if speler.car.input_delay < time.time() -0.5:
-                speler.car.input_delay = time.time()
-                if speler.car.versnelling == "1":
-                    speler.car.versnelling = "R"
-                else:
-                    speler.car.versnelling = "1"
-        if key_states[sdl2.SDL_SCANCODE_B]:
-            speler.reset()
 
 
     if game_state == 2 and show_map:
@@ -338,9 +329,21 @@ def verwerk_input(delta,events=0):
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_t:
-                speler.car.player_enter(speler)
                 if speler.in_auto:
-                    muziek_spelen("car start", channel=7)
+                    speler.car.player_leaving(world_map,speler)
+                else:
+                    speler.car.player_enter(speler)
+                    if speler.in_auto:
+                        muziek_spelen("car start", channel=7)
+            if key == sdl2.SDLK_y:
+                if speler.car.versnelling == "1":
+                    speler.car.versnelling = "R"
+                else:
+                    speler.car.versnelling = "1"
+            if key == sdl2.SDLK_b:
+                speler.reset()
+
+
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
                 pass
             if game_state == 1:
@@ -409,7 +412,7 @@ def render_sprites(renderer, sprites, player, d):
 
     for i,sprite in enumerate(sprites):
         if sprite.afstand >= max_dist: continue;
-        if sprite.update(world_map):
+        if sprite.update():
             sprites.pop(i)
             continue
 
@@ -482,7 +485,7 @@ def render_sprites(renderer, sprites, player, d):
         print("breedte :" + str(sprite_size_breedte))"""
         breedte = len(geschikte_i_waarden)
         if geschikte_i_waarden[0]==0:
-            renderer.copy(image,   srcrect=(
+            renderer.copy(image, srcrect=(
                            geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, spriteBreedte*breedte/sprite_size_breedte, sprite_size_hoogte * sprite.afstand),
                     dstrect=(
                         screen_x , screen_y, breedte,
@@ -495,7 +498,7 @@ def render_sprites(renderer, sprites, player, d):
                           dstrect=(screen_x+sprite_size_breedte-breedte, screen_y, breedte, sprite_size_hoogte))
 
         else:
-            renderer.copy(image,   srcrect=(
+            renderer.copy(image, srcrect=(
                            geschikte_i_waarden[0]/ sprite_size_breedte * spriteBreedte, 0, spriteBreedte*breedte/sprite_size_breedte, sprite_size_hoogte * sprite.afstand),
                           dstrect=(
                           screen_x  + geschikte_i_waarden[0], screen_y, breedte,
@@ -507,7 +510,7 @@ def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
     if index == 0:
         index += 1
     if fout:
-        #print("Fout")
+        print("Fout")
         index = 360 - index
     #print (index)
     image = sprite.images[index]
@@ -976,9 +979,13 @@ def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, s
                 """
             draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
+            
+            if speler.car.speed != 0:
+                speler.car.beweeg(world_map,speler)
+
             if speler.in_auto:
                 wheelSprite(renderer, wheel, speler.car)
-                speler.renderen(renderer, world_map)
+                #speler.renderen(renderer, world_map)
                 if speler.car.speed > 0:
                     muziek_spelen("car loop", channel=2)
                 elif speler.car.speed < 0:
