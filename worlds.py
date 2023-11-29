@@ -10,6 +10,11 @@ from PIL import Image
 
 
 
+random.seed(10)
+
+
+
+
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
 world_map = np.array([[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
@@ -120,11 +125,11 @@ def aanmaken_sprites_bomen(speler_x,speler_y,HOOGTE,bomen,sprite_map_png,tree,wo
             x = random.uniform(x_min,x_max)
             y = random.uniform(y_min,y_max)
 
-            print(math.floor(x))
-            print(math.floor(y))
+            #print(math.floor(x))
+            #print(math.floor(y))
 
             nieuw = []
-            print("de zak"  + str((speler_x - x)**2 + (speler_y - y)**2))
+            #print("de zak"  + str((speler_x - x)**2 + (speler_y - y)**2))
             if worldmap[math.floor(y),math.floor(x)] <= 0 and (speler_x - x)**2 + (speler_y - y)**2 >= 1000 :
                 nieuw.append(Sprite(tree, bomen, sprite_map_png, x, y, HOOGTE,True, schaal=0.2))
                 geplaatst = True
@@ -292,6 +297,7 @@ class Map():
             self.world_map[x * self.size:(x + 1) * self.size, y * self.size:(y + 1) * self.size] = self.tile_map[
                 x, y].map
         self.added = []
+        self.mogelijke_bestemmingen = np.transpose((self.world_map == -1).nonzero()).tolist()
 
     def direct_map_making(self, x_pos, y_pos):
         if self.tile_map[x_pos, y_pos] == 0:

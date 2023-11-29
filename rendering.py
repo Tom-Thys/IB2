@@ -52,7 +52,7 @@ def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
     renderer.copy(Map.png, srcrect=(x_min, y_min, 2 * afstand, 2 * afstand), dstrect=(start_x, start_y, width, height),
                   flip=2)
     for sprite in sprites:
-        if x_min < sprite.x < x_max and y_min < sprite.y < y_max:
+        if x_min < sprite.x < x_max- sprite.map_grootte / 2 and y_min < sprite.y < y_max- sprite.map_grootte / 2:
             pos_x = (sprite.x - speler.position[0]) / afstand * midden + midden - sprite.map_grootte / 2
             pos_y = (-sprite.y + speler.position[1]) / afstand * midden + midden - sprite.map_grootte / 2
             renderer.copy(sprite.map_png, dstrect=(pos_x, pos_y, sprite.map_grootte, sprite.map_grootte))
@@ -122,7 +122,7 @@ def renderen(renderer, d, d_v, k, muren_info):
             rij = unit_d * breedte
             scherm_y = HOOGTE / 2
             renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
-                          dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
+                          dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte),angle=0)
 
 
 def z_renderen(renderer, d, d_v, k, muren_info):
@@ -141,12 +141,11 @@ def z_renderen(renderer, d, d_v, k, muren_info):
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 
-def renderText(font, renderer, text, x, y, midden=0):
+def renderText(font, renderer, text, x, y):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
-    if midden:
-        renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), y, text.size[0], text.size[1]))
-    else:
-        renderer.copy(text, dstrect=(x, y, text.size[0], text.size[1]))
+    x_s = text.size[0]
+    renderer.copy(text, dstrect=(int((x - x_s) / 2), y, x_s, text.size[1]))
+
 
 
 def render_floor_and_sky(renderer, kleuren_textures):
