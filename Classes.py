@@ -12,7 +12,7 @@ from sdl2 import *
 
 
 class Sprite:
-    def __init__(self, image, images, map_png, x, y, height, schaal=0.4):
+    def __init__(self, image, images, map_png, x, y, height,is_boom, schaal=0.4):
         self.images = images
         self.image = image  # The image of the sprite
         self.map_png = map_png
@@ -26,6 +26,7 @@ class Sprite:
         self.afstand = 1
         self.schadelijk = True
         self.is_doos = False
+        self.is_boom = is_boom
         self.schaal = schaal
 
     def afstanden(self, player):
@@ -42,14 +43,15 @@ class Sprite:
 class Doos_Sprite(Sprite):
     """Doos neemt alle functies met sprite over met een extra vector zodat hij gegooid kan worden"""
 
-    def __init__(self, image, map_png, x, y, height, vector, deletable=True):
-        super().__init__(image, [], map_png, x, y, height)
+    def __init__(self, image, map_png, x, y, height, is_boom,vector, deletable=True):
+        super().__init__(image, [], map_png, x, y, height,False)
         self.deletable = deletable
         self.vector = vector
         self.map_grootte = 2
         self.tick = 1
         self.schadelijk = True
         self.is_doos = True
+        self.is_boom = False
 
     def update(self, world_map):
         self.tick += 1
@@ -182,7 +184,7 @@ class Player:
         """Maakt Doos sprite aan en update deze zodat een paar keer voor betere visuals
         :return: Doos_Sprite"""
         self.laatste_doos = time.time()
-        sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, -600, self.r_speler / 5)
+        sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, -600,False ,self.r_speler / 5,)
         for i in range(51):
             sprite.update(world_map)
         return sprite

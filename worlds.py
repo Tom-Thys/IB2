@@ -1,8 +1,11 @@
+import math
+import random
+
 import numpy as np
 import sdl2.ext
 from sdl2 import *
 from random import randint
-from Classes import Deur
+from Classes import Deur, Sprite
 from PIL import Image
 
 
@@ -88,6 +91,47 @@ def main():
 
     # Maak png van wereldmap
     make_world_png(worldlijst)
+
+def aanmaken_sprites_bomen(speler_x,speler_y,HOOGTE,bomen,sprite_map_png,tree,worldmap,oudesprites):
+    aantalbomen = 1;
+    x_max = speler_x + 100
+    x_min = speler_x - 100
+    y_max = speler_y + 100
+    y_min = speler_y - 100
+    #Checken of de coordinaten in het veld liggen
+    if x_max > 1000:
+        x_max = 1000;
+    if y_max > 1000:
+        y_max = 1000;
+    if x_min < 0:
+        x_min = 0;
+    if y_min < 0:
+        y_min = 0;
+    sprites = oudesprites
+    for sprite in sprites:
+        if sprite.afstand>=80:
+            sprites.remove(sprite)
+    if len(sprites) >= 100 :
+        return sprites
+
+    for teller in range (0,aantalbomen):
+        geplaatst = False
+        while geplaatst == False:
+            x = random.uniform(x_min,x_max)
+            y = random.uniform(y_min,y_max)
+
+            print(math.floor(x))
+            print(math.floor(y))
+
+            nieuw = []
+            print("de zak"  + str((speler_x - x)**2 + (speler_y - y)**2))
+            if worldmap[math.floor(y),math.floor(x)] <= 0 and (speler_x - x)**2 + (speler_y - y)**2 >= 1000 :
+                nieuw.append(Sprite(tree, bomen, sprite_map_png, x, y, HOOGTE,True, schaal=0.2))
+                geplaatst = True
+    sprites = sprites + nieuw
+
+
+    return sprites
 
 
 def world_generation(openingen=[]):

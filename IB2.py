@@ -61,7 +61,6 @@ game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
 paused = False
 show_map = False
-verandering = 1
 main_menu_index = 0
 settings_menu_index = 0
 main_menu_positie = [0, 0]
@@ -74,6 +73,7 @@ pad = []
 pauze_positie = POSITIE_PAUZE[0]
 sprites = []
 lijst_mogelijke_bestemmingen = []
+sprites_dozen = []
 # verwerking van config file: ook globale variabelen
 config.read("config.ini")
 volume = int(config.get("settings", "volume"))
@@ -325,7 +325,7 @@ def verwerk_input(delta,events=0):
                 else:
                     if key == sdl2.SDLK_SPACE and speler.laatste_doos < time.time() - 0.5:
                         geworpen_doos = speler.trow(world_map)
-                        sprites.append(geworpen_doos)
+                        sprites_dozen.append(geworpen_doos)
                         muziek_spelen("throwing", channel=2)
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
@@ -403,26 +403,6 @@ def wheelSprite(renderer, sprite, car):
     hoek = -car.stuurhoek * 180 / math.pi * 100 * car.speed
     renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250), angle=hoek)
     car.stuurhoek = 0
-
-
-def handen_sprite(renderer, handen_doos):
-    global verandering
-    x, y = speler.p_x, speler.p_y
-    oud_x, oud_y = speler.oude_pos
-    if speler.isWalking:
-        if verandering < 24:
-            verandering += 1
-        else:
-            verandering = 1
-    else:
-        if verandering > 1:
-            verandering -= 1
-        else:
-            verandering = 1
-    print(verandering)
-    renderer.copy(handen_doos,
-                  srcrect=(0, 0, handen_doos.size[0], handen_doos.size[1]),
-                  dstrect=(200 + 8*math.sin(((2*math.pi)/24)*verandering), 230, BREEDTE - 400, HOOGTE))
 
 def render_sprites(renderer, sprites, player, d):
     global world_map
@@ -540,11 +520,14 @@ def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
     return image
 
 
-def collision_detection(renderer, speler,sprites,hartje):
+def collision_detection(renderer, speler,sprites,hartje,bomen):
     global eindbestemming, pad, world_map
     for sprite in sprites:
         if sprite.afstand < 1 and sprite.schadelijk and not sprite.is_doos:
-            sprites.remove(sprite)
+            if sprite.is_boom:
+                bomen.remove(sprite)
+            else:
+                sprites.remove(sprite)
             if speler.in_auto:
                 speler.car.hp -= 1
                 speler.car.crashed = True
@@ -574,8 +557,6 @@ def collision_detection(renderer, speler,sprites,hartje):
             i += 1
     else:
         hartjes = speler.aantal_hartjes
-        if hartjes == 0:
-            return True
         i = 1
         while i <= hartjes:
             x_pos = BREEDTE - 50  - 50*i
@@ -692,13 +673,14 @@ def heuristiek(a, b):
     return 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
 
 
-def pathfinding_gps2(world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
+def pathfinding_gps2(lock, world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     time.sleep(1)  # wachten tot game volledig gestart en eindbestemming besloten is
     oud_speler_positie = [0, 0]
     oud_eindbestemming = [0, 0]
     while True:
-        spelerpos = tuple(shared_spelerpositie)
-        eindbestemming = tuple(shared_eindbestemming)
+        with lock:
+            spelerpos = tuple(shared_spelerpositie)
+            eindbestemming = tuple(shared_eindbestemming)
         if abs(oud_speler_positie[0]-spelerpos[0]) > 1 or abs(oud_speler_positie[1]-spelerpos[1]) > 1\
                 or (eindbestemming[0] != oud_eindbestemming[0] or eindbestemming[1] != oud_eindbestemming[1]):
             #print(f"pad: {pad}, best: {eindbestemming}")
@@ -723,7 +705,8 @@ def pathfinding_gps2(world_map, shared_pad, shared_eindbestemming, shared_speler
                     if shared_pad[:] == pad[:]:
                         time.sleep(0.5)
                     else:
-                        shared_pad[:] = pad[:]
+                        with lock:
+                            shared_pad[:] = pad[:]
                     break
                 close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
@@ -788,16 +771,16 @@ def quit(button, event):
 
 
 #@profile
-def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
-    global eindbestemming, paused, show_map
+def main(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, eindbestemming
     map_positie = [50, world_map.shape[0]-50]
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
     bestemming_selector("start")
     eindbestemming = bestemming_selector()
-    shared_eindbestemming[:] = eindbestemming[:]
+    with lock:
+        shared_eindbestemming[:] = eindbestemming[:]
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
     window.show()
@@ -815,12 +798,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # Spritefactory aanmaken
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
     # soorten muren opslaan in sdl2 textures
-
-    achtergrond = factory.from_image(resources.get_path("game_main_menu_wh_tekst.png"))
-    renderer.copy(achtergrond)
-    renderer.present()
-
-
     soort_muren = [
         factory.from_image(resources.get_path("muur_test.png")),  # 1
         factory.from_image(resources.get_path("Red_house.png")),  # 2
@@ -857,6 +834,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     auto = sdl2.ext.Resources(__file__, "resources/Auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
+    sprites_bomen = []
     bomen = []
     autos = []
     for i in range(361):
@@ -868,10 +846,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # Eerste Auto aanmaken
     auto = Auto(tree, autos, sprite_map_png, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
     speler.car = auto
+    player_auto = []
+    player_auto.append(auto)
 
-    sprites.append(Sprite(tree, autos, sprite_map_png, 50.5 * 9, 50 * 9, HOOGTE))
-    sprites.append(Sprite(tree, bomen, sprite_map_png, 49.5 * 9, 50 * 9, HOOGTE, schaal= 0.2))
-    sprites.append(speler.car)
+
     # sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
     #draai_sprites(sprites[0], 138)
 
@@ -880,13 +858,13 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     fps_generator = show_fps(font, renderer)
 
 
+    achtergrond = factory.from_image(resources.get_path("game_main_menu_wh_tekst.png"))
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
     pauze_menu = factory.from_image(resources.get_path("pause_menu.png"))
     handen_doos = factory.from_image(resources.get_path("box_hands.png"))
 
     map_png = factory.from_image(resources_mappen.get_path("map.png"))
-    pngs_mappen = (map_png,gps_grote_map)
 
     #UI
     uifactory = sdl2.ext.UIFactory(factory)
@@ -960,6 +938,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
             muziek_spelen("game start", channel=3)
+            #pad = pathfinding_gps2((50 * 9, 50 * 9))
+            #pathfinding_gps2()
+            #pad = pathfinding_gps2(eindbestemming)
         if game_state != 1:
             config.set("settings", "volume",
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
@@ -969,10 +950,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 config.write(f)
 
         while game_state == 2 and not moet_afsluiten:
-            shared_spelerpositie[:] = speler.position[:]
-            shared_eindbestemming[:] = list(eindbestemming[:])
-            pad[:] = shared_pad[:]
-            speler.idle()
+            with lock:
+                shared_spelerpositie[:] = speler.position[:]
+                shared_eindbestemming[:] = list(eindbestemming[:])
+                pad[:] = shared_pad[:]
             for key in deuren:
                 deuren[key].update()
             # Onthoud de huidige tijd
@@ -987,13 +968,13 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             renderen(renderer, d, v, kl, muren_info)
             if np.any(z_k) != 0:
                 z_renderen(renderer, z_d, z_v, z_k, muren_info)
+            sprites_bomen= aanmaken_sprites_bomen(speler.p_x,speler.p_y,HOOGTE,bomen,sprite_map_png,tree,world_map,sprites_bomen)
+            sprites_autos = []
+            sprites = sprites_bomen + sprites_autos + player_auto + sprites_dozen
             render_sprites(renderer, sprites, speler, d)
-            if collision_detection(renderer, speler, sprites, hartje):
-                print("GAME OVER")
-                show_map = True
-                speler.aantal_hartjes += 5
+            collision_detection(renderer, speler, sprites, hartje,sprites_bomen)
             # t.append(time.time()-t1)
-            verwerk_input(delta)
+
             if pad == None:
                 print(f"EINDBESTEMMING NONE: {eindbestemming}")
                 print('NONE')
@@ -1021,8 +1002,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                     pass
                     # reversing beep ofz
 
-            elif not speler.in_auto:
-                handen_sprite(renderer, handen_doos)
+            elif speler.car != 0:
+                renderer.copy(handen_doos,
+                              srcrect=(0, 0, handen_doos.size[0], handen_doos.size[1]),
+                              dstrect=(200, 230, BREEDTE-400, HOOGTE))
             if paused:
                 renderer.copy(pauze_menu,
                               srcrect=(0, 0, pauze_menu.size[0], pauze_menu.size[1]),
@@ -1032,19 +1015,49 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                               dstrect=(pauze_positie[0], pauze_positie[1], 80, 50))
                 menu_nav()
             elif show_map:
-                map_settings = (map_positie,afstand_map,np.shape(world_map))
-                render_map(renderer, pngs_mappen, map_settings, speler, sprites)
+                """linker_bovenhoek_x = speler.p_x - afstand if speler.p_x - afstand >= 0 else 0
+                linker_bovenhoek_y = speler.p_y - afstand if speler.p_y - afstand >= 0 else 0
+                #speler_png_x = BREEDTE//2
+                #speler_png_y = HOOGTE//2-10
+                speler_png_x = BREEDTE//2
+                speler_png_y = HOOGTE//2-10
+                if afstand + speler.p_x > np.size(world_map, 1):
+                    linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand
+                if afstand + speler.p_y > np.size(world_map, 0):
+                    linker_bovenhoek_y = np.size(world_map, 0) - 2*afstand """
+
+                linker_bovenhoek_x = map_positie[0]-afstand_map if map_positie[0]-afstand_map >= 0 else 0
+                linker_bovenhoek_y = map_positie[1]-afstand_map if map_positie[1]-afstand_map >= 0 else 0
+                #speler_grootte = int((-17/190)*(afstand_map-10)+20)
+                #speler_png_x = (BREEDTE//2)-2*(map_positie[0]-speler.position[0])+speler_grootte//2
+                #speler_png_y = (HOOGTE//2)+(map_positie[1]-speler.position[1])-speler_grootte
+                if afstand_map + map_positie[0] > np.size(world_map, 1):
+                    linker_bovenhoek_x = np.size(world_map, 1) - 2*afstand_map
+                if afstand_map + map_positie[1] > np.size(world_map, 0):
+                    linker_bovenhoek_y = np.size(world_map, 0) - 2*afstand_map
+                renderer.copy(gps_grote_map,
+                              srcrect=(0, 0, gps_grote_map.size[0], gps_grote_map.size[1]),
+                              dstrect=(80, 70, BREEDTE-120, HOOGTE-140),
+                              flip=2)
+                renderer.copy(map_png,
+                              srcrect=(linker_bovenhoek_x, linker_bovenhoek_y, 2*afstand_map, 2*afstand_map),
+                              dstrect=(160, 112, BREEDTE-300, HOOGTE-222),
+                              flip=2)
+                """renderer.copy(speler.png,
+                              dstrect=(speler_png_x, speler_png_y, speler_grootte, speler_grootte),
+                              angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)"""
                 menu_nav()
             else:
                 positie_check()
                 next(fps_generator)
                 map_positie = list(speler.position)
+            verwerk_input(delta)
             if sprites == []:
-                pass
+                0
             else:
                 #draai_sprites(sprites[0], 1)
                  #draai_sprites(speler.car,1)
-                pass
+                0
             #print(str(speler.p_x)+" "+str(speler.p_y))
             # Toon de fps
             #next(fps_generator)
@@ -1058,24 +1071,24 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
 
 if __name__ == '__main__':
-    with Manager() as manager:
-        shared_eindbestemming = manager.list(eindbestemming)
-        shared_spelerpositie = manager.list(speler.position)
-        shared_pad = manager.list(pad)
+    shared_eindbestemming = Manager().list(eindbestemming)
+    shared_spelerpositie = Manager().list(speler.position)
+    shared_pad = Manager().list(pad)
 
-        inf_world = Map()
-        inf_world.start()
-        # inf_world.map_making(speler)
-        shared_world_map = inf_world.world_map
+    inf_world = Map()
+    inf_world.start()
+    # inf_world.map_making(speler)
+    shared_world_map = inf_world.world_map
 
-        # profiler = cProfile.Profile()
-        # profiler.enable()
-        p2 = Process(target=pathfinding_gps2, args=(shared_world_map, shared_pad,
-                                                    shared_eindbestemming, shared_spelerpositie), daemon=True)
-        p2.start()
-        main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie)
-        p2.kill()
-        # main()
-        # profiler.disable()
-        # stats = pstats.Stats(profiler)
-        # stats.dump_stats('data.prof')
+    # profiler = cProfile.Profile()
+    # profiler.enable()
+    lock = Manager().Lock()
+    p1 = Process(target=main, args=(lock, inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie))
+    p2 = Process(target=pathfinding_gps2, args=(lock, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie), daemon=True)
+    p1.start()
+    p2.start()
+    p1.join()
+    # main()
+    # profiler.disable()
+    # stats = pstats.Stats(profiler)
+    # stats.dump_stats('data.prof')
