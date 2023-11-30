@@ -53,6 +53,7 @@ def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
                   flip=2)
     for sprite in sprites:
         if x_min < sprite.x < x_max- sprite.map_grootte / 2 and y_min < sprite.y < y_max- sprite.map_grootte / 2:
+            if sprite.x == speler.p_x and sprite.y == speler.p_y: continue;
             pos_x = (sprite.x - speler.position[0]) / afstand * midden + midden - sprite.map_grootte / 2
             pos_y = (-sprite.y + speler.position[1]) / afstand * midden + midden - sprite.map_grootte / 2
             renderer.copy(sprite.map_png, dstrect=(pos_x, pos_y, sprite.map_grootte, sprite.map_grootte))
@@ -111,33 +112,39 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
     return
 
 
-def renderen(renderer, d, d_v, k, muren_info):
+def renderen(renderer, d, d_v, k, muren_info, angle):
     d = 1 / d
-    for kolom in range(BREEDTE):
-        k_muur = k[kolom]
+    scherm_y = HOOGTE / 2
+
+    for kolom, (d_muur, unit_d, k_muur) in enumerate(zip(d, d_v, k)):
         if k_muur >= 0:
-            d_muur = d[kolom]
-            unit_d = d_v[kolom]
             wall_texture, breedte, hoogte = muren_info[k_muur]
-            rij = unit_d * breedte
-            scherm_y = HOOGTE / 2
-            renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
-                          dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte),angle=0)
+            kolom -= 50
+            if angle == 0:
+                if (0 > kolom >= BREEDTE):
+                    continue
+                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, hoogte),
+                          dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
+            else:
+                print("Shake")
+                hoek = math.atan2(d_muur * hoogte / 2, kolom - BREEDTE / 2) + angle / 180 * math.pi
+                afstand = ((kolom - BREEDTE / 2) ** 2 + (d_muur * hoogte / 2) ** 2) ** (1 / 2)
+                y = scherm_y - math.sin(hoek) * afstand
+                x = math.cos(hoek) * afstand + BREEDTE / 2
+                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, hoogte),
+                              dstrect=(x, y, 1, d_muur * hoogte), angle=angle)
+
+
+
 
 
 def z_renderen(renderer, d, d_v, k, muren_info):
-    for kolom in range(BREEDTE):
-        kleur = k[kolom]
+    scherm_y = HOOGTE / 2
+    for kolom, (d_muur, unit_d, kleur) in enumerate(zip(d, d_v, k)):
         if kleur == 0:
             continue
-        d_muur = d[kolom]
-        unit_d = d_v[kolom]
         wall_texture, breedte, hoogte = muren_info[kleur]
-        rij = unit_d * breedte
-        #rij = (unit_d - deur.positie) % 1 * breedte
-        # d_muur = 10 / d_muur
-        scherm_y = HOOGTE / 2
-        renderer.copy(wall_texture, srcrect=(rij, 0, 1, hoogte),
+        renderer.copy(wall_texture, srcrect=(unit_d * breedte, 0, 1, hoogte),
                       dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
 
 

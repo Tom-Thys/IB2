@@ -8,12 +8,7 @@ from random import randint
 from Classes import Deur, Sprite
 from PIL import Image
 
-
-
 random.seed(10)
-
-
-
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
@@ -59,10 +54,13 @@ kleuren = [
     sdl2.ext.Color(255, 255, 255, 100),  # 8 = Wit
     sdl2.ext.Color(120, 200, 250, 100),  # 9 = Blauw_lucht
     sdl2.ext.Color(106, 13, 173, 100),  # 10 = Purple
-    sdl2.ext.Color( 255, 255, 0, 100),  # 11 = Yellow
+    sdl2.ext.Color(255, 255, 0, 100),  # 11 = Yellow
 ]
 colors = [0, 0, 0, 102, 102, 102, 176, 176, 176, 255, 255, 255]
-kleur_dict = {0: (0, 0, 0), 25: (255, 0, 20), 50: (255, 0, 20), 75: (106, 13, 173), 100: (255, 255, 0), 125: (128, 128, 128), 150: (0, 255, 0), 175: (255, 0, 20)}
+kleur_dict = {0: (0, 0, 0), 25: (255, 0, 20), 50: (255, 0, 20), 75: (106, 13, 173), 100: (255, 255, 0),
+              125: (128, 128, 128), 150: (0, 255, 0), 175: (255, 0, 20)}
+
+
 def make_world_png(worldmap, unit_d=1):
     """
     Creëert een PNG die weer geeft, welk gebouw waar staat op de wereldmap
@@ -97,53 +95,48 @@ def main():
     # Maak png van wereldmap
     make_world_png(worldlijst)
 
-def aanmaken_sprites_bomen(speler_x,speler_y,HOOGTE,bomen,sprite_map_png,tree,worldmap,oudesprites):
-    aantalbomen = 1;
+
+def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tree, worldmap, sprites, aantalbomen=1):
     x_max = speler_x + 100
     x_min = speler_x - 100
     y_max = speler_y + 100
     y_min = speler_y - 100
-    #Checken of de coordinaten in het veld liggen
+    # Checken of de coordinaten in het veld liggen
     if x_max > 1000:
-        x_max = 1000;
+        x_max = 1000
     if y_max > 1000:
-        y_max = 1000;
+        y_max = 1000
     if x_min < 0:
-        x_min = 0;
+        x_min = 0
     if y_min < 0:
-        y_min = 0;
-    sprites = oudesprites
+        y_min = 0
     for sprite in sprites:
-        if sprite.afstand>=80:
+        if sprite.afstand >= 80:
             sprites.remove(sprite)
-    if len(sprites) >= 100 :
+    if len(sprites) >= 100:
         return sprites
 
-    for teller in range (0,aantalbomen):
-        geplaatst = False
-        while geplaatst == False:
-            x = random.uniform(x_min,x_max)
-            y = random.uniform(y_min,y_max)
+    for teller in range(0, aantalbomen):
+        while True:
+            x = random.uniform(x_min, x_max)
+            y = random.uniform(y_min, y_max)
 
-            #print(math.floor(x))
-            #print(math.floor(y))
+            # print(math.floor(x))
+            # print(math.floor(y))
 
-            nieuw = []
-            #print("de zak"  + str((speler_x - x)**2 + (speler_y - y)**2))
-            if worldmap[math.floor(y),math.floor(x)] <= 0 and (speler_x - x)**2 + (speler_y - y)**2 >= 1000 :
-                nieuw.append(Sprite(tree, bomen, sprite_map_png, x, y, HOOGTE,True, schaal=0.2))
-                geplaatst = True
-    sprites = sprites + nieuw
-
+            # print("de zak"  + str((speler_x - x)**2 + (speler_y - y)**2))
+            if worldmap[math.floor(y), math.floor(x)] <= 0 and (speler_x - x) ** 2 + (speler_y - y) ** 2 >= 100:
+                sprites.append(Sprite(tree, bomen, sprite_map_png, x, y, HOOGTE, "Boom", schaal=0.2))
+                break
 
     return sprites
 
 
 def world_generation(openingen=[]):
     kaart = np.zeros((9, 9), dtype='int32')
-    pakjes_plekken = [(1,3),(3,1),(7,3),(3,7),(1,5),(5,1),(7,5),(5,7)]
-    for plekx,pleky in pakjes_plekken:
-        kaart[plekx,pleky] = -1
+    pakjes_plekken = [(1, 3), (3, 1), (7, 3), (3, 7), (1, 5), (5, 1), (7, 5), (5, 7)]
+    for plekx, pleky in pakjes_plekken:
+        kaart[plekx, pleky] = -1
     kleur = randint(2, 6)
     kaart[:3, :3] = kleur
     kleur = randint(2, 6)
@@ -155,7 +148,7 @@ def world_generation(openingen=[]):
     if len(openingen) < 3:
         extra_openingen = randint(0, 3 - len(openingen))  # Extra openingen
         if extra_openingen == 0 and len(openingen) <= 1:
-            extra_openingen = randint(1,3)
+            extra_openingen = randint(1, 3)
         for i in range(extra_openingen):
             loops = 0
             while loops < 6:
@@ -165,10 +158,10 @@ def world_generation(openingen=[]):
                     openingen.append(opening)
                     continue
     elif len(openingen) == 3:
-        openingen.pop(randint(0,2))
-        if randint(0,10) == 0:
-            openingen.pop(randint(0,1))
-            if randint(0,20) == 0:
+        openingen.pop(randint(0, 2))
+        if randint(0, 10) == 0:
+            openingen.pop(randint(0, 1))
+            if randint(0, 20) == 0:
                 openingen.pop(0)
     else:
         openingen.pop(randint(0, 3))
@@ -178,7 +171,6 @@ def world_generation(openingen=[]):
                 openingen.pop(randint(0, 1))
     for i in range(1, 5):
         if i not in openingen:
-            kleur = randint(2, 6)
             if i == 1:
                 kaart[3:-3, :3] = 6
             elif i == 2:
@@ -187,26 +179,24 @@ def world_generation(openingen=[]):
                 kaart[3:-3, -3:] = 6
             else:
                 kaart[-3:, 3:-3] = 6
-    #print(kaart)
+    # print(kaart)
     return kaart, openingen
 
 
 def converter(input_image):
     r_image_in, g_image_in, b_image_in, alfa = input_image.split()
     r_in = np.uint32(np.array(r_image_in))
-    g_in = np.uint32(np.array(g_image_in))
-    b_in = np.uint32(np.array(b_image_in))
 
     shape0 = r_in.shape[0]
     shape1 = r_in.shape[1]
 
     # hier komen de matrixbewerkingen
-    r_out = np.zeros((shape0,shape1))
-    g_out = np.zeros((shape0,shape1))
-    b_out = np.zeros((shape0,shape1))
+    r_out = np.zeros((shape0, shape1))
+    g_out = np.zeros((shape0, shape1))
+    b_out = np.zeros((shape0, shape1))
 
     for i in range(11):
-        mask = r_in == (i*25)
+        mask = r_in == (i * 25)
 
         if np.any(mask):
             r_out[mask] = kleur_dict[i * 25][0]
@@ -222,7 +212,7 @@ def converter(input_image):
     r_image_out = Image.fromarray(np.uint8(r_out))
     g_image_out = Image.fromarray(np.uint8(g_out))
     b_image_out = Image.fromarray(np.uint8(b_out))
-    output_im = Image.merge("RGBA", (r_image_out, g_image_out, b_image_out,alfa))
+    output_im = Image.merge("RGBA", (r_image_out, g_image_out, b_image_out, alfa))
     return output_im
 
 
@@ -246,7 +236,7 @@ class Map():
     def start(self):
         y, x = np.shape(self.tile_map)
         self.added = []
-        #map = np.ones((9, 9), dtype='int32')
+        # map = np.ones((9, 9), dtype='int32')
         map = np.full((9, 9), fill_value=7, dtype='int32')
         openingen = []
         surrounding_tiles = Tile((map, openingen))
@@ -262,11 +252,12 @@ class Map():
             self.added.append((i, 0))
             self.added.append((i, y - 1))
 
-        map_initieel = np.full((9, 9), 2)
-        map_initieel[0:-3, 3:-3] = 0
-        intiele_tile = Tile((map_initieel, [1]))
-        tile_2 = Tile(world_generation([1, 2, 3, 4]))
-        tile_3 = Tile(world_generation([1, 2, 3, 4]))
+        kaart = np.zeros((9, 9), dtype='int32')
+        kaart[:, 4] = -2
+        kaart[4, :] = -2
+        intiele_tile = Tile((kaart, [1]))
+        tile_2 = Tile((kaart, [1, 2, 3, 4]))
+        tile_3 = Tile((kaart, [1, 2, 3, 4]))
         self.tile_map[48, 50] = tile_3
         self.tile_map[49, 50] = tile_2
         self.tile_map[49, 51] = tile_2
@@ -274,15 +265,19 @@ class Map():
         self.tile_map[50, 50] = intiele_tile
         if False:
             for i in range(5):
-                x = randint(1,self.tiles_size[1]-1)
-                y = randint(1, self.tiles_size[0]-1)
-                print(x,y)
-                self.tile_map[y,x] = Tile(world_generation([1, 2, 3, 4]))
-        #self.world_map[450,450] = -5
-        self.size = (np.shape(map_initieel))[0]
+                x = randint(1, self.tiles_size[1] - 1)
+                y = randint(1, self.tiles_size[0] - 1)
+                print(x, y)
+                self.tile_map[y, x] = Tile(world_generation([1, 2, 3, 4]))
+        # self.world_map[450,450] = -5
+        self.size = (np.shape(kaart))[0]
         for i in range(1, x - 1):
             for j in range(1, y - 1):
                 self.direct_map_making(i, j)
+                self.added.append((i, j))
+        """for i in range(1, x - 1):
+            for j in range(1, y - 1):
+                self.drivable(i, j)"""
         self.update()
 
         if True:
@@ -301,9 +296,9 @@ class Map():
 
     def direct_map_making(self, x_pos, y_pos):
         if self.tile_map[x_pos, y_pos] == 0:
-            if randint(0,100) == 0:
-                self.tile_map[x_pos, y_pos] = Tile((np.zeros((9, 9), dtype='int32'), []))
-                self.added.append((x_pos, y_pos))
+            if randint(0, 100) == 0:
+                kaart = np.zeros((9, 9), dtype='int32')
+                self.tile_map[x_pos, y_pos] = Tile((kaart, []))
                 return
 
             openingen = []
@@ -320,8 +315,38 @@ class Map():
                 if 4 in self.tile_map[x_pos, y_pos - 1].openingen:
                     openingen.append(2)
             self.tile_map[x_pos, y_pos] = Tile(world_generation(openingen))
-            self.added.append((x_pos, y_pos))
 
+    def drivable(self, x_pos, y_pos):
+        if self.tile_map[x_pos, y_pos] == 0:
+            return
+        kaart = self.tile_map[x_pos, y_pos].map
+        openingen = self.tile_map[x_pos, y_pos].openingen
+        drive = []
+        if self.tile_map[x_pos, y_pos + 1] != 0 and 1 in openingen:
+            if 3 in self.tile_map[x_pos, y_pos + 1].openingen:
+                drive.append(1)
+        if self.tile_map[x_pos, y_pos- 1] != 0 and 3 in openingen:
+            if 1 in self.tile_map[x_pos, y_pos- 1].openingen:
+                drive.append(3)
+        if self.tile_map[x_pos + 1, y_pos] != 0 and 4 in openingen:
+            if 2 in self.tile_map[x_pos + 1, y_pos].openingen:
+                drive.append(4)
+        if self.tile_map[x_pos- 1, y_pos] != 0 and 2 in openingen:
+            if 4 in self.tile_map[x_pos- 1, y_pos].openingen:
+                drive.append(2)
+
+        for i in drive:
+            kaart[4, 4] = -2
+            # kleur = randint(2, 6)
+            if i == 1:
+                kaart[4, 3] = -2
+            elif i == 2:
+                kaart[3, 4] = -2
+            elif i == 3:
+                kaart[4, 5] = -2
+            else:
+                kaart[5, 4] = -2
+        self.tile_map[x_pos, y_pos].map = kaart
 
     def map_making(self, speler):
         lengte = 7
