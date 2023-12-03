@@ -126,7 +126,6 @@ def renderen(renderer, d, d_v, k, muren_info, angle):
                 renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, hoogte),
                           dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
             else:
-                print("Shake")
                 hoek = math.atan2(d_muur * hoogte / 2, kolom - BREEDTE / 2) + angle / 180 * math.pi
                 afstand = ((kolom - BREEDTE / 2) ** 2 + (d_muur * hoogte / 2) ** 2) ** (1 / 2)
                 y = scherm_y - math.sin(hoek) * afstand

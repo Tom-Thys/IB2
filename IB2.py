@@ -7,6 +7,7 @@ import time
 import random
 import numpy as np
 import heapq
+import logging
 import threading
 from multiprocessing import Process, Manager, set_start_method
 import sdl2.ext
@@ -15,7 +16,7 @@ import sdl2.sdlimage
 import sdl2.sdlmixer
 from sdl2 import *
 from worlds import *
-from Classes import *
+from Classes import Voertuig, Player, PostBus, Politie
 # from Code_niet_langer_in_gebruik import *
 from rendering import *
 from configparser import ConfigParser
@@ -33,6 +34,9 @@ import soundfile"""
 import ctypes
 
 config = ConfigParser()
+
+logging.basicConfig(level=logging.DEBUG, filename="log.log", filemode="w",
+                    format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Constanten
 BREEDTE = 1000
@@ -158,12 +162,13 @@ def verwerk_input(delta, events=0):
         events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
     if game_state == 2 and not paused and not show_map:
+        if key_states[20]:
+            print("a")
         if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
             speler.move(1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
             else:
-                # print(speler.car.speed)
                 if 0 < speler.car.speed < 0.12:
                     muziek_spelen("car gear 1", channel=4)
                 elif 0.12 < speler.car.speed < 0.25:
@@ -335,6 +340,12 @@ def verwerk_input(delta, events=0):
                     speler.car.versnelling = "1"
             if key == sdl2.SDLK_b:
                 speler.reset()
+            if key == sdl2.SDLK_n:
+                logging.info(f"Speler r-straal = {speler.r_speler}")
+                logging.info(f"Speler hoek = {speler.hoek}")
+                logging.info(f"Speler positie = {speler.position}")
+                logging.info(f"Auto = {speler.car}")
+
 
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
                 pass
@@ -388,11 +399,20 @@ def verwerk_input(delta, events=0):
         moet_afsluiten = True
 
 
-def wheelSprite(renderer, sprite, car):
+def auto_info_renderen(renderer, font, pngs, car):
+    hoogte_dashboard = 150
+    start_dashboard = 200
+    renderer.copy(pngs[0], dstrect=(start_dashboard, HOOGTE - hoogte_dashboard, BREEDTE-2*start_dashboard, hoogte_dashboard))
+    renderText(font, renderer, car.versnelling, 600, HOOGTE - 95)
+    snelheid = round(car.speed * 400)
+    if car.versnelling == "R":
+        snelheid *= -1
+    renderText(font, renderer, str(snelheid), 1400, HOOGTE - 95)
+
     x_pos = (BREEDTE - 250) // 2
     y_pos = HOOGTE - 230
     hoek = -car.stuurhoek * 180 / math.pi * 100 * car.speed
-    renderer.copy(sprite, dstrect=(x_pos, y_pos, 250, 250), angle=hoek)
+    renderer.copy(pngs[1], dstrect=(x_pos, y_pos, 250, 250), angle=hoek)
     car.stuurhoek = 0
 
 
@@ -410,7 +430,6 @@ def handen_sprite(renderer, handen_doos):
             verandering -= 1
         else:
             verandering = 1
-    # print(verandering)
     renderer.copy(handen_doos,
                   srcrect=(0, 0, handen_doos.size[0], handen_doos.size[1]),
                   dstrect=(200 + 8 * math.sin(((2 * math.pi) / 24) * verandering), 230, BREEDTE - 400, HOOGTE))
@@ -478,8 +497,7 @@ def render_sprites(renderer, sprites, player, d, delta):
         print(np.linalg.solve(a,b)[1])
         c = np.linalg.solve(a,b)[1]"""
 
-        screen_y = int((
-                                   sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
+        screen_y = int((sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
 
         kolom, breedte, initieel = -1, 0, 0
@@ -580,13 +598,6 @@ def show_fps(font, renderer):
 
     while True:
         fps_list.append(1 / (time.time() - loop_time))
-        """if min(fps_list) < 20:
-            print(min(fps_list))
-        if fps_list[-1] > 190:
-            print(fps_list[-1])
-        if (time.time() - loop_time) != 0:
-            fps_list.append(1 / (time.time() - loop_time))
-            #print(min(fps_list))"""
         loop_time = time.time()
 
         fps = sum(fps_list) / len(fps_list)
@@ -837,6 +848,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # Inladen sprites
     hartje = factory.from_image(resources.get_path("Hartje.png"))
     wheel = factory.from_image(resources.get_path("Wheel.png"))
+    dashboard = factory.from_image(resources.get_path("dashboard.png"))
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
     sprite_map_png = factory.from_image(resources.get_path("map_boom.png"))
     map_auto = factory.from_image(resources.get_path("map_auto.png"))
@@ -996,7 +1008,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                         angle *= -1
                 else:
                     angle /= 1.7
-                print(angle)
             else:
                 angle = 0
             # Reset de rendering context
@@ -1028,7 +1039,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             delta = time.time() - start_time
 
             if speler.in_auto:
-                wheelSprite(renderer, wheel, speler.car)
+                auto_info_renderen(renderer, font_2,(dashboard, wheel), speler.car)
                 # speler.renderen(renderer, world_map)
                 if speler.car.speed > 0:
                     muziek_spelen("car loop", channel=2)
@@ -1063,13 +1074,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             if quiting > 0:
                 quiting -= 1
                 renderText(font_2, renderer, "DONT QUIT THE GAME!!!", BREEDTE, HOOGTE / 2)
-            # print(str(speler.p_x)+" "+str(speler.p_y))
             # Toon de fps
             # next(fps_generator)
 
             # Verwissel de rendering context met de frame buffer
             renderer.present()
-            # print(sum(t)/len(t))
 
     # Sluit SDL2 af
     sdl2.ext.quit()

@@ -11,6 +11,7 @@ from Code_niet_langer_in_gebruik import pathfinding_gps
 from sdl2 import *
 
 
+
 class Sprite:
     def __init__(self, image, images, map_png, x, y, height, soort, schaal=0.4):
         self.images = images
@@ -164,6 +165,8 @@ class Player:
         self.oude_pos = (self.p_x, self.p_y)
         if self.in_auto:
             self.car.stuurhoek = (stap * (richting * -1) * self.car.speed * self.car.turning_mult)
+            if not -math.pi < self.car.stuurhoek < math.pi:
+                self.car.stuurhoek = 0
             self.draaien(self.car.stuurhoek)
             self.car.draaien(self.car.stuurhoek)
         else:
@@ -414,10 +417,11 @@ class PostBus(Sprite):
                     speler.draaien(veranderingshoek)
             if self.crash_time < time.time() - 0.01:
                 self.vector = (0,0)
-                self.crashed = True
-                self.crash_time = time.time()
                 self.speed = 0
-                self.hp -= 1
+                if speler.in_auto:
+                    self.crashed = True
+                    self.crash_time = time.time()
+                    self.hp -= 1
                 if self.hp == 0:
                     self.player_leaving(world_map, speler)
                     self.hp = 9
@@ -566,7 +570,6 @@ class Voertuig(Sprite):
             if self.vector == [(vx*-1), (vy*-1)]: continue;
             pos = (self.position[1] + 3 * vy, self.position[0] + 3 * vx)
             pos2 = (self.position[1] + 5 * vy, self.position[0] + 5 * vx)
-            v1, v2 = (world_map[pos],world_map[pos2])
             if world_map[pos] <= 0 and world_map[pos2] <= 0:
                  i += 1
                  nieuwe_richting.append(([vx, vy], [self.position[0] + 9 * vx, self.position[1] + 9 * vy]))
