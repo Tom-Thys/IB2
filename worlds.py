@@ -102,14 +102,14 @@ def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tr
     y_max = speler_y + 100
     y_min = speler_y - 100
     # Checken of de coordinaten in het veld liggen
-    if x_max > 1000:
-        x_max = 1000
-    if y_max > 1000:
-        y_max = 1000
-    if x_min < 0:
-        x_min = 0
-    if y_min < 0:
-        y_min = 0
+    if x_max >= 1000:
+        x_max = 999
+    if y_max >= 1000:
+        y_max = 999
+    if x_min <= 0:
+        x_min = 1
+    if y_min <= 0:
+        y_min = 1
     for sprite in sprites:
         if sprite.afstand >= 80:
             sprites.remove(sprite)
@@ -125,7 +125,12 @@ def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tr
             # print(math.floor(y))
 
             # print("de zak"  + str((speler_x - x)**2 + (speler_y - y)**2))
-            if worldmap[math.floor(y), math.floor(x)] <= 0 and (speler_x - x) ** 2 + (speler_y - y) ** 2 >= 100:
+            if (worldmap[math.floor(y), math.floor(x)] <= 0
+                    and worldmap[math.floor(y), math.floor(x+1)] <= 0
+                    and worldmap[math.floor(y+1), math.floor(x)] <= 0
+                    and worldmap[math.floor(y), math.floor(x-1)] <= 0
+                    and worldmap[math.floor(y-1), math.floor(x)] <= 0
+                    and (speler_x - x) ** 2 + (speler_y - y) ** 2 >= 100):
                 sprites.append(Sprite(tree, bomen, sprite_map_png, x, y, HOOGTE, "Boom", schaal=0.2))
                 break
 

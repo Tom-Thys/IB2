@@ -453,6 +453,7 @@ class PostBus(Sprite):
         self.vector = np.array([math.cos(self.hoek), math.sin(self.hoek)])
         self.draai_sprites(round(hoek*180/math.pi))
 
+
     def player_enter(self, speler):
         """Kijkt of speler dicht genoeg tegen auto staat om in te stappen.\n
         zet alle settings correct"""
@@ -545,6 +546,8 @@ class Voertuig(Sprite):
             self.x += self.speed * self.vector[0]
             self.y += self.speed * self.vector[1]
             self.position = [math.floor(self.x), math.floor(self.y)]
+            self.draai_sprites(round(self.hoek*180/math.pi))
+            print(self.hoek)
             if self.crashing(auto_sprites):
                 self.hoek = (math.pi + self.hoek) % (2 * math.pi)
                 self.draai_sprites(180)

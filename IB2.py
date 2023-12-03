@@ -448,7 +448,7 @@ def render_sprites(renderer, sprites, player, d, delta):
         grond_hoek_verschil = abs(player_hoek - hoek_sprite)
         fout = False
 
-        if (player_hoek <= 0.8 and hoek_sprite <= 0.79):
+        if (player_hoek <= 0.85 and hoek_sprite <= 0.85):
             fout = True
 
         if sprite.images == []:
@@ -482,47 +482,28 @@ def render_sprites(renderer, sprites, player, d, delta):
                                    sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
 
-        geschikte_i_waarden = []
+        kolom, breedte, initieel = -1, 0, 0
         for i in range(sprite_size_breedte):
-            kolom = i + screen_x
-            if kolom >= BREEDTE:
+            k = i + screen_x
+            if k >= BREEDTE:
                 break
-            if kolom < 0:
+            if k < 0:
                 continue
-            if not d[kolom] <= sprite.afstand:
-                # Voeg de geschikte i-waarden toe aan de lijst
-                geschikte_i_waarden.append(i)
-        if geschikte_i_waarden == []:
+            if not d[k] <= sprite.afstand:
+                if kolom == -1:
+                    kolom = k
+                    breedte = 1
+                    initieel = i
+                else:
+                    breedte = k - kolom + 1
+
+        if kolom == -1:
             continue
-        # Render de sprites voor de geschikte i-waarden in één keer
-        """
-        print("geschikt :" + str(geschikte_i_waarden[len(geschikte_i_waarden)-1]))
-        print("breedte :" + str(sprite_size_breedte))"""
-        breedte = len(geschikte_i_waarden)
-        if geschikte_i_waarden[0] == 0:
-            renderer.copy(image, srcrect=(
-                geschikte_i_waarden[0] / sprite_size_breedte * spriteBreedte, 0,
-                spriteBreedte * breedte / sprite_size_breedte, sprite_size_hoogte * sprite.afstand),
-                          dstrect=(
-                              screen_x, screen_y, breedte,
-                              sprite_size_hoogte))
 
-
-        elif (geschikte_i_waarden[breedte - 1]) == sprite_size_breedte - 1:
-            renderer.copy(image, srcrect=(
-                geschikte_i_waarden[0] / sprite_size_breedte * spriteBreedte, 0,
-                spriteBreedte * breedte / sprite_size_breedte, sprite_size_hoogte * sprite.afstand),
-                          dstrect=(screen_x + sprite_size_breedte - breedte, screen_y, breedte, sprite_size_hoogte))
-
-        else:
-            renderer.copy(image, srcrect=(
-                geschikte_i_waarden[0] / sprite_size_breedte * spriteBreedte, 0,
-                spriteBreedte * breedte / sprite_size_breedte, sprite_size_hoogte * sprite.afstand),
-                          dstrect=(
-                              screen_x + geschikte_i_waarden[0], screen_y, breedte,
-                              sprite_size_hoogte))
-
-
+        renderer.copy(image, srcrect=(
+            initieel / sprite_size_breedte * spriteBreedte, 0, spriteBreedte * breedte / sprite_size_breedte,
+            sprite_size_hoogte * sprite.afstand),
+                      dstrect=(kolom, screen_y, breedte, sprite_size_hoogte))
 # In sprite class
 """def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
     index = 360 - round((hoek_verschil)/(math.pi*2)*360)
@@ -868,19 +849,22 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     gps_grote_map = factory.from_image(resources.get_path("gps_grote_map.png"))
 
     boom = sdl2.ext.Resources(__file__, "resources/boom")
-    auto = sdl2.ext.Resources(__file__, "resources/Auto")
+    rode_auto = sdl2.ext.Resources(__file__, "resources/Rode_auto")
+    blauwe_auto = sdl2.ext.Resources(__file__, "resources/Blauwe_auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
     bomen = []
-    autos = []
+    rode_autos = []
+    blauwe_autos = []
     for i in range(361):
         afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
-        autos.append(factory.from_image(auto.get_path(afbeelding_naam)))
+        rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
+        blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
         # polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
 
     # Eerste Auto aanmaken
-    auto = PostBus(tree, autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
+    auto = PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
     auto.draai_sprites(125)
     speler.car = auto
     sprites_autos.append(auto)
@@ -889,7 +873,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         omgeving = 18
         x = randint(speler.tile[0] - omgeving, speler.tile[0] + omgeving) * 9 + 4
         y = randint(speler.tile[1] - omgeving, speler.tile[1] + omgeving) * 9 + 4
-        voertuig = Voertuig(tree, autos, map_auto, x, y, HOOGTE, world_map)
+        voertuig = Voertuig(tree, rode_autos, map_auto, x, y, HOOGTE, world_map)
         if voertuig.vector == []: continue;
         sprites_autos.append(voertuig)
 
