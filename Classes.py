@@ -11,7 +11,6 @@ from Code_niet_langer_in_gebruik import pathfinding_gps
 from sdl2 import *
 
 
-
 class Sprite:
     def __init__(self, image, images, map_png, x, y, height, soort, schaal=0.4):
         self.images = images
@@ -60,8 +59,8 @@ class Sprite:
 class Doos_Sprite(Sprite):
     """Doos neemt alle functies met sprite over met een extra vector zodat hij gegooid kan worden"""
 
-    def __init__(self, image, map_png, x, y, height, is_boom,vector, deletable=True):
-        super().__init__(image, [], map_png, x, y, height,"Doos")
+    def __init__(self, image, map_png, x, y, height, is_boom, vector, deletable=True):
+        super().__init__(image, [], map_png, x, y, height, "Doos")
         self.deletable = deletable
         self.vector = vector
         self.map_grootte = 2
@@ -83,7 +82,7 @@ class Doos_Sprite(Sprite):
                 self.y = y
                 self.position = [math.floor(x), math.floor(y)]
             else:
-                self.vector = (0,0)
+                self.vector = (0, 0)
                 self.tick += 10
         else:
             self.height = 800
@@ -98,7 +97,7 @@ class Player:
         """Player is gedefinieerd door zijn start x-, y-coördinaten (floats), kijkhoek (rad) en
         de breedte (int) van het scherm dat hij opneemt"""
         self.position = [math.floor(x), math.floor(y)]
-        self.oude_pos = (x,y)
+        self.oude_pos = (x, y)
         self.p_x = x
         self.p_y = y
         self.hoek = hoek
@@ -107,27 +106,28 @@ class Player:
         self.breedte = breedte + 100
         self.hoeken = np.zeros(self.breedte)
         self.r_stralen = np.zeros((self.breedte, 2))
-        self.car = 0
+        self.car = None
         self.in_auto = False
         self.aantal_hartjes = 5
-        self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)
-        self.initial = (x, y, hoek)
-        self.laatste_doos = 0
+        self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9) #Aanmaak autos rond speler
+        self.initial = (x, y, hoek) #Reset values
+        self.laatste_doos = 0 #Time
         self.isWalking = False
+        self.hit = False
         self.delta_x = np.zeros(self.breedte)
         self.delta_y = np.zeros(self.breedte)
+        self.aanmaak_r_stralen()
+        self.draaien(0)
 
     def aanmaak_r_stralen(self, d_camera=1):
         """Gebruikt speler hoek, speler straal en gegeven camera afstand om r_stralen voor raycaster te berekenen"""
         self.r_speler = np.array([math.cos(self.hoek), math.sin(self.hoek)])
         self.r_camera = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
 
-
-        for i in range(-50,self.breedte-50):
+        for i in range(-50, self.breedte - 50):
             r_straal_kolom = (d_camera * self.r_speler + (1 - (2 * i) / self.breedte) * self.r_camera)
             hoek = math.atan2(r_straal_kolom[0], r_straal_kolom[1])
             self.hoeken[i] = hoek
-
 
         self.r_stralen[:, 0] = np.cos(self.hoeken)
         self.r_stralen[:, 1] = np.sin(self.hoeken)
@@ -138,7 +138,7 @@ class Player:
         self.oude_pos = (self.p_x, self.p_y)
         if self.in_auto:
             if richting == 1 and stap > 0:
-                self.car.accelerate()
+                self.car.accelerate(self)
             else:
                 self.car.brake()
         else:
@@ -152,9 +152,11 @@ class Player:
             if world_map[math.floor(y)][math.floor(x)] <= 0 and world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
                 self.p_x = x
                 self.p_y = y
-            if world_map[math.floor(y)][math.floor(self.p_x)] <= 0 and world_map[math.floor(y_2)][math.floor(self.p_x)] <= 0:
+            if world_map[math.floor(y)][math.floor(self.p_x)] <= 0 and world_map[math.floor(y_2)][
+                math.floor(self.p_x)] <= 0:
                 self.p_y = y
-            if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and world_map[math.floor(self.p_y)][math.floor(x_2)] <= 0:
+            if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and world_map[math.floor(self.p_y)][
+                math.floor(x_2)] <= 0:
                 self.p_x = x
         self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)
@@ -180,21 +182,22 @@ class Player:
             if world_map[math.floor(y)][math.floor(x)] <= 0 and world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
                 self.p_x = x
                 self.p_y = y
-            if world_map[math.floor(y)][math.floor(self.p_x)] <= 0 and world_map[math.floor(y_2)][math.floor(self.p_x)] <= 0:
+            if world_map[math.floor(y)][math.floor(self.p_x)] <= 0 and world_map[math.floor(y_2)][
+                math.floor(self.p_x)] <= 0:
                 self.p_y = y
-            if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and world_map[math.floor(self.p_y)][math.floor(x_2)] <= 0:
+            if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and world_map[math.floor(self.p_y)][
+                math.floor(x_2)] <= 0:
                 self.p_x = x
         self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)
-
 
     def idle(self):
         self.isWalking = False
 
     def draaien(self, hoek):
         """Via gegeven draaihoek alle stralen in van de speler (en auto) laten draaien"""
-        self.hoek = (hoek + self.hoek)# % (2 * math.pi)
-        self.hoeken = (hoek + self.hoeken)# % (2 * math.pi)
+        self.hoek = (hoek + self.hoek)  # % (2 * math.pi)
+        self.hoeken = (hoek + self.hoeken)  # % (2 * math.pi)
 
         self.r_speler = np.array([math.cos(self.hoek), math.sin(self.hoek)])
         self.r_camera = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
@@ -205,11 +208,19 @@ class Player:
         self.hoek = self.hoek % (2 * math.pi)
         self.hoeken = self.hoeken % (2 * math.pi)
 
+        x = self.r_stralen[:, 0] != 0
+        y = self.r_stralen[:, 1] != 0
+
+        self.delta_x[~x] = 99999
+        self.delta_y[~y] = 99999
+        self.delta_x[x] = 1 / np.abs(self.r_stralen[x, 0])
+        self.delta_y[y] = 1 / np.abs(self.r_stralen[y, 1])
+
     def trow(self, world_map):
         """Maakt Doos sprite aan en update deze zodat een paar keer voor betere visuals
         :return: Doos_Sprite"""
         self.laatste_doos = time.time()
-        sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, -600,False ,self.r_speler / 5,)
+        sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, -600, False, self.r_speler / 5, )
         for i in range(51):
             sprite.update(world_map)
         return sprite
@@ -219,7 +230,8 @@ class Player:
         Neemt world map in zodat er gemakkelijk van map kan gewisseld worden"""
 
         # variabelen
-        l = 2000  # maximale lengte die geraycast wordt
+        y_max, x_max = np.shape(world_map)
+        l = 200  # maximale lengte die geraycast wordt
         """AANPASSINGEN DOORTREKKEN NAAR SPRITES"""
 
         kleuren = np.zeros(self.breedte, dtype="int")
@@ -228,24 +240,16 @@ class Player:
         z_d_muur = np.ones(self.breedte)
         z_d_muur_vlak = np.zeros(self.breedte)
 
-        x = self.r_stralen[:, 0] != 0
-        y = self.r_stralen[:, 1] != 0
-        if not x.all() or not y.all():
-            print("straight on")
-
-        self.delta_x[~x] = 999
-        self.delta_y[~y] = 999
-        self.delta_x[x] = 1 / np.abs(self.r_stralen[x, 0])
-        self.delta_y[y] = 1 / np.abs(self.r_stralen[y, 1])
-
 
         # Bij negatieve R_straal moeten we op de wereldmap 1 positie meer naar 0 toe schuiven.
         richting_x = np.where(self.r_stralen[:, 0] >= 0, 0, 1)
         richting_y = np.where(self.r_stralen[:, 1] >= 0, 0, 1)
 
         # initiele afstand berekenen
-        d_v = np.where(self.r_stralen[:, 0] >= 0,(1 - (self.p_x - math.floor(self.p_x))) * self.delta_x,(self.p_x - math.floor(self.p_x)) * self.delta_x)
-        d_h = np.where( self.r_stralen[:, 1] >= 0,(1 - (self.p_y - math.floor(self.p_y))) * self.delta_y,(self.p_y - math.floor(self.p_y)) * self.delta_y)
+        d_v = np.where(self.r_stralen[:, 0] >= 0, (1 - (self.p_x - math.floor(self.p_x))) * self.delta_x,
+                       (self.p_x - math.floor(self.p_x)) * self.delta_x)
+        d_h = np.where(self.r_stralen[:, 1] >= 0, (1 - (self.p_y - math.floor(self.p_y))) * self.delta_y,
+                       (self.p_y - math.floor(self.p_y)) * self.delta_y)
 
         z_buffer = np.full(self.breedte, False)
         checker = np.full(self.breedte, True)
@@ -292,7 +296,8 @@ class Player:
 
             # Logica: x_f moet tussen 0 en x_dim blijven en y_f tussen 0 en y_dim
             # Deze tellen ook enkel maar als de break conditie niet telt
-            valid_indices = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), 0 <= y_f, y_f < len(world_map), break_cond))
+            valid_indices = np.logical_and.reduce(
+                (0 <= x_f, x_f < x_max, 0 <= y_f, y_f < y_max, break_cond))
             z_valid = valid_indices * break_z
             """HIER LOGICA INVOEGEN VOOR ALS EEN RAY OUT OF BOUND GAAT --> Map herwerken"""
 
@@ -304,7 +309,8 @@ class Player:
             if z_buffer.any():
                 z_kleuren[z_buffer] = world_map[y_f[z_buffer], x_f[z_buffer]]
                 # r_straal*r_speler voor fish eye eruit te halen
-                z_d_muur = np.where(z_buffer,least_distance* (self.r_stralen[:, 0] * self.r_speler[0]+ self.r_stralen[:, 1] * self.r_speler[1]), 0)
+                z_d_muur = np.where(z_buffer, least_distance * (
+                            self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 0)
                 # Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
                 z_d_muur_vlak[z_buffer] = np.where(dist_cond[z_buffer], y[z_buffer], x[z_buffer])
                 # z_kleuren = np.where((z_d_muur_vlak % 1) < deuren[z_kleuren].positie, 0, z_kleuren)
@@ -315,14 +321,15 @@ class Player:
         valid_indices = np.logical_and.reduce((0 <= x_f, x_f < len(world_map[0]), y_f < len(world_map), ~checker))
         kleuren[valid_indices] = world_map[y_f[valid_indices], x_f[valid_indices]]
         d_muur_vlak = np.where(dist_cond, y, x)
-        d_muur = np.where(valid_indices, least_distance * (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 60)
+        d_muur = np.where(valid_indices, least_distance * (
+                    self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 60)
         z_d_muur * (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1])
         return (d_muur, (d_muur_vlak % 1), (kleuren - 1)), ((1 / z_d_muur), (z_d_muur_vlak % 1), (z_kleuren))
 
     def reset(self):
         self.p_x = self.initial[0]
         self.p_y = self.initial[1]
-        self.position[:] = math.floor(self.p_x),math.floor(self.p_y)
+        self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
         self.hoek = self.initial[2]
         self.r_speler = np.array([math.cos(self.hoek), math.sin(self.hoek)])
         self.r_camera = np.array([math.cos(self.hoek - math.pi / 2), math.sin(self.hoek - math.pi / 2)])
@@ -344,26 +351,26 @@ class PostBus(Sprite):
         self.vector = np.array([1, 0])
         self.afrem = 0.002
         self.optrek = 0.001
-        self.hoek = -math.pi/2
+        self.hoek = -math.pi / 2
         self.player_inside = False
         self.crashed = False
         self.turning_mult = 2
         self.stuurhoek = 0
-        self.versnelling = "1"
+        self.versnelling = 1
+        self.versnellingen = ["R", "1", "2", "3", "4", "5", "6"]
         self.input_delay = 0
         self.crash_time = 0
 
     def update(self, world_map, speler, delta):
         """Update positie auto"""
-
-
+        self.speed_update()
         speed = self.speed * delta / 0.015
         if self.speed == 0:
             return
         elif self.speed < 0:
             self.turning_mult = 40
         else:
-            self.turning_mult = (self.optrek/speed)**1.2 * 500
+            self.turning_mult = (self.optrek / speed) ** 1.2 * 500
         if self.player_inside == False:
             self.brake()
             self.brake()
@@ -403,9 +410,9 @@ class PostBus(Sprite):
             if not self.crash_time < time.time() - 0.2:
                 if world_map[math.floor(y)][math.floor(self.x)] <= 0 and world_map[y_2_f][math.floor(self.x)] <= 0:
                     if self.vector[1] > 0:
-                        self.hoek = math.pi/2
+                        self.hoek = math.pi / 2
                     elif self.vector[1] != 0:
-                        self.hoek = -math.pi/2
+                        self.hoek = -math.pi / 2
                     veranderingshoek = self.hoek - speler.hoek
                     speler.draaien(veranderingshoek)
                 if world_map[math.floor(self.y)][math.floor(x)] <= 0 and world_map[math.floor(self.y)][x_2_f] <= 0:
@@ -416,46 +423,62 @@ class PostBus(Sprite):
                     veranderingshoek = self.hoek - speler.hoek
                     speler.draaien(veranderingshoek)
             if self.crash_time < time.time() - 0.01:
-                self.vector = (0,0)
+                self.vector = (0, 0)
                 self.speed = 0
-                if speler.in_auto:
-                    self.crashed = True
-                    self.crash_time = time.time()
-                    self.hp -= 1
+                self.versnelling = 1
+                self.hp -= 1
                 if self.hp == 0:
+                    speler.hit = True
                     self.player_leaving(world_map, speler)
                     self.hp = 9
                     speler.aantal_hartjes -= 1
+                elif speler.in_auto:
+                    self.crashed = True
+                    self.crash_time = time.time()
 
     def brake(self):
         if self.speed > self.afrem:
             self.speed -= self.afrem
+            if self.speed < (self.versnelling-1.5) * 0.05:
+                self.versnelling -= 1
         else:
             self.speed = 0.0
 
-    def accelerate(self):
-        if self.versnelling == "1":
+    def accelerate(self,speler):
+        if self.versnelling != 0:
             if self.speed < 0:
                 self.speed = 0
-            elif self.speed < 1:
+            elif self.speed < 0.05 * self.versnelling:
+                #Changing the 0.05 affects line 171 IB2 (sound) and the up and downshifting line 330 IB2
+                #In class affects in speed_update and braking
                 self.speed += self.optrek
-        elif self.versnelling == "R":
+            else:
+                speler.messages.append(("Shift", time.time()))
+                self.speed -= self.afrem
+        else:
             if self.speed > 0:
                 self.speed -= self.optrek
             elif self.speed > -0.01:
-                self.speed -= self.optrek/2
-            """
-            if 0.2 > self.speed > 0.1:
-                self.turning_mult = 1
-            elif 0.3 > self.speed > 0.2:
-                self.turning_mult = 0.1
-            elif self.speed > 0.3:
-                self.turning_mult = 0.02"""
+                self.speed -= self.optrek / 2
+
+    def speed_update(self):
+        if self.speed > 0.05 * self.versnelling:
+            self.speed -= self.afrem/2
+            if self.speed > 0.05 * (self.versnelling+1):
+                self.speed -= self.afrem
+            if self.speed < 0:
+                self.speed = 0
+        elif self.speed < 0 and self.versnelling:
+            if self.speed > -self.optrek/5:
+                self.speed = 0
+            else:
+                self.speed += self.optrek/5
+
 
     def draaien(self, hoek):
         self.hoek = (hoek + self.hoek) % (2 * math.pi)
         self.vector = np.array([math.cos(self.hoek), math.sin(self.hoek)])
-        self.draai_sprites(round(hoek*180/math.pi))
+        self.draai_sprites(round(-hoek * 180 / math.pi))
 
 
     def player_enter(self, speler):
@@ -463,13 +486,14 @@ class PostBus(Sprite):
         zet alle settings correct"""
         if self.afstanden(speler.p_x, speler.p_y) < 1.5:
             self.player_inside = True
+            self.versnelling = 1
             speler.p_x = self.x
             speler.p_y = self.y
             speler.position[:] = math.floor(self.x), math.floor(self.y)
             hoek_diff = self.hoek - speler.hoek
             speler.draaien(hoek_diff)
             speler.hoek = self.hoek
-            #speler.aanmaak_r_stralen()
+            # speler.aanmaak_r_stralen()
             self.vector = np.array([math.cos(self.hoek), math.sin(self.hoek)])
             speler.in_auto = True
             return False
@@ -521,29 +545,28 @@ class Deur:
 
 class Voertuig(Sprite):
     def __init__(self, image, images, map_png, x, y, height, world_map, schaal=0.2):
-        super().__init__(image, images, map_png, int(x)+0.5, int(y)+0.5, height, "Auto", schaal)
+        super().__init__(image, images, map_png, int(x) + 0.5, int(y) + 0.5, height, "Auto", schaal)
         self.speed = 0.05
         self.vector = [1, 0]
         self.hoek = 0
-        self.nieuwe_pos = [0,0] #pos op wereldmap
+        self.nieuwe_pos = [0, 0]  # pos op wereldmap
         self.position = [math.floor(x), math.floor(y)]
         self.crash = False
-        self.select_new_dir(world_map,initial=True)
+        self.select_new_dir(world_map, initial=True)
         self.last_car = self
+        self.map_grootte = 6
 
-    def crashing(self,autos):
+    def crashing(self, autos):
+        return False
         if self.crash:
             return True
         for auto in autos:
             if auto == self and auto == self.last_car: continue;
-
-            afstand = ((self.x - auto.x) ** 2 + (self.y - auto.y) ** 2) ** (1 / 2)
-            if afstand < 0.5:
+            if -0.5 < (self.x - auto.x) < 0.5 or -0.5 < (self.y - auto.y) < 0.5:
                 self.crash = True
                 auto.crash = True
                 self.last_car = auto
         return self.crash
-
 
     def update(self, world_map, delta, auto_sprites):
         if self.position != self.nieuwe_pos:
@@ -551,7 +574,6 @@ class Voertuig(Sprite):
             self.y += self.speed * self.vector[1]
             self.position = [math.floor(self.x), math.floor(self.y)]
             self.draai_sprites(round(self.hoek*180/math.pi))
-            print(self.hoek)
             if self.crashing(auto_sprites):
                 self.hoek = (math.pi + self.hoek) % (2 * math.pi)
                 self.draai_sprites(180)
@@ -562,17 +584,17 @@ class Voertuig(Sprite):
 
         self.select_new_dir(world_map)
 
-    def select_new_dir(self,world_map, initial=None):
+    def select_new_dir(self, world_map, initial=None):
         nieuwe_richting = []
         i = 0
         vectors = [[1, 0], [-1, 0], [0, 1], [0, -1]]
         for vx, vy in vectors:
-            if self.vector == [(vx*-1), (vy*-1)]: continue;
+            if self.vector == [(vx * -1), (vy * -1)]: continue;
             pos = (self.position[1] + 3 * vy, self.position[0] + 3 * vx)
             pos2 = (self.position[1] + 5 * vy, self.position[0] + 5 * vx)
             if world_map[pos] <= 0 and world_map[pos2] <= 0:
-                 i += 1
-                 nieuwe_richting.append(([vx, vy], [self.position[0] + 9 * vx, self.position[1] + 9 * vy]))
+                i += 1
+                nieuwe_richting.append(([vx, vy], [self.position[0] + 9 * vx, self.position[1] + 9 * vy]))
         if i == 0:
             if initial:
                 self.vector = []
@@ -580,11 +602,9 @@ class Voertuig(Sprite):
             self.nieuwe_pos = [self.nieuwe_pos[0] - 9 * self.vector[0], self.nieuwe_pos[1] - 9 * self.vector[1]]
             self.vector = [v * -1 for v in self.vector]
         else:
-            plek = random.randint(0, len(nieuwe_richting)-1)
+            plek = random.randint(0, len(nieuwe_richting) - 1)
             self.vector = nieuwe_richting[plek][0]
             self.nieuwe_pos = nieuwe_richting[plek][1]
-
-
 
 
 class Politie(Sprite):
@@ -608,14 +628,14 @@ class Politie(Sprite):
             else:
                 speed = 0.05
 
-            vector = (self.pad[-1][1] - self.pad[-2][1],self.pad[-1][0] - self.pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
+            vector = (self.pad[-1][1] - self.pad[-2][1],
+                      self.pad[-1][0] - self.pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
 
             self.x += speed * vector[0]
             self.y += speed * vector[1]
 
     def padfind(self):
         if self.afstand < 25 and self.achtervolgen:
-            self.pad = pathfinding_gps((self.x,self.y))
+            self.pad = pathfinding_gps((self.x, self.y))
         else:
             self.achtervolgen = False
-

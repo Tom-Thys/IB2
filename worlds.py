@@ -8,7 +8,7 @@ from random import randint
 from Classes import Deur, Sprite
 from PIL import Image
 
-random.seed(10)
+random.seed(20)
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
@@ -137,7 +137,7 @@ def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tr
     return sprites
 
 
-def world_generation(openingen=[]):
+def world_generation(openingen=list):
     kaart = np.zeros((9, 9), dtype='int32')
     pakjes_plekken = [(1, 3), (3, 1), (7, 3), (3, 7), (1, 5), (5, 1), (7, 5), (5, 7)]
     for plekx, pleky in pakjes_plekken:
@@ -301,9 +301,9 @@ class Map():
 
     def direct_map_making(self, x_pos, y_pos):
         if self.tile_map[x_pos, y_pos] == 0:
-            if randint(0, 100) == 0:
+            if randint(0, 75) == 0:
                 kaart = np.zeros((9, 9), dtype='int32')
-                self.tile_map[x_pos, y_pos] = Tile((kaart, []))
+                self.tile_map[x_pos, y_pos] = Tile((kaart, [1, 2, 3, 4]))
                 return
 
             openingen = []

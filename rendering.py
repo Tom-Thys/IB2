@@ -6,7 +6,7 @@ from IB2 import kleuren, HOOGTE, BREEDTE
 """ALLES RELATED AAN DRAWING OP HET SCHERM"""
 
 
-def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
+def draw_nav(renderer, kleuren_textures, arrow, Map, speler, pad, sprites):
     """
     Rendert PNG van world map in linkerbovenhoek
     Speler is zichtbaar in het midden
@@ -99,6 +99,7 @@ def draw_nav(renderer, kleuren_textures, Map, speler, pad, sprites):
     packet = (x_min, x_max, y_min, y_max, midden, afstand, unit_d)
 
     draw_path(renderer, kleuren_textures, pad, speler, packet)
+    draw_arrow(renderer, arrow, speler, pad)
 
     # renderer.fill(((speler.p_x-0.25)*unit_d,(speler.p_y-0.25)*unit_d,unit_d/2,unit_d/2),kleuren[9])
     # for sprite in sprites:
@@ -149,13 +150,13 @@ def z_renderen(renderer, d, d_v, k, muren_info):
 
 def renderText(font, renderer, text, x, y):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
-    x_s = text.size[0]
-    renderer.copy(text, dstrect=(int((x - x_s) / 2), y, x_s, text.size[1]))
+    x_s, y_s = text.size
+    renderer.copy(text, dstrect=(int((x - x_s) / 2), y, x_s, y_s))
 
 
 
 def render_floor_and_sky(renderer, kleuren_textures):
-    """Rendert achtergrond top half blauw bottem grijs"""
+    """Rendert achtergrond top half blauw bottom grijs"""
     """# SKY in blauw
     renderer.fill((0, 0, BREEDTE, HOOGTE // 2), kleuren[9])
     # Floor in grijs
@@ -171,40 +172,36 @@ def render_floor_and_sky(renderer, kleuren_textures):
 
 
 def draw_path(renderer, kleuren_textures, path, speler, packet):
-    if path == None:
-        pass
-        # Moeten we hier niet kijken dat er dan een nieuwe locatie wordt gevonden? Als de eindlocatie in ingesloten ruimte zit
-    else:
-        x_min, x_max, y_min, y_max, midden, afstand, unit_d = packet
-        for item, locatie in enumerate(path):
-            if x_min < locatie[0] < x_max and y_min < locatie[1] < y_max:
-                x = (locatie[0] - speler.position[0]) / afstand * midden + midden - unit_d / (2*1.5)
-                y = (-locatie[1] + speler.position[1]) / afstand * midden + midden - unit_d - unit_d / (2*1.5)
-            else:
-                continue
-            """x = (locatie[1] - mid_y + afstand)*unit_d
-            y = (locatie[0] - mid_x + afstand)*unit_d
-            if x < 0 or y < 0 or x > 2 * afstand or y > 2 * afstand:
-                continue
-            if locatie[0] == 0:
-                pass"""
-            if item == 0:
-                # renderer.fill(((x * unit_d), (y * unit_d), unit_d, unit_d), kleuren[1])
-                renderer.copy(kleuren_textures[1],
-                              srcrect=(0, 0, 1, 1),
-                              dstrect=(x, y, unit_d, unit_d/1.5))
-            elif item == len(path) - 1:
-                # renderer.fill(((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
-                # unit_d / 1.5, unit_d / 1.5), kleuren[2])
-                renderer.copy(kleuren_textures[2],
-                              srcrect=(0, 0, 1, 1),
-                              dstrect=(x, y, unit_d / 1.5, unit_d / 1.5))
-            else:
-                # renderer.fill(((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
-                # unit_d / 1.5, unit_d / 1.5), kleuren[7])
-                renderer.copy(kleuren_textures[7],
-                              srcrect=(0, 0, 1, 1),
-                              dstrect=(x, y, unit_d / 1.5, unit_d / 1.5))
+    x_min, x_max, y_min, y_max, midden, afstand, unit_d = packet
+    for item, locatie in enumerate(path):
+        if x_min < locatie[0] < x_max and y_min < locatie[1] < y_max:
+            x = (locatie[0] - speler.position[0]) / afstand * midden + midden - unit_d / (2*1.5)
+            y = (-locatie[1] + speler.position[1]) / afstand * midden + midden - unit_d - unit_d / (2*1.5)
+        else:
+            continue
+        """x = (locatie[1] - mid_y + afstand)*unit_d
+        y = (locatie[0] - mid_x + afstand)*unit_d
+        if x < 0 or y < 0 or x > 2 * afstand or y > 2 * afstand:
+            continue
+        if locatie[0] == 0:
+            pass"""
+        if item == 0:
+            # renderer.fill(((x * unit_d), (y * unit_d), unit_d, unit_d), kleuren[1])
+            renderer.copy(kleuren_textures[1],
+                          srcrect=(0, 0, 1, 1),
+                          dstrect=(x, y, unit_d, unit_d/1.5))
+        elif item == len(path) - 1:
+            # renderer.fill(((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
+            # unit_d / 1.5, unit_d / 1.5), kleuren[2])
+            renderer.copy(kleuren_textures[2],
+                          srcrect=(0, 0, 1, 1),
+                          dstrect=(x, y, unit_d / 1.5, unit_d / 1.5))
+        else:
+            # renderer.fill(((x * unit_d + unit_d / 4), (y * unit_d + unit_d / 4),
+            # unit_d / 1.5, unit_d / 1.5), kleuren[7])
+            renderer.copy(kleuren_textures[7],
+                          srcrect=(0, 0, 1, 1),
+                          dstrect=(x, y, unit_d / 1.5, unit_d / 1.5))
 
 
 def render_map(renderer,pngs_mappen, map_settings,speler,sprites):
@@ -230,3 +227,27 @@ def render_map(renderer,pngs_mappen, map_settings,speler,sprites):
                   srcrect=(linker_bovenhoek_x, linker_bovenhoek_y, 2 * afstand_map, 2 * afstand_map),
                   dstrect=(160, 112, BREEDTE - 300, HOOGTE - 222),
                   flip=2)
+
+def auto_info_renderen(renderer, font, pngs, car):
+    hoogte_dashboard = 150
+    start_dashboard = 200
+    renderer.copy(pngs[0], dstrect=(start_dashboard, HOOGTE - hoogte_dashboard, BREEDTE-2*start_dashboard, hoogte_dashboard))
+    renderText(font, renderer, car.versnellingen[car.versnelling], 1400, HOOGTE - 100)
+    snelheid = str(abs(round(car.speed * 400)))
+    renderText(font, renderer, snelheid, 600, HOOGTE - 100)
+
+    x_pos = (BREEDTE - 250) // 2
+    y_pos = HOOGTE - 230
+    hoek = -car.stuurhoek * 180 / math.pi * 100 * car.speed
+    renderer.copy(pngs[1], dstrect=(x_pos, y_pos, 250, 250), angle=hoek)
+    car.stuurhoek = 0
+
+def draw_arrow(renderer, arrow, speler, pad):
+    if len(pad) > 6:
+        pos = pad[-6]
+    elif pad != []:
+        pos = pad[0]
+    else:
+        return
+    hoek = (speler.hoek - math.atan2(speler.p_y-pos[1],speler.p_x-pos[0])+math.pi/2) / math.pi * 180
+    renderer.copy(arrow, dstrect=(100,HOOGTE-100,100,100),angle=hoek)

@@ -20,7 +20,8 @@
 
 ### Others
 - Gebruik <kbd>t</kbd> om in de auto te stappen (afstand < 1.5)
-- Gebruik <kbd>y</kbd> om de auto in achteruit te zetten
+- Gebruik <kbd>y</kbd> om omhoog te shiften
+- Gebruik <kbd>h</kbd> om omlaag te shiften
 - Gebruik <kbd>g</kbd> om deuren te openen (momenteel geen deuren meer in de game)
 - Gebruik <kbd>space</kbd> om pakketjes af te vuren of de menu optie te selecteren
 - Gebruik <kbd>m</kbd> om de volledige map te kunnen bekijken
@@ -42,4 +43,3 @@
 - Sprites
 - Fine tuning car
 - Police car
-- Multi-treading/-processing (done?)

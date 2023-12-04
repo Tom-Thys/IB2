@@ -109,12 +109,12 @@ kleuren = [
     sdl2.ext.Color(0, 255, 0),  # 2 = Groen
     sdl2.ext.Color(0, 0, 255),  # 3 = Blauw
     sdl2.ext.Color(225, 165, 0),  # 4 = oranje
-    sdl2.ext.Color(64, 64, 64),  # 4 = Donker grijs
-    sdl2.ext.Color(128, 128, 128),  # 5 = Grijs
-    sdl2.ext.Color(192, 192, 192),  # 6 = Licht grijs
-    sdl2.ext.Color(255, 255, 255),  # 7 = Wit
-    sdl2.ext.Color(120, 200, 250),  # 8 = Blauw_lucht
-    sdl2.ext.Color(106, 13, 173)  # 9 = Purple
+    sdl2.ext.Color(64, 64, 64),  # 5 = Donker grijs
+    sdl2.ext.Color(128, 128, 128),  # 6 = Grijs
+    sdl2.ext.Color(192, 192, 192),  # 7 = Licht grijs
+    sdl2.ext.Color(255, 255, 255),  # 8 = Wit
+    sdl2.ext.Color(120, 200, 250),  # 9 = Blauw_lucht
+    sdl2.ext.Color(106, 13, 173)  # 10 = Purple
 ]
 kleuren_textures = []
 
@@ -141,7 +141,7 @@ geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_loop.wav", "UTF-8")),  # 14
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car crash.wav", "UTF-8"))
 ]
-
+gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "car gear 4", "car gear 4"]
 
 #
 # Verwerkt alle input van het toetsenbord en de muis
@@ -168,17 +168,11 @@ def verwerk_input(delta, events=0):
             speler.move(1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
-            else:
-                if 0 < speler.car.speed < 0.12:
-                    muziek_spelen("car gear 1", channel=4)
-                elif 0.12 < speler.car.speed < 0.25:
-                    muziek_spelen("car gear 2", channel=4)
-                elif 0.25 < speler.car.speed < 0.4:
-                    muziek_spelen("car gear 3", channel=4)
-                elif speler.car.speed > 0.4:
-                    muziek_spelen("car gear 4", channel=4)
+            elif speler.car.speed < speler.car.versnelling*0.0499:
+                muziek_spelen(gears[speler.car.versnelling], channel=4)
 
-        if key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]:
+
+        elif key_states[sdl2.SDL_SCANCODE_DOWN] or key_states[sdl2.SDL_SCANCODE_D]:
             speler.move(-1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
@@ -186,14 +180,14 @@ def verwerk_input(delta, events=0):
             speler.sideways_move(1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
-        if key_states[sdl2.SDL_SCANCODE_R] and not speler.in_auto:
-            speler.draaien(-math.pi / sensitivity)
-        if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
+        elif key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
             speler.sideways_move(-1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
         if key_states[sdl2.SDL_SCANCODE_W] and not speler.in_auto:
             speler.draaien(math.pi / sensitivity)
+        elif key_states[sdl2.SDL_SCANCODE_R] and not speler.in_auto:
+            speler.draaien(-math.pi / sensitivity)
 
     if game_state == 2 and show_map:
         if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
@@ -295,9 +289,9 @@ def verwerk_input(delta, events=0):
                     game_state = 0 if not paused else 2
             if game_state == 2:
                 if key == sdl2.SDLK_m and not paused:
-                    show_map = True if not show_map else False
+                    show_map = not show_map
                 if key == sdl2.SDLK_p:
-                    paused = True if not paused else False
+                    paused = not paused
                 if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
                     pass
                 if paused:
@@ -334,10 +328,11 @@ def verwerk_input(delta, events=0):
                     if speler.in_auto:
                         muziek_spelen("car start", channel=7)
             if key == sdl2.SDLK_y:
-                if speler.car.versnelling == "1":
-                    speler.car.versnelling = "R"
-                else:
-                    speler.car.versnelling = "1"
+                if speler.car.versnelling != 6 and (speler.car.versnelling == 0 or speler.car.speed > (speler.car.versnelling-0.5) * 0.05):
+                        speler.car.versnelling += 1
+            elif key == sdl2.SDLK_h:
+                if speler.car.versnelling != 0:
+                    speler.car.versnelling -= 1
             if key == sdl2.SDLK_b:
                 speler.reset()
             if key == sdl2.SDLK_n:
@@ -397,23 +392,6 @@ def verwerk_input(delta, events=0):
 
     if key_states[sdl2.SDL_SCANCODE_ESCAPE]:
         moet_afsluiten = True
-
-
-def auto_info_renderen(renderer, font, pngs, car):
-    hoogte_dashboard = 150
-    start_dashboard = 200
-    renderer.copy(pngs[0], dstrect=(start_dashboard, HOOGTE - hoogte_dashboard, BREEDTE-2*start_dashboard, hoogte_dashboard))
-    renderText(font, renderer, car.versnelling, 600, HOOGTE - 95)
-    snelheid = round(car.speed * 400)
-    if car.versnelling == "R":
-        snelheid *= -1
-    renderText(font, renderer, str(snelheid), 1400, HOOGTE - 95)
-
-    x_pos = (BREEDTE - 250) // 2
-    y_pos = HOOGTE - 230
-    hoek = -car.stuurhoek * 180 / math.pi * 100 * car.speed
-    renderer.copy(pngs[1], dstrect=(x_pos, y_pos, 250, 250), angle=hoek)
-    car.stuurhoek = 0
 
 
 def handen_sprite(renderer, handen_doos):
@@ -544,7 +522,7 @@ def collision_detection(renderer, speler, sprites, hartje):
     global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen
     for sprite in sprites:
         if sprite.soort == "Doos":
-            if sprite.position[:] == eindbestemming[:]:
+            if tuple(sprite.position[:]) == eindbestemming[:]:
                 lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
                 rnd = randint(0, len(lijst_objective_complete) - 1)
                 muziek_spelen(lijst_objective_complete[rnd], channel=5)
@@ -567,20 +545,29 @@ def collision_detection(renderer, speler, sprites, hartje):
                 if speler.car.hp == 0:
                     speler.car.hp = 9
                     speler.car.player_leaving(world_map, speler)
+                    speler.car.crashed = False
+                    speler.hit = True
 
             else:
                 speler.aantal_hartjes -= 1
+                speler.hit = True
     if speler.in_auto:
         if speler.car.crashed:
             speler.car.crashed = False
             muziek_spelen("car crash", channel=5)
-        i = 1
-        while i <= speler.car.hp:
-            x_pos = BREEDTE - 50 - 50 * i
-            y_pos = HOOGTE - 70
-            renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
-            i += 1
+        rijen = (speler.car.hp -1)//4
+        for i in range(rijen + 1):
+            kolom = 4
+            if i == rijen:
+                kolom = speler.car.hp - 4 * i
+            for j in range(kolom):
+                x_pos = BREEDTE - 50 - 50 * j
+                y_pos = HOOGTE - 70 - 50 * i
+                renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
     else:
+        if speler.hit:
+            muziek_spelen("car crash", channel=5)
+            speler.hit = False
         hartjes = speler.aantal_hartjes
         if hartjes == 0:
             return True
@@ -802,6 +789,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
+
     # bestemming_selector("start")
     lijst_mogelijke_bestemmingen = inf_world.mogelijke_bestemmingen
     eindbestemming = bestemming_selector()
@@ -852,17 +840,19 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
     sprite_map_png = factory.from_image(resources.get_path("map_boom.png"))
     map_auto = factory.from_image(resources.get_path("map_auto.png"))
+    map_voertuig = factory.from_image(resources.get_path("map_voertuig.png"))
     doos = factory.from_image(resources.get_path("doos.png"))
     map_doos = factory.from_image(resources.get_path("map_doos.png"))
     speler_png = factory.from_image(resources.get_path("speler_sprite.png"))
+    arrow = factory.from_image(resources.get_path("arrow.png"))
     speler.doos = doos
     speler.map_doos = map_doos
     speler.png = speler_png
     gps_grote_map = factory.from_image(resources.get_path("gps_grote_map.png"))
 
     boom = sdl2.ext.Resources(__file__, "resources/boom")
-    rode_auto = sdl2.ext.Resources(__file__, "resources/Rode_auto")
-    blauwe_auto = sdl2.ext.Resources(__file__, "resources/Blauwe_auto")
+    rode_auto = sdl2.ext.Resources(__file__, "resources/Auto")
+    #blauwe_auto = sdl2.ext.Resources(__file__, "resources/Blauwe_auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
     bomen = []
@@ -872,20 +862,20 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
         rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
-        blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
+        #blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
         # polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
 
     # Eerste Auto aanmaken
-    auto = PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
+    auto = PostBus(tree, rode_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
     auto.draai_sprites(125)
     speler.car = auto
     sprites_autos.append(auto)
 
-    for i in range(100):
+    for i in range(200):
         omgeving = 18
         x = randint(speler.tile[0] - omgeving, speler.tile[0] + omgeving) * 9 + 4
         y = randint(speler.tile[1] - omgeving, speler.tile[1] + omgeving) * 9 + 4
-        voertuig = Voertuig(tree, rode_autos, map_auto, x, y, HOOGTE, world_map)
+        voertuig = Voertuig(tree, rode_autos, map_voertuig, x, y, HOOGTE, world_map)
         if voertuig.vector == []: continue;
         sprites_autos.append(voertuig)
 
@@ -896,6 +886,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
     font_2 = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=60, color=kleuren[0])
+    dash_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=60, color=kleuren[8])
     fps_generator = show_fps(font, renderer)
 
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
@@ -1035,11 +1026,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 print('NONE')
                 eindbestemming = bestemming_selector()
 
-            draw_nav(renderer, kleuren_textures, inf_world, speler, pad, sprites)
+            draw_nav(renderer, kleuren_textures, arrow, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
 
             if speler.in_auto:
-                auto_info_renderen(renderer, font_2,(dashboard, wheel), speler.car)
+                auto_info_renderen(renderer, dash_font,(dashboard, wheel), speler.car)
                 # speler.renderen(renderer, world_map)
                 if speler.car.speed > 0:
                     muziek_spelen("car loop", channel=2)
@@ -1087,7 +1078,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 if __name__ == '__main__':
     # Speler aanmaken
     speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
-    speler.aanmaak_r_stralen(d_camera=d_camera)
     with Manager() as manager:
         shared_eindbestemming = manager.list(eindbestemming)
         shared_spelerpositie = manager.list(speler.position)
