@@ -16,7 +16,7 @@
 - Pakkjes oppakken, in auto en uit auto halen
 - Dialog boxes?
 - Game over screen
-- Muziek: Ander geluid als persoon iets hit?
+- Muziek: Ander geluid als persoon iets hit? (done?)
 - Generated sprites: Andere types?
 
 

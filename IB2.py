@@ -139,7 +139,8 @@ geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_3.wav", "UTF-8")),  # 12
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_4.wav", "UTF-8")),  # 13
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_loop.wav", "UTF-8")),  # 14
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car crash.wav", "UTF-8"))
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car crash.wav", "UTF-8")),  # 15
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/hit sound.wav", "UTF-8"))
 ]
 gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "car gear 4", "car gear 4"]
 
@@ -396,21 +397,21 @@ def verwerk_input(delta, events=0):
 
 def handen_sprite(renderer, handen_doos):
     global verandering
-    x, y = speler.p_x, speler.p_y
-    oud_x, oud_y = speler.oude_pos
     if speler.isWalking:
-        if verandering < 24:
+        if verandering < 36:
             verandering += 1
         else:
             verandering = 1
     else:
         if verandering > 1:
             verandering -= 1
+        if verandering == 19:
+            verandering = 1
         else:
             verandering = 1
     renderer.copy(handen_doos,
                   srcrect=(0, 0, handen_doos.size[0], handen_doos.size[1]),
-                  dstrect=(200 + 8 * math.sin(((2 * math.pi) / 24) * verandering), 230, BREEDTE - 400, HOOGTE))
+                  dstrect=(200 + 8 * math.sin(((2 * math.pi) / 36) * verandering), 230, BREEDTE - 400, HOOGTE))
 
 
 def render_sprites(renderer, sprites, player, d, delta):
@@ -566,7 +567,7 @@ def collision_detection(renderer, speler, sprites, hartje):
                 renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
     else:
         if speler.hit:
-            muziek_spelen("car crash", channel=5)
+            muziek_spelen("hit sound", channel=5)
             speler.hit = False
         hartjes = speler.aantal_hartjes
         if hartjes == 0:
@@ -626,7 +627,8 @@ def muziek_spelen(geluid, looped=False, channel=1):
             "car gear 3": geluiden[12],
             "car gear 4": geluiden[13],
             "car loop": geluiden[14],
-            "car crash": geluiden[15]
+            "car crash": geluiden[15],
+            "hit sound": geluiden[16]
         }
         if looped == False:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
@@ -1049,7 +1051,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 menu_nav()
             elif show_map:
                 map_settings = (map_positie, afstand_map, np.shape(world_map))
-                render_map(renderer, pngs_mappen, map_settings, speler, sprites)
+                render_map(renderer, kleuren_textures, pngs_mappen, map_settings, speler, pad, sprites)
                 menu_nav()
             else:
                 positie_check()
@@ -1064,7 +1066,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
             if quiting > 0:
                 quiting -= 1
-                renderText(font_2, renderer, "DONT QUIT THE GAME!!!", BREEDTE, HOOGTE / 2)
+                renderText(font_2, renderer, "DON'T QUIT THE GAME!!!", BREEDTE, HOOGTE / 2)
             # Toon de fps
             # next(fps_generator)
 

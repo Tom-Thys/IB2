@@ -204,7 +204,7 @@ def draw_path(renderer, kleuren_textures, path, speler, packet):
                           dstrect=(x, y, unit_d / 1.5, unit_d / 1.5))
 
 
-def render_map(renderer,pngs_mappen, map_settings,speler,sprites):
+def render_map(renderer,kleuren_textures, pngs_mappen, map_settings,speler,pad, sprites):
     map_png, gps_grote_map = pngs_mappen
     map_positie, afstand_map, worldshape = map_settings
 
@@ -227,6 +227,34 @@ def render_map(renderer,pngs_mappen, map_settings,speler,sprites):
                   srcrect=(linker_bovenhoek_x, linker_bovenhoek_y, 2 * afstand_map, 2 * afstand_map),
                   dstrect=(160, 112, BREEDTE - 300, HOOGTE - 222),
                   flip=2)
+    #print(afstand_map)
+    #speler_grootte = int((-17/190)*((afstand_map/1.2)-10)+20)
+    speler_grootte = 1/math.sinh((1/200)*afstand_map) + 5
+    node_grootte = 1/math.sinh((1/200)*afstand_map) + 1
+    for item, locatie in enumerate(pad):
+        if linker_bovenhoek_x < locatie[0] < linker_bovenhoek_x+2*afstand_map and linker_bovenhoek_y < locatie[1] < linker_bovenhoek_y+2*afstand_map:
+            locatie_x = int(160 + (locatie[0]-linker_bovenhoek_x) / (2*afstand_map) * (BREEDTE-300))
+            locatie_y = int(112 + (-locatie[1] + linker_bovenhoek_y+2*afstand_map) / (2 * afstand_map) * (HOOGTE-222)) - node_grootte
+            if item == 0:
+                renderer.copy(kleuren_textures[1],
+                              srcrect=(0, 0, 1, 1),
+                              dstrect=(locatie_x, locatie_y, node_grootte, node_grootte))
+            elif item == len(pad)-1:
+                renderer.copy(kleuren_textures[2],
+                              srcrect=(0, 0, 1, 1),
+                              dstrect=(locatie_x, locatie_y, node_grootte, node_grootte))
+            else:
+                renderer.copy(kleuren_textures[7],
+                              srcrect=(0, 0, 1, 1),
+                              dstrect=(locatie_x, locatie_y, node_grootte, node_grootte))
+        else:
+            continue
+    if linker_bovenhoek_x < speler.p_x < linker_bovenhoek_x+2*afstand_map and linker_bovenhoek_y < speler.p_y < linker_bovenhoek_y+2*afstand_map:
+        speler_png_x = int(160 + (speler.position[0] - linker_bovenhoek_x) / (2*afstand_map) * (BREEDTE-300))
+        speler_png_y = int(112 + (-speler.position[1] + linker_bovenhoek_y+2*afstand_map) / (2 * afstand_map) * (HOOGTE-222))
+        renderer.copy(speler.png,
+                    dstrect=(speler_png_x-speler_grootte//2, speler_png_y-speler_grootte//2, speler_grootte, speler_grootte),
+                    angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)
 
 def auto_info_renderen(renderer, font, pngs, car):
     hoogte_dashboard = 150
