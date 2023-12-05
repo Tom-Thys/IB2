@@ -871,19 +871,18 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     auto = PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
     auto.draai_sprites(125)
     speler.car = auto
-    sprites_autos.append(auto)
+    sprites_auto = []
+    sprites_auto.append(auto)
 
-    for i in range(200):
-        omgeving = 18
+    for i in range(180):
+        omgeving = 20
         x = randint(speler.tile[0] - omgeving, speler.tile[0] + omgeving) * 9 + 4
         y = randint(speler.tile[1] - omgeving, speler.tile[1] + omgeving) * 9 + 4
         voertuig = Voertuig(tree, rode_autos, map_voertuig, x, y, HOOGTE, world_map)
+
         if voertuig.vector == []: continue;
         sprites_autos.append(voertuig)
 
-
-    # sprites.append(Sprite(tree, [], sprite_map_png, (49 * 9), (49.5 * 9), HOOGTE))
-    # draai_sprites(sprites[0], 138)
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
@@ -1015,7 +1014,18 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
             sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree,
                                                    world_map, sprites_bomen)
-            sprites = sprites_bomen + sprites_autos + sprites_dozen
+            sprites = sprites_bomen + sprites_autos + sprites_dozen + sprites_auto
+
+            """
+            Bomen reageren hier raar op en verlaagt de fps met een factor 3
+            for auto in sprites_autos:
+                if auto.soort == "Auto":
+                    verwijderen = auto.collision(sprites_bomen)
+                    if verwijderen == 0:
+                        continue
+                    print("jaa")
+                    sprites_bomen.remove(verwijderen)
+            """
             render_sprites(renderer, sprites, speler, d[50:BREEDTE+50], delta)
             if collision_detection(renderer, speler, sprites, hartje):
                 print("GAME OVER")
@@ -1063,7 +1073,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 # draai_sprites(sprites[0], 1)
                 # draai_sprites(speler.car,1)
                 pass
-
+            #print(speler.p_x)
             if quiting > 0:
                 quiting -= 1
                 renderText(font_2, renderer, "DON'T QUIT THE GAME!!!", BREEDTE, HOOGTE / 2)

@@ -568,14 +568,23 @@ class Voertuig(Sprite):
                 self.last_car = auto
         return self.crash
 
+    def collision(self,sprites):
+        for sprite in sprites:
+            if sprite == self:
+                continue
+            print(abs(self.x-sprite.x+self.y-sprite.y))
+            if  abs(self.x-sprite.x+self.y-sprite.y) <= 0.5:
+                    return sprite
+        return 0
+
     def update(self, world_map, delta, auto_sprites):
         if self.position != self.nieuwe_pos:
             self.x += self.speed * self.vector[0]
             self.y += self.speed * self.vector[1]
             self.position = [math.floor(self.x), math.floor(self.y)]
-            self.draai_sprites(round(self.hoek*180/math.pi))
+
             if self.crashing(auto_sprites):
-                self.hoek = (math.pi + self.hoek) % (2 * math.pi)
+                #self.hoek = (math.pi + self.hoek) % (2 * math.pi)
                 self.draai_sprites(180)
                 self.crash = False
                 self.nieuwe_pos = [self.nieuwe_pos[0] - 9 * self.vector[0], self.nieuwe_pos[1] - 9 * self.vector[1]]
@@ -605,6 +614,21 @@ class Voertuig(Sprite):
             plek = random.randint(0, len(nieuwe_richting) - 1)
             self.vector = nieuwe_richting[plek][0]
             self.nieuwe_pos = nieuwe_richting[plek][1]
+        if self.position[0] == self.nieuwe_pos[0]:
+            x = self.position[1] - self.nieuwe_pos[1]
+            if x >= 0:
+                x = 130
+            else:
+                x=310
+
+        if self.position[1] == self.nieuwe_pos[1]:
+            x = self.position[0] - self.nieuwe_pos[0]
+            if x >= 0:
+                x=220
+            else:
+                x = 40
+        self.draai_sprites( x - self.hoek)
+        self.hoek = x
 
 
 class Politie(Sprite):
