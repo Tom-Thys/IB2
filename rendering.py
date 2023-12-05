@@ -238,15 +238,15 @@ def render_map(renderer,kleuren_textures, pngs_mappen, map_settings,speler,pad, 
             if item == 0:
                 renderer.copy(kleuren_textures[1],
                               srcrect=(0, 0, 1, 1),
-                              dstrect=(locatie_x, locatie_y, node_grootte, node_grootte))
+                              dstrect=(locatie_x + node_grootte//2, locatie_y, node_grootte, node_grootte))
             elif item == len(pad)-1:
                 renderer.copy(kleuren_textures[2],
                               srcrect=(0, 0, 1, 1),
-                              dstrect=(locatie_x, locatie_y, node_grootte, node_grootte))
+                              dstrect=(locatie_x + node_grootte//2, locatie_y, node_grootte, node_grootte))
             else:
                 renderer.copy(kleuren_textures[7],
                               srcrect=(0, 0, 1, 1),
-                              dstrect=(locatie_x, locatie_y, node_grootte, node_grootte))
+                              dstrect=(locatie_x + node_grootte//2, locatie_y, node_grootte, node_grootte))
         else:
             continue
     if linker_bovenhoek_x < speler.p_x < linker_bovenhoek_x+2*afstand_map and linker_bovenhoek_y < speler.p_y < linker_bovenhoek_y+2*afstand_map:

@@ -1097,7 +1097,6 @@ if __name__ == '__main__':
         p2.start()
         main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie)
         p2.kill()
-        # main()
         # profiler.disable()
         # stats = pstats.Stats(profiler)
         # stats.dump_stats('data.prof')
