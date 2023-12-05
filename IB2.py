@@ -57,6 +57,11 @@ POSITIE_PAUZE = [
     [595, 450],  # 2: Main Menu
     [590, 585]  # 3: Quit Game
 ]
+POSITIE_GAME_OVER = [
+    [600, 210],  # 0: Play Again
+    [600, 388],  # 1: Main Menu
+    [600, 563]  # 2: Quit Game
+]
 #
 # Globale variabelen
 #
@@ -64,6 +69,9 @@ game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
 paused = False
 show_map = False
+game_over = False
+game_over_index = 0
+game_over_positie = [0, 0]
 quiting = 0
 verandering = 1
 main_menu_index = 0
@@ -153,7 +161,7 @@ gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "ca
 
 def verwerk_input(delta, events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
-    global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie, afstand_map, quiting
+    global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie, afstand_map, quiting, game_over, game_over_index
 
     move_speed = delta * 7.5
 
@@ -162,7 +170,7 @@ def verwerk_input(delta, events=0):
     if events == 0:
         events = sdl2.ext.get_events()
     key_states = sdl2.SDL_GetKeyboardState(None)
-    if game_state == 2 and not paused and not show_map:
+    if game_state == 2 and not paused and not show_map and not game_over:
         if key_states[20]:
             print("a")
         if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
@@ -314,6 +322,24 @@ def verwerk_input(delta, events=0):
                         moet_afsluiten = True
                 elif show_map:
                     pass
+                elif game_over:
+                    if key == sdl2.SDLK_UP or key == sdl2.SDLK_e:
+                        game_over_index -= 1
+                        muziek_spelen("main menu select", channel=2)
+                    if key == sdl2.SDLK_DOWN or key == sdl2.SDLK_d:
+                        game_over_index += 1
+                        muziek_spelen("main menu select", channel=2)
+                    if game_over_index == 0 and key == sdl2.SDLK_SPACE:
+                        game_over = False
+                        speler.aantal_hartjes = 5
+                        speler.reset()
+                    if game_over_index == 1 and key == sdl2.SDLK_SPACE:
+                        game_over = False
+                        game_state = 0
+                        speler.aantal_hartjes = 5
+                        speler.reset()
+                    if game_over_index == 2 and key == sdl2.SDLK_SPACE:
+                        moet_afsluiten = True
                 else:
                     if key == sdl2.SDLK_SPACE and speler.laatste_doos < time.time() - 0.5:
                         geworpen_doos = speler.trow(world_map)
@@ -370,7 +396,7 @@ def verwerk_input(delta, events=0):
         # Wordt afgeleverd als de gebruiker de muis heeft bewogen.
         # Aangezien we relative motion gebruiken zijn alle coordinaten
         # relatief tegenover de laatst gerapporteerde positie van de muis.
-        elif event.type == sdl2.SDL_MOUSEMOTION and game_state == 2 and not paused and not show_map:
+        elif event.type == sdl2.SDL_MOUSEMOTION and game_state == 2 and not paused and not show_map and not game_over:
             # Aangezien we in onze game maar 1 as hebben waarover de camera
             # kan roteren zijn we enkel geinteresseerd in bewegingen over de
             # X-as
@@ -520,7 +546,7 @@ def render_sprites(renderer, sprites, player, d, delta):
 
 
 def collision_detection(renderer, speler, sprites, hartje):
-    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen
+    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over
     for sprite in sprites:
         if sprite.soort == "Doos":
             if tuple(sprite.position[:]) == eindbestemming[:]:
@@ -571,7 +597,7 @@ def collision_detection(renderer, speler, sprites, hartje):
             speler.hit = False
         hartjes = speler.aantal_hartjes
         if hartjes == 0:
-            return True
+            game_over = True
         i = 1
         while i <= hartjes:
             x_pos = BREEDTE - 50 - 50 * i
@@ -637,7 +663,8 @@ def muziek_spelen(geluid, looped=False, channel=1):
 
 
 def menu_nav():
-    global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie, pauze_index, pauze_positie, map_positie, afstand_map
+    global game_state, main_menu_index, settings_menu_index, main_menu_positie, settings_menu_positie, \
+        pauze_index, pauze_positie, map_positie, afstand_map, game_over_index, game_over_positie
     if game_state == 0:
         if main_menu_index > 2:
             main_menu_index = 0
@@ -669,6 +696,12 @@ def menu_nav():
             afstand_map = 10
         if afstand_map > 200:
             afstand_map = 200
+    elif game_over:
+        if game_over_index > 2:
+            game_over_index = 0
+        if game_over_index < 0:
+            game_over_index = 2
+        game_over_positie = POSITIE_GAME_OVER[game_over_index]
 
 
 def heuristiek(a, b):
@@ -783,6 +816,8 @@ def quit(button, event):
     moet_afsluiten = True
 
 
+
+
 # @profile
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
@@ -894,6 +929,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
     pauze_menu = factory.from_image(resources.get_path("pause_menu.png"))
+    game_over_menu = factory.from_image(resources.get_path("Game_over_menu.png"))
     handen_doos = factory.from_image(resources.get_path("box_hands.png"))
 
     map_png = factory.from_image(resources_mappen.get_path("map.png"))
@@ -985,7 +1021,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         while game_state == 2 and not moet_afsluiten:
             # Onthoud de huidige tijd
             start_time = time.time()
-
             shared_spelerpositie[:] = speler.position[:]
             shared_eindbestemming[:] = list(eindbestemming[:])
             pad[:] = shared_pad[:]
@@ -1017,12 +1052,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                                                    world_map, sprites_bomen)
             sprites = sprites_bomen + sprites_autos + sprites_dozen
             render_sprites(renderer, sprites, speler, d[50:BREEDTE+50], delta)
-            if collision_detection(renderer, speler, sprites, hartje):
-                print("GAME OVER")
-                show_map = True
-                speler.aantal_hartjes += 5
+            collision_detection(renderer, speler, sprites, hartje)
             # t.append(time.time()-t1)
             verwerk_input(delta)
+            menu_nav()
             if pad == None:
                 print(f"EINDBESTEMMING NONE: {eindbestemming}")
                 print('NONE')
@@ -1031,16 +1064,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             draw_nav(renderer, kleuren_textures, arrow, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
 
-            if speler.in_auto:
-                auto_info_renderen(renderer, dash_font,(dashboard, wheel), speler.car)
-                # speler.renderen(renderer, world_map)
-                if speler.car.speed > 0:
-                    muziek_spelen("car loop", channel=2)
-                elif speler.car.speed < 0:
-                    pass
-                    # reversing beep ofz
-            else:
-                handen_sprite(renderer, handen_doos)
             if paused:
                 renderer.copy(pauze_menu,
                               srcrect=(0, 0, pauze_menu.size[0], pauze_menu.size[1]),
@@ -1053,10 +1076,29 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 map_settings = (map_positie, afstand_map, np.shape(world_map))
                 render_map(renderer, kleuren_textures, pngs_mappen, map_settings, speler, pad, sprites)
                 menu_nav()
+            elif game_over:
+                renderer.copy(game_over_menu,
+                                srcrect=(0, 0, game_over_menu.size[0], game_over_menu.size[1]),
+                                dstrect=(0, 0, BREEDTE, HOOGTE))
+                renderer.copy(menu_pointer,
+                              srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
+                              dstrect=(game_over_positie[0], game_over_positie[1], 80, 50))
+                verwerk_input(delta)
+                menu_nav()
             else:
                 positie_check()
                 next(fps_generator)
                 map_positie = list(speler.position)
+                if speler.in_auto:
+                    auto_info_renderen(renderer, dash_font,(dashboard, wheel), speler.car)
+                # speler.renderen(renderer, world_map)
+                if speler.car.speed > 0:
+                    muziek_spelen("car loop", channel=2)
+                elif speler.car.speed < 0:
+                    pass
+                    # reversing beep ofz
+                else:
+                    handen_sprite(renderer, handen_doos)
             if sprites == []:
                 pass
             else:
