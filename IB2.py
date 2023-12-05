@@ -889,7 +889,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
     boom = sdl2.ext.Resources(__file__, "resources/boom")
     rode_auto = sdl2.ext.Resources(__file__, "resources/Auto")
-    #blauwe_auto = sdl2.ext.Resources(__file__, "resources/Blauwe_auto")
+    blauwe_auto = sdl2.ext.Resources(__file__, "resources/Blauwe_auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
     bomen = []
@@ -899,11 +899,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
         rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
-        #blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
-        # polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
+        blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
+        # polities.append(factory.from_imagqqqqqqe(politie.get_path(afbeelding_naam)))
 
     # Eerste Auto aanmaken
-    auto = PostBus(tree, rode_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
+    auto = PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
     auto.draai_sprites(125)
     speler.car = auto
     sprites_autos.append(auto)
