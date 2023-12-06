@@ -440,21 +440,24 @@ def handen_sprite(renderer, handen_doos):
                   dstrect=(200 + 8 * math.sin(((2 * math.pi) / 36) * verandering), 230, BREEDTE - 400, HOOGTE))
 
 
-def render_sprites(renderer, sprites, player, d, delta):
+def render_sprites(renderer, sprites, player, d, delta, update):
     global world_map, sprites_autos
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player.p_x, player.p_y))  # Sorteren op afstand
-    # Dit is beetje dubbel atm omdat je een stap later weer de afstand berekend
-    max_dist = 100
+
+    max_dist = 80
     """AANPASSINGEN DOORTREKKEN NAAR RAYCASTER"""
+
+    d /= (speler.r_stralen[50:-50, 0] * speler.r_speler[0] + speler.r_stralen[50:-50, 1] * speler.r_speler[1])
 
     for i, sprite in enumerate(sprites):
         if sprite.afstand >= max_dist: continue;
-        if sprite.soort == "Auto":
-            sprite.update(world_map, delta, sprites_autos)
-        elif sprite.update(world_map, speler, delta):
-            sprites.pop(i)
-            continue
-        if sprite.afstand <= 0.01: continue;
+        if update:
+            if sprite.soort == "Auto":
+                sprite.update(world_map, delta, sprites_autos)
+            elif sprite.update(world_map, speler, delta):
+                sprites.pop(i)
+                continue
+        if sprite.afstand <= 0.001: continue;
 
         # hoek
         rx = sprite.x - player.p_x
@@ -483,19 +486,19 @@ def render_sprites(renderer, sprites, player, d, delta):
         if hoek_verschil >= (math.pi / 3.7):
             continue  # net iets minder gepakt als 4 zodat hij langs rechts er niet afspringt
 
-        a = ((speler.r_speler[0] + speler.r_camera[0] / 1000 - speler.r_speler[1] * rx / ry - speler.r_camera[
-            1] * rx / (1000 * ry)) / ((speler.r_camera[0] / 500) - (speler.r_camera[1] * rx / (500 * ry))))
-        if not (-BREEDTE * 0.6 < a < BREEDTE * 0.6):
-            continue
-
         # richting
         sprite_distance = sprite.afstand * abs(math.cos(hoek_verschil))
-
-        spriteBreedte = image.size[0]
-        spriteHoogte = image.size[1]
+        spriteBreedte, spriteHoogte = image.size
         # grootte
         sprite_size_breedte = int(spriteBreedte / sprite_distance * 10 * sprite.schaal)
         sprite_size_hoogte = int(spriteHoogte / sprite_distance * 10 * sprite.schaal)
+
+        a = ((speler.r_speler[0] + speler.r_camera[0] / 1000 - speler.r_speler[1] * rx / ry - speler.r_camera[
+            1] * rx / (1000 * ry)) / ((speler.r_camera[0] / 500) - (speler.r_camera[1] * rx / (500 * ry))))
+
+        interval = (BREEDTE + sprite_size_breedte) / 2
+        if not (-interval < a < interval):
+            continue
 
         """a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
         b = np.array([speler.r_speler[0]+speler.r_camera[0]/1000,speler.r_speler[1]+speler.r_camera[1]/1000])
@@ -505,14 +508,19 @@ def render_sprites(renderer, sprites, player, d, delta):
         screen_y = int((sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
 
+        kolomen = np.arange(sprite_size_breedte) / sprite_size_breedte - 1 / 2
+        x = abs(kolomen * math.sin(hoek_sprite) + abs(rx))
+        y = abs(kolomen * math.cos(hoek_sprite) + abs(ry))
+        afstand = (x * 2 + y * 2) ** (1 / 2)
+
         kolom, breedte, initieel = -1, 0, 0
-        for i in range(sprite_size_breedte):
+        for i, afstand in enumerate(afstand):
             k = i + screen_x
             if k >= BREEDTE:
                 break
             if k < 0:
                 continue
-            if not d[k] <= sprite.afstand:
+            if not d[k] <= afstand:
                 if kolom == -1:
                     kolom = k
                     breedte = 1
@@ -544,7 +552,32 @@ def render_sprites(renderer, sprites, player, d, delta):
     rest_van_de_lijst = sprites.images[:-aantal_te_verschuiven]
     sprites.images = laatste_items + rest_van_de_lijst"""
 
+def collision_auto(delta,zichtbare_sprites):
+    place_array = np.array([[sprite.x, sprite.y] for sprite in zichtbare_sprites])
+    lenght = len(place_array)
+    for i, sprite in enumerate(zichtbare_sprites):
+        if sprite.soort == "Auto":
+            sprite.update(world_map, delta, sprites_autos)
 
+            wh_self_array_x = place_array[:, 0] - sprite.x
+            wh_self_array_y = place_array[:, 1] - sprite.y
+            distances = np.sqrt(wh_self_array_y ** 2 + wh_self_array_x ** 2)
+            distances[i] = 100
+
+            check = distances < 5
+            if check.any():
+                pop_indexes = np.arange(0, lenght)[check]
+
+                for index in pop_indexes:
+                    # print(index, sprite)
+                    soort = sprites[index].soort
+                    if soort == "Auto":
+                        sprites_autos.remove(sprites[index])
+                    elif soort == "Boom":
+                        sprites_bomen.remove(sprites[index])
+
+                place_array = place_array[~check, :]
+                lenght -= len(pop_indexes)
 def collision_detection(renderer, speler, sprites, hartje):
     global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over
     for sprite in sprites:
@@ -1050,19 +1083,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree,
                                                    world_map, sprites_bomen)
             sprites = sprites_bomen + sprites_autos + sprites_dozen + sprites_auto
-
-            """
-            Bomen reageren hier raar op en verlaagt de fps met een factor 3
-            for auto in sprites_autos:
-                if auto.soort == "Auto":
-                    verwijderen = auto.collision(sprites_bomen)
-                    if verwijderen == 0:
-                        continue
-                    print("jaa")
-                    sprites_bomen.remove(verwijderen)
-            """
-            render_sprites(renderer, sprites, speler, d[50:BREEDTE+50], delta)
+            updatable = not (show_map or paused or game_over)
+            render_sprites(renderer, sprites, speler, d[50:-50], delta, updatable)
             collision_detection(renderer, speler, sprites, hartje)
+
+
             # t.append(time.time()-t1)
             verwerk_input(delta)
             menu_nav()

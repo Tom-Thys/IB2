@@ -3,13 +3,14 @@
 ## Code
 #### Needs fixxes
 - Sprite glitches in muren
-- Rondrijdende auto's in correcte richting zetten
+- Rondrijdende auto's in correcte richting zetten DONE
 - Politie auto pathfinding en tracker wanneer actief
 - Pakkje correct in de lucht laten zweven
 - Aanpassen keybindings naar betere indeling
 - Pakjes niet leverbaar aan hagen
 
 #### In te voegen
+- Generator auto
 - Scores bijhouden &rarr; opslaan in .ini?
 - Garage voor selecteren van postauto
 - Postkantoor op map zelf
