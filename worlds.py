@@ -5,7 +5,7 @@ import numpy as np
 import sdl2.ext
 from sdl2 import *
 from random import randint
-from Classes import Deur, Sprite
+from Classes import Deur, Sprite, Voertuig
 from PIL import Image
 
 random.seed(20)
@@ -94,6 +94,26 @@ def main():
 
     # Maak png van wereldmap
     make_world_png(worldlijst)
+def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, worldmap, HOOGTE, sprites_autos, aantalautos=1):
+    for sprite in sprites_autos:
+        if sprite.afstand >= 100:
+            print(sprite.afstand)
+            sprites_autos.remove(sprite)
+    if len(sprites_autos) == aantalautos:
+        return sprites_autos
+    for i in range(aantalautos- len(sprites_autos)):
+        omgeving = 10
+        x = randint(speler_x - omgeving, speler_x + omgeving)*9 + 4
+        y = randint(speler_y - omgeving, speler_y + omgeving)*9 + 4
+        if x <= 0 or x >= 1000 or y <= 0 or y >= 1000:
+            continue
+        else:
+            if (speler_x - x) ** 2 + (speler_y - y) ** 2 >= 100:
+                voertuig = Voertuig(tree, kleuren_autos[randint(0,3)], map_voertuig, x, y, HOOGTE, worldmap)
+                if voertuig.vector == []:
+                    continue
+                sprites_autos.append(voertuig)
+    return sprites_autos
 
 
 def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tree, worldmap, sprites, aantalbomen=1):
@@ -120,11 +140,6 @@ def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tr
         while True:
             x = random.uniform(x_min, x_max)
             y = random.uniform(y_min, y_max)
-
-            # print(math.floor(x))
-            # print(math.floor(y))
-
-            # print("de zak"  + str((speler_x - x)**2 + (speler_y - y)**2))
             if (worldmap[math.floor(y), math.floor(x)] <= 0
                     and worldmap[math.floor(y), math.floor(x+1)] <= 0
                     and worldmap[math.floor(y+1), math.floor(x)] <= 0
@@ -132,6 +147,7 @@ def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tr
                     and worldmap[math.floor(y-1), math.floor(x)] <= 0
                     and (speler_x - x) ** 2 + (speler_y - y) ** 2 >= 100):
                 sprites.append(Sprite(tree, bomen, sprite_map_png, x, y, HOOGTE, "Boom", schaal=0.2))
+                sprites[len(sprites)-1].draai_sprites(randint(0,360))
                 break
 
     return sprites

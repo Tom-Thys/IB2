@@ -565,7 +565,7 @@ def collision_auto(zichtbare_sprites):
             wh_self_array_y = place_array[:, 1] - sprite.y
             distances = np.sqrt(wh_self_array_y ** 2 + wh_self_array_x ** 2)
 
-            check = distances < 3
+            check = distances < 1.5
             if check.any():
                 pop_indexes = np.arange(0, lenght)[check]
 
@@ -924,20 +924,30 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     gps_grote_map = factory.from_image(resources.get_path("gps_grote_map.png"))
 
     boom = sdl2.ext.Resources(__file__, "resources/boom")
-    rode_auto = sdl2.ext.Resources(__file__, "resources/Auto")
+    rode_auto = sdl2.ext.Resources(__file__, "resources/Rode_auto")
     blauwe_auto = sdl2.ext.Resources(__file__, "resources/Blauwe_auto")
+    Groene_auto = sdl2.ext.Resources(__file__, "resources/Groene_auto")
+    Witte_auto = sdl2.ext.Resources(__file__, "resources/Witte_auto")
+    Grijze_auto = sdl2.ext.Resources(__file__, "resources/Grijze_auto")
     factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
     bomen = []
     rode_autos = []
     blauwe_autos = []
+    groene_autos = []
+    witte_autos = []
+    grijze_autos = []
     for i in range(361):
         afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
         rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
         blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
+        groene_autos.append(factory.from_image(Groene_auto.get_path(afbeelding_naam)))
+        witte_autos.append(factory.from_image(Witte_auto.get_path(afbeelding_naam)))
+        grijze_autos.append(factory.from_image(Grijze_auto.get_path(afbeelding_naam)))
         # polities.append(factory.from_imagqqqqqqe(politie.get_path(afbeelding_naam)))
 
+    kleuren_autos = [rode_autos,groene_autos,witte_autos,grijze_autos]
     # Eerste Auto aanmaken
     auto = PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
     auto.draai_sprites(125)
@@ -945,14 +955,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     sprites_auto = []
     sprites_auto.append(auto)
 
-    for i in range(180):
-        omgeving = 20
-        x = randint(speler.tile[0] - omgeving, speler.tile[0] + omgeving) * 9 + 4
-        y = randint(speler.tile[1] - omgeving, speler.tile[1] + omgeving) * 9 + 4
-        voertuig = Voertuig(tree, rode_autos, map_voertuig, x, y, HOOGTE, world_map)
 
-        if voertuig.vector == []: continue;
-        sprites_autos.append(voertuig)
 
 
     # Initialiseer font voor de fps counter
@@ -1052,6 +1055,16 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         # Setup voor de game
         sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree, world_map,
                                                sprites_bomen, aantalbomen=40)
+        sprites_autos
+        for i in range(100):
+            omgeving = 20
+            x = randint(speler.tile[0] - omgeving, speler.tile[0] + omgeving)*9+4
+            y = randint(speler.tile[1] - omgeving, speler.tile[1] + omgeving)*9+4
+            if x <= 0 or x >= 1000 or y <= 0 or y >= 1000:
+                continue;
+            voertuig = Voertuig(tree, kleuren_autos[randint(0,3)], map_voertuig, x, y, HOOGTE, world_map)
+            if voertuig.vector == []: continue;
+            sprites_autos.append(voertuig)
         t0 = 0
         while game_state == 2 and not moet_afsluiten:
             # Onthoud de huidige tijd
@@ -1082,6 +1095,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             renderen(renderer, d, v, kl, muren_info, angle)
             if np.any(z_k) != 0:
                 z_renderen(renderer, z_d, z_v, z_k, muren_info)
+            sprites_autos = sprites_auto_update(speler.tile[0],speler.tile[1],kleuren_autos,tree,map_voertuig,
+                                                world_map,HOOGTE,sprites_autos,aantalautos=100)
 
             sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree,
                                                    world_map, sprites_bomen)
