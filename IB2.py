@@ -448,7 +448,7 @@ def render_sprites(renderer, sprites, player, d, delta, update):
     """AANPASSINGEN DOORTREKKEN NAAR RAYCASTER"""
 
     d /= (speler.r_stralen[50:-50, 0] * speler.r_speler[0] + speler.r_stralen[50:-50, 1] * speler.r_speler[1])
-
+    zichtbaar = []
     for i, sprite in enumerate(sprites):
         if sprite.afstand >= max_dist: continue;
         if update:
@@ -511,7 +511,7 @@ def render_sprites(renderer, sprites, player, d, delta, update):
         kolomen = np.arange(sprite_size_breedte) / sprite_size_breedte - 1 / 2
         x = abs(kolomen * math.sin(hoek_sprite) + abs(rx))
         y = abs(kolomen * math.cos(hoek_sprite) + abs(ry))
-        afstand = (x * 2 + y * 2) ** (1 / 2)
+        afstand = (x ** 2 + y ** 2) ** (1 / 2)
 
         kolom, breedte, initieel = -1, 0, 0
         for i, afstand in enumerate(afstand):
@@ -535,6 +535,8 @@ def render_sprites(renderer, sprites, player, d, delta, update):
             initieel / sprite_size_breedte * spriteBreedte, 0, spriteBreedte * breedte / sprite_size_breedte,
             sprite_size_hoogte * sprite.afstand),
                       dstrect=(kolom, screen_y, breedte, sprite_size_hoogte))
+        zichtbaar.append(sprite)
+    return zichtbaar
 # In sprite class
 """def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
     index = 360 - round((hoek_verschil)/(math.pi*2)*360)
@@ -552,32 +554,33 @@ def render_sprites(renderer, sprites, player, d, delta, update):
     rest_van_de_lijst = sprites.images[:-aantal_te_verschuiven]
     sprites.images = laatste_items + rest_van_de_lijst"""
 
-def collision_auto(delta,zichtbare_sprites):
+def collision_auto(zichtbare_sprites):
+    global  sprites_bomen, sprites_autos
     place_array = np.array([[sprite.x, sprite.y] for sprite in zichtbare_sprites])
     lenght = len(place_array)
     for i, sprite in enumerate(zichtbare_sprites):
         if sprite.soort == "Auto":
-            sprite.update(world_map, delta, sprites_autos)
 
             wh_self_array_x = place_array[:, 0] - sprite.x
             wh_self_array_y = place_array[:, 1] - sprite.y
             distances = np.sqrt(wh_self_array_y ** 2 + wh_self_array_x ** 2)
-            distances[i] = 100
 
-            check = distances < 5
+            check = distances < 3
             if check.any():
                 pop_indexes = np.arange(0, lenght)[check]
 
                 for index in pop_indexes:
                     # print(index, sprite)
                     soort = sprites[index].soort
-                    if soort == "Auto":
-                        sprites_autos.remove(sprites[index])
-                    elif soort == "Boom":
+                    if soort == "Doos" or soort == "Postbus":
+                        continue
+                    if soort == "Boom":
                         sprites_bomen.remove(sprites[index])
 
-                place_array = place_array[~check, :]
-                lenght -= len(pop_indexes)
+        place_array = np.array([[sprite.x, sprite.y] for sprite in sprites])
+        lenght = len(place_array)
+
+
 def collision_detection(renderer, speler, sprites, hartje):
     global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over
     for sprite in sprites:
@@ -1084,8 +1087,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                                                    world_map, sprites_bomen)
             sprites = sprites_bomen + sprites_autos + sprites_dozen + sprites_auto
             updatable = not (show_map or paused or game_over)
-            render_sprites(renderer, sprites, speler, d[50:-50], delta, updatable)
+            zichtbare_sprites = render_sprites(renderer, sprites, speler, d[50:-50], delta, updatable)
             collision_detection(renderer, speler, sprites, hartje)
+            collision_auto(zichtbare_sprites)
 
 
             # t.append(time.time()-t1)
