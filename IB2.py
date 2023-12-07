@@ -99,13 +99,13 @@ sensitivity = -2 * sensitivity_rw + 300
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
 
-# positie van de speler
+# Speler
 p_speler_x, p_speler_y = 50.4 * 9, 49 * 9
-
-# richting waarin de speler kijkt
 r_speler_hoek = math.pi / 4
-# FOV
 d_camera = 1
+
+# Kantoor postbode
+pakjesx, pakjesy = 467, 441
 
 # world
 world_map = np.zeros((10, 10))
@@ -152,6 +152,7 @@ geluiden = [
 ]
 gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "car gear 4", "car gear 4"]
 
+
 #
 # Verwerkt alle input van het toetsenbord en de muis
 #
@@ -161,9 +162,12 @@ gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "ca
 
 def verwerk_input(delta, events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
-    global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie, afstand_map, quiting, game_over, game_over_index
+    global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie
+    global afstand_map, quiting, game_over, game_over_index
 
-    move_speed = delta * 7.5
+    move_speed = delta * 2
+    if speler.in_auto:
+        move_speed *= 4
 
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
@@ -177,7 +181,7 @@ def verwerk_input(delta, events=0):
             speler.move(1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
-            elif speler.car.speed < speler.car.versnelling*0.0499:
+            elif speler.car.speed < speler.car.versnelling * 0.0499:
                 muziek_spelen(gears[speler.car.versnelling], channel=4)
 
 
@@ -341,10 +345,28 @@ def verwerk_input(delta, events=0):
                     if game_over_index == 2 and key == sdl2.SDLK_SPACE:
                         moet_afsluiten = True
                 else:
-                    if key == sdl2.SDLK_SPACE and speler.laatste_doos < time.time() - 0.5:
-                        geworpen_doos = speler.trow(world_map)
-                        sprites_dozen.append(geworpen_doos)
-                        muziek_spelen("throwing", channel=2)
+                    if key == sdl2.SDLK_SPACE:
+                        if not speler.doos_vast:
+                            if pakjesx - 1 < speler.p_x < pakjesx + 1 and pakjesy - 1 < speler.p_y < pakjesy + 1:
+                                speler.doos_vast = True
+                                continue
+                            if not speler.car.dozen: continue;
+                            backend_car = speler.car.x - speler.car.vector[0], speler.car.y - speler.car.vector[1]
+                            afstand_back = (speler.p_x - backend_car[0]) ** 2 + (speler.p_y - backend_car[1]) ** 2
+                            if speler.car.afstand < 2 and afstand_back < 2.5:
+                                speler.doos_vast = True
+                                speler.car.dozen -= 1
+                                continue
+                            for doos in sprites_dozen:
+                                if doos.afstand < 1.5:
+                                    sprites_dozen.remove(doos)
+                                    speler.doos_vast = True
+                                    break
+                        elif speler.laatste_doos < time.time() - 0.5:
+                            geworpen_doos = speler.trow(world_map)
+                            sprites_dozen.append(geworpen_doos)
+                            muziek_spelen("throwing", channel=2)
+                            speler.doos_vast = False
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_t:
@@ -355,8 +377,9 @@ def verwerk_input(delta, events=0):
                     if speler.in_auto:
                         muziek_spelen("car start", channel=7)
             if key == sdl2.SDLK_y:
-                if speler.car.versnelling != 6 and (speler.car.versnelling == 0 or speler.car.speed > (speler.car.versnelling-0.5) * 0.05):
-                        speler.car.versnelling += 1
+                if speler.car.versnelling != 6 and (
+                        speler.car.versnelling == 0 or speler.car.speed > (speler.car.versnelling - 0.5) * 0.05):
+                    speler.car.versnelling += 1
             elif key == sdl2.SDLK_h:
                 if speler.car.versnelling != 0:
                     speler.car.versnelling -= 1
@@ -367,7 +390,6 @@ def verwerk_input(delta, events=0):
                 logging.info(f"Speler hoek = {speler.hoek}")
                 logging.info(f"Speler positie = {speler.position}")
                 logging.info(f"Auto = {speler.car}")
-
 
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
                 pass
@@ -447,14 +469,13 @@ def render_sprites(renderer, sprites, player, d, delta, update):
     max_dist = 80
     """AANPASSINGEN DOORTREKKEN NAAR RAYCASTER"""
 
-    d /= (speler.r_stralen[50:-50, 0] * speler.r_speler[0] + speler.r_stralen[50:-50, 1] * speler.r_speler[1])
+    d /= (speler.r_stralen[:, 0] * speler.r_speler[0] + speler.r_stralen[:, 1] * speler.r_speler[1])
     zichtbaar = []
+
     for i, sprite in enumerate(sprites):
         if sprite.afstand >= max_dist: continue;
         if update:
-            if sprite.soort == "Auto":
-                sprite.update(world_map, delta, sprites_autos)
-            elif sprite.update(world_map, speler, delta):
+            if sprite.update(world_map, speler, delta):
                 sprites.pop(i)
                 continue
         if sprite.afstand <= 0.001: continue;
@@ -500,11 +521,6 @@ def render_sprites(renderer, sprites, player, d, delta, update):
         if not (-interval < a < interval):
             continue
 
-        """a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
-        b = np.array([speler.r_speler[0]+speler.r_camera[0]/1000,speler.r_speler[1]+speler.r_camera[1]/1000])
-        print(np.linalg.solve(a,b)[1])
-        c = np.linalg.solve(a,b)[1]"""
-
         screen_y = int((sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
 
@@ -537,22 +553,7 @@ def render_sprites(renderer, sprites, player, d, delta, update):
                       dstrect=(kolom, screen_y, breedte, sprite_size_hoogte))
         zichtbaar.append(sprite)
     return zichtbaar
-# In sprite class
-"""def kies_sprite_afbeelding(hoek_verschil,sprite,fout):
-    index = 360 - round((hoek_verschil)/(math.pi*2)*360)
-    if index == 0:
-        index += 1
-    if fout:
-        #print("Fout")
-        index = 360 - index
-    #print (index)
-    image = sprite.images[index]
-    return image"""
-"""def draai_sprites(sprites,draai):
-    aantal_te_verschuiven = draai
-    laatste_items = sprites.images[-aantal_te_verschuiven:]
-    rest_van_de_lijst = sprites.images[:-aantal_te_verschuiven]
-    sprites.images = laatste_items + rest_van_de_lijst"""
+
 
 def collision_auto(zichtbare_sprites):
     global sprites_bomen, sprites_autos
@@ -561,10 +562,9 @@ def collision_auto(zichtbare_sprites):
 
     for i, sprite in enumerate(zichtbare_sprites):
         if sprite.soort == "Auto":
-
             wh_self_array_x = place_array[:, 0] - sprite.x
             wh_self_array_y = place_array[:, 1] - sprite.y
-            distances = wh_self_array_y * 2 + wh_self_array_x * 2
+            distances = wh_self_array_y ** 2 + wh_self_array_x ** 2
             distances[i] = 100
 
             check = distances < 1
@@ -583,7 +583,7 @@ def collision_auto(zichtbare_sprites):
                         raise NotImplementedError("Politie tegengekomen")
                     else:
                         raise NotImplementedError(soort)
-                    zichtbare_sprites.pop(index)
+                    zichtbare_sprites.remove(check_sprite)
 
                 place_array = place_array[~check, :]
                 lenght = len(place_array)
@@ -609,6 +609,8 @@ def collision_detection(renderer, speler, sprites, hartje):
             elif sprite.soort == "Auto":
                 speler.aantal_hartjes -= 2
                 sprites_autos.remove(sprite)
+            elif sprite.soort == "Politie":
+                game_over = True
             else:
                 raise TypeError("Kan sprite niet verwijderen")
             if speler.in_auto:
@@ -628,7 +630,7 @@ def collision_detection(renderer, speler, sprites, hartje):
         if speler.car.crashed:
             speler.car.crashed = False
             muziek_spelen("car crash", channel=5)
-        rijen = (speler.car.hp -1)//4
+        rijen = (speler.car.hp - 1) // 4
         for i in range(rijen + 1):
             kolom = 4
             if i == rijen:
@@ -776,7 +778,7 @@ def pathfinding_gps2(world_map, shared_pad, shared_eindbestemming, shared_speler
             f_score = {start: heuristiek(start, eindpositie)}  # dictionary die onze f scores bijhoudt bij iteratie
             oheap = []  # ~open_list van eerste pathfinding algoritme, bevat alle posities die we behandelen voor het kortste pad te vinden
             heapq.heappush(oheap, (
-            f_score[start], start))  # we pushen de startpositie en f score op de oheap (f score later nodig)
+                f_score[start], start))  # we pushen de startpositie en f score op de oheap (f score later nodig)
 
             while oheap:  # kijken dat er posities zijn die we kunnen behandelen
                 current = heapq.heappop(oheap)[
@@ -837,8 +839,7 @@ def bestemming_selector(mode=""):
                          and (m[0] >= range_te_dicht_max[0] and m[1] >= range_te_dicht_max[1] or m[0] <=
                               range_te_dicht_min[0] and m[1] <= range_te_dicht_min[1] \
                               ), lijst_mogelijke_bestemmingen))
-    rnd = randint(0,
-                  len(dichte_locaties) - 1)  # len(dichte_locaties) kan 0 zijn indien er geen dichte locaties zijn: vermijden door groot genoeg gebied te zoeken
+    rnd = randint(0, len(dichte_locaties) - 1)  # len(dichte_locaties) kan 0 zijn indien er geen dichte locaties zijn: vermijden door groot genoeg gebied te zoeken
     lijst_mogelijke_bestemmingen.remove(dichte_locaties[rnd])
     bestemming = (dichte_locaties[rnd][1], dichte_locaties[rnd][0])
     return bestemming
@@ -860,8 +861,6 @@ def settings(button, event):
 def quit(button, event):
     global moet_afsluiten
     moet_afsluiten = True
-
-
 
 
 # @profile
@@ -904,8 +903,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         factory.from_image(resources.get_path("groen_huis.png")),  # 3
         factory.from_image(resources.get_path("Blauw_huis.png")),  # 4
         factory.from_image(resources.get_path("Grijs_huis.png")),  # 5
-        factory.from_image(resources.get_path("Hedge_donker.png")),  # 6
-        factory.from_image(resources.get_path("stop bord pixel art.png"))  # 7
+        factory.from_image(resources.get_path("Paars_huis.png")),  # 6
+        factory.from_image(resources.get_path("Geel_huis.png")),  # 7
+        factory.from_image(resources.get_path("Hedge_donker.png")),  # 8
+        factory.from_image(resources.get_path("stop bord pixel art.png"))  # 9
     ]
     muren_info = []
     for i, muur in enumerate(soort_muren):
@@ -922,8 +923,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     dashboard = factory.from_image(resources.get_path("dashboard.png"))
     tree = factory.from_image(resources.get_path("Tree_gecropt.png"))
     sprite_map_png = factory.from_image(resources.get_path("map_boom.png"))
-    map_auto = factory.from_image(resources.get_path("map_auto.png"))
-    map_voertuig = factory.from_image(resources.get_path("map_voertuig.png"))
+    map_voertuig = factory.from_image(resources.get_path("map_auto.png"))
+    map_auto = factory.from_image(resources.get_path("map_voertuig.png"))
     doos = factory.from_image(resources.get_path("doos.png"))
     map_doos = factory.from_image(resources.get_path("map_doos.png"))
     speler_png = factory.from_image(resources.get_path("speler_sprite.png"))
@@ -935,7 +936,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
     boom = sdl2.ext.Resources(__file__, "resources/boom")
     rode_auto = sdl2.ext.Resources(__file__, "resources/Rode_auto")
-    blauwe_auto = sdl2.ext.Resources(__file__, "resources/Blauwe_auto")
+    blauwe_auto = sdl2.ext.Resources(__file__, "resources/Humvee")
     Groene_auto = sdl2.ext.Resources(__file__, "resources/Groene_auto")
     Witte_auto = sdl2.ext.Resources(__file__, "resources/Witte_auto")
     Grijze_auto = sdl2.ext.Resources(__file__, "resources/Grijze_auto")
@@ -955,18 +956,14 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         groene_autos.append(factory.from_image(Groene_auto.get_path(afbeelding_naam)))
         witte_autos.append(factory.from_image(Witte_auto.get_path(afbeelding_naam)))
         grijze_autos.append(factory.from_image(Grijze_auto.get_path(afbeelding_naam)))
-        # polities.append(factory.from_imagqqqqqqe(politie.get_path(afbeelding_naam)))
+        #polities.append(factory.from_imaqe(politie.get_path(afbeelding_naam)))
 
-    kleuren_autos = [rode_autos,groene_autos,witte_autos,grijze_autos]
+    kleuren_autos = [rode_autos, groene_autos, witte_autos, grijze_autos]
     # Eerste Auto aanmaken
     auto = PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)
     auto.draai_sprites(125)
     speler.car = auto
-    sprites_auto = []
-    sprites_auto.append(auto)
-
-
-
+    sprites_autos.append(auto)
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
@@ -1064,15 +1061,15 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
         # Setup voor de game
         sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree, world_map,
-                                               sprites_bomen, aantalbomen=40)
-        sprites_autos
+                                               sprites_bomen, aantalbomen=50)
+        # sprites_autos
         for i in range(100):
             omgeving = 20
-            x = randint(speler.tile[0] - omgeving, speler.tile[0] + omgeving)*9+4
-            y = randint(speler.tile[1] - omgeving, speler.tile[1] + omgeving)*9+4
+            x = randint(speler.tile[0] - omgeving, speler.tile[0] + omgeving) * 9 + 4
+            y = randint(speler.tile[1] - omgeving, speler.tile[1] + omgeving) * 9 + 4
             if x <= 0 or x >= 1000 or y <= 0 or y >= 1000:
                 continue;
-            voertuig = Voertuig(tree, kleuren_autos[randint(0,3)], map_voertuig, x, y, HOOGTE, world_map)
+            voertuig = Voertuig(tree, kleuren_autos[randint(0, 3)], map_voertuig, x, y, HOOGTE, world_map)
             if voertuig.vector == []: continue;
             sprites_autos.append(voertuig)
         t0 = 0
@@ -1099,21 +1096,21 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             # Reset de rendering context
             renderer.clear()
             render_floor_and_sky(renderer, kleuren_textures)
+            draw_bestemming(renderer, eindbestemming, speler, kleuren_textures[4])
             # Render de huidige frame
-            (d, v, kl), (z_d, z_v, z_k) = (speler.n_raycasting(world_map, deuren))
-
-            renderen(renderer, d, v, kl, muren_info, angle)
+            (d, d_v, kl), (z_d, z_v, z_k), _ = (speler.n_raycasting(world_map, deuren))
+            renderen(renderer, d, d_v, kl, muren_info, angle)
             if np.any(z_k) != 0:
                 z_renderen(renderer, z_d, z_v, z_k, muren_info)
-            sprites_autos = sprites_auto_update(speler.tile[0],speler.tile[1],kleuren_autos,tree,map_voertuig,
-                                                world_map,HOOGTE,sprites_autos,aantalautos=100)
+            sprites_autos = sprites_auto_update(speler.tile[0], speler.tile[1], kleuren_autos, tree, map_voertuig,
+                                                world_map, HOOGTE, sprites_autos, aantalautos=100)
 
             sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree,
                                                    world_map, sprites_bomen)
-            sprites = sprites_bomen + sprites_autos + sprites_dozen + sprites_auto
+            sprites = sprites_bomen + sprites_autos + sprites_dozen
             updatable = not (show_map or paused or game_over)
-            zichtbare_sprites = render_sprites(renderer, sprites, speler, d[50:-50], delta, updatable)
-            collision_detection(renderer, speler, sprites, hartje)
+            zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable)
+            #collision_detection(renderer, speler, sprites, hartje)
             collision_auto(zichtbare_sprites)
 
 
@@ -1142,8 +1139,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 menu_nav()
             elif game_over:
                 renderer.copy(game_over_menu,
-                                srcrect=(0, 0, game_over_menu.size[0], game_over_menu.size[1]),
-                                dstrect=(0, 0, BREEDTE, HOOGTE))
+                              srcrect=(0, 0, game_over_menu.size[0], game_over_menu.size[1]),
+                              dstrect=(0, 0, BREEDTE, HOOGTE))
                 renderer.copy(menu_pointer,
                               srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
                               dstrect=(game_over_positie[0], game_over_positie[1], 80, 50))
@@ -1154,27 +1151,26 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 next(fps_generator)
                 map_positie = list(speler.position)
                 if speler.in_auto:
-                    auto_info_renderen(renderer, dash_font,(dashboard, wheel), speler.car)
+                    auto_info_renderen(renderer, dash_font, (dashboard, wheel), speler.car)
+                elif speler.doos_vast:
+                    handen_sprite(renderer, handen_doos)
                 # speler.renderen(renderer, world_map)
                 if speler.car.speed > 0:
                     muziek_spelen("car loop", channel=2)
                 elif speler.car.speed < 0:
                     pass
                     # reversing beep ofz
-                else:
-                    handen_sprite(renderer, handen_doos)
+
             if sprites == []:
                 pass
             else:
                 # draai_sprites(sprites[0], 1)
                 # draai_sprites(speler.car,1)
                 pass
-            #print(speler.p_x)
+            # print(speler.p_x)
             if quiting > 0:
                 quiting -= 1
                 renderText(font_2, renderer, "DON'T QUIT THE GAME!!!", BREEDTE, HOOGTE / 2)
-            # Toon de fps
-            # next(fps_generator)
 
             # Verwissel de rendering context met de frame buffer
             renderer.present()

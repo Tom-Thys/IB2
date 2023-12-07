@@ -8,7 +8,7 @@ from random import randint
 from Classes import Deur, Sprite, Voertuig
 from PIL import Image
 
-random.seed(20)
+#random.seed(20)
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
@@ -57,8 +57,8 @@ kleuren = [
     sdl2.ext.Color(255, 255, 0, 100),  # 11 = Yellow
 ]
 colors = [0, 0, 0, 102, 102, 102, 176, 176, 176, 255, 255, 255]
-kleur_dict = {0: (0, 0, 0), 25: (255, 0, 20), 50: (255, 0, 20), 75: (106, 13, 173), 100: (255, 255, 0),
-              125: (128, 128, 128), 150: (0, 255, 0), 175: (255, 0, 20)}
+kleur_dict = {0: (0, 0, 0), 1: (170, 85, 85), 2: (170, 85, 85), 3: (141, 170, 127), 4: (102, 127, 171), 5: (205, 201, 201), 6: (180, 162, 200), 7: (218, 165, 32), 8: (0, 255, 0), 9: (255, 0, 20)}
+laatste_huis_pos = 7
 
 
 def make_world_png(worldmap, unit_d=1):
@@ -94,10 +94,13 @@ def main():
 
     # Maak png van wereldmap
     make_world_png(worldlijst)
+
+
+
 def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, worldmap, HOOGTE, sprites_autos, aantalautos=1):
     for sprite in sprites_autos:
         if sprite.afstand >= 100:
-            print(sprite.afstand)
+            #print(sprite.afstand)
             sprites_autos.remove(sprite)
     if len(sprites_autos) == aantalautos:
         return sprites_autos
@@ -117,6 +120,8 @@ def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, w
 
 
 def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tree, worldmap, sprites, aantalbomen=1):
+    if len(bomen) < 50 and aantalbomen == 1:
+        aantalbomen = 10
     x_max = speler_x + 100
     x_min = speler_x - 100
     y_max = speler_y + 100
@@ -147,25 +152,46 @@ def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tr
                     and worldmap[math.floor(y-1), math.floor(x)] <= 0
                     and (speler_x - x) ** 2 + (speler_y - y) ** 2 >= 100):
                 sprites.append(Sprite(tree, bomen, sprite_map_png, x, y, HOOGTE, "Boom", schaal=0.2))
-                sprites[len(sprites)-1].draai_sprites(randint(0,360))
+                sprites[-1].draai_sprites(randint(0,360))
                 break
 
     return sprites
 
+coords_huizen = []
+for i in range(9):
+    for j in range(9):
+        if 3 <= i <= 5 or 3 <= j <= 5:
+            continue
+        coords_huizen.append((i, j))
 
 def world_generation(openingen=list):
     kaart = np.zeros((9, 9), dtype='int32')
     pakjes_plekken = [(1, 3), (3, 1), (7, 3), (3, 7), (1, 5), (5, 1), (7, 5), (5, 7)]
     for plekx, pleky in pakjes_plekken:
         kaart[plekx, pleky] = -1
-    kleur = randint(2, 6)
+    for coord in coords_huizen:
+        kleur = randint(2, laatste_huis_pos)
+        kaart[coord] = kleur
+    """    kleur = randint(2, 6)
     kaart[:3, :3] = kleur
+    if kleur != 6:
+        kaart[1, 3] = -1
+        kaart[3, 1] = -1
     kleur = randint(2, 6)
     kaart[-3:, -3:] = kleur
+    if kleur != 6:
+        kaart[7, 5] = -1
+        kaart[5, 7] = -1
     kleur = randint(2, 6)
     kaart[-3:, :3] = kleur
-    kleur = randint(-1, 30)
-    kaart[:3, -3:] = (kleur % 4) + 2
+    if kleur != 6:
+        kaart[5, 1] = -1
+        kaart[7, 3] = -1
+    kleur = (randint(-1, 30) % 4) + 2
+    kaart[:3, -3:] = kleur
+    if kleur != 6:
+        kaart[1, 5] = -1
+        kaart[3, 7] = -1"""
     if len(openingen) < 3:
         extra_openingen = randint(0, 3 - len(openingen))  # Extra openingen
         if extra_openingen == 0 and len(openingen) <= 1:
@@ -193,16 +219,22 @@ def world_generation(openingen=list):
     for i in range(1, 5):
         if i not in openingen:
             if i == 1:
-                kaart[3:-3, :3] = 6
+                kaart = openingen_sluiten(kaart, (3,6), (0,3))
             elif i == 2:
-                kaart[:3, 3:-3] = 6
+                kaart = openingen_sluiten(kaart, (0,3), (3, 6))
             elif i == 3:
-                kaart[3:-3, -3:] = 6
+                kaart = openingen_sluiten(kaart, (3,6), (6, 9))
             else:
-                kaart[-3:, 3:-3] = 6
+                kaart = openingen_sluiten(kaart, (6,9), (3, 6))
     # print(kaart)
     return kaart, openingen
 
+
+def openingen_sluiten(kaart, y, x):
+    for i in range(y[0], y[1]):
+        for j in range(x[0], x[1]):
+            kaart[i, j] = randint(2, laatste_huis_pos)
+    return kaart
 
 def converter(input_image):
     r_image_in, g_image_in, b_image_in, alfa = input_image.split()
@@ -217,12 +249,12 @@ def converter(input_image):
     b_out = np.zeros((shape0, shape1))
 
     for i in range(11):
-        mask = r_in == (i * 25)
+        mask = r_in == i
 
         if np.any(mask):
-            r_out[mask] = kleur_dict[i * 25][0]
-            g_out[mask] = kleur_dict[i * 25][1]
-            b_out[mask] = kleur_dict[i * 25][2]
+            r_out[mask] = kleur_dict[i][0]
+            g_out[mask] = kleur_dict[i][1]
+            b_out[mask] = kleur_dict[i][2]
         """for j in range(shape1):
             gray = b_in[i][j]
             r_out[i][j] = kleur_dict[gray][0]
@@ -258,7 +290,7 @@ class Map():
         y, x = np.shape(self.tile_map)
         self.added = []
         # map = np.ones((9, 9), dtype='int32')
-        map = np.full((9, 9), fill_value=7, dtype='int32')
+        map = np.full((9, 9), fill_value=laatste_huis_pos+2, dtype='int32')
         openingen = []
         surrounding_tiles = Tile((map, openingen))
         self.tile_map[0, :] = surrounding_tiles
@@ -302,7 +334,7 @@ class Map():
         self.update()
 
         if True:
-            im = Image.fromarray(self.world_map * 25)
+            im = Image.fromarray(self.world_map)
             rgbimg = Image.new("RGBA", im.size)
             rgbimg.paste(im)
             new_im = converter(rgbimg)

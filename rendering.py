@@ -22,7 +22,7 @@ def draw_nav(renderer, kleuren_textures, arrow, Map, speler, pad, sprites):
     height = 200
     midden = 100
     speler_grootte = 10
-    afstand = 30
+    afstand = 20
     y_dim, x_dim = Map.world_size
 
     hoek = 2 * math.pi - speler.hoek / math.pi * 180 - 48
@@ -115,24 +115,27 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
 
 def renderen(renderer, d, d_v, k, muren_info, angle):
     d = 1 / d
+    d_v = d_v % 1
+    k -= 1
     scherm_y = HOOGTE / 2
-
-    for kolom, (d_muur, unit_d, k_muur) in enumerate(zip(d, d_v, k)):
-        if k_muur >= 0:
-            wall_texture, breedte, hoogte = muren_info[k_muur]
-            kolom -= 50
-            if angle == 0:
-                if (0 > kolom >= BREEDTE):
-                    continue
-                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, hoogte),
-                          dstrect=(kolom, scherm_y - d_muur * hoogte / 2, 1, d_muur * hoogte))
-            else:
-                hoek = math.atan2(d_muur * hoogte / 2, kolom - BREEDTE / 2) + angle / 180 * math.pi
-                afstand = ((kolom - BREEDTE / 2) ** 2 + (d_muur * hoogte / 2) ** 2) ** (1 / 2)
+    if angle == 0:
+        for kolom, (d_muur, unit_d, k_muur) in enumerate(zip(d, d_v, k)):
+            if k_muur >= 0:
+                wall_texture, breedte, hoogte = muren_info[k_muur]
+                hoogte *= d_muur
+                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, 890),
+                        dstrect=(kolom, scherm_y - hoogte / 2, 1, hoogte))
+    else:
+        for kolom, (d_muur, unit_d, k_muur) in enumerate(zip(d, d_v, k)):
+            if k_muur >= 0:
+                wall_texture, breedte, hoogte = muren_info[k_muur]
+                hoogte *= d_muur
+                hoek = math.atan2(hoogte / 2, kolom - BREEDTE / 2) + angle / 180 * math.pi
+                afstand = ((kolom - BREEDTE / 2) ** 2 + (hoogte / 2) ** 2) ** (1 / 2)
                 y = scherm_y - math.sin(hoek) * afstand
                 x = math.cos(hoek) * afstand + BREEDTE / 2
-                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, hoogte),
-                              dstrect=(x, y, 1, d_muur * hoogte), angle=angle)
+                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, 890),
+                              dstrect=(x, y, 1, hoogte), angle=angle)
 
 
 
@@ -246,7 +249,7 @@ def render_map(renderer,kleuren_textures, pngs_mappen, map_settings,speler,pad, 
             else:
                 renderer.copy(kleuren_textures[7],
                               srcrect=(0, 0, 1, 1),
-                              dstrect=(locatie_x + node_grootte//2, locatie_y, node_grootte, node_grootte))
+                              dstrect=(locatie_x + node_grootte//2, locatie_y, node_grootte, node_grootte/1.2))
         else:
             continue
     if linker_bovenhoek_x < speler.p_x < linker_bovenhoek_x+2*afstand_map and linker_bovenhoek_y < speler.p_y < linker_bovenhoek_y+2*afstand_map:
@@ -269,6 +272,42 @@ def auto_info_renderen(renderer, font, pngs, car):
     hoek = -car.stuurhoek * 180 / math.pi * 100 * car.speed
     renderer.copy(pngs[1], dstrect=(x_pos, y_pos, 250, 250), angle=hoek)
     car.stuurhoek = 0
+
+def draw_bestemming(renderer, bestemming, speler, texture):
+    kolommen = []
+    afstanden = 0
+    coords = [(0, 0), (0, 1), (1, 1), (1, 0)]
+    linear_solve_b = np.array([speler.r_speler[0] + speler.r_camera[0] / 1000, speler.r_speler[1] + speler.r_camera[1] / 1000])
+    for coord in coords:
+        rx = bestemming[0] + coord[0] - speler.p_x
+        ry = bestemming[1] + coord[1] - speler.p_y
+        hoek = math.atan2(ry, rx) % (2 * math.pi)
+        hoek_verschil = abs(speler.hoek - hoek)
+        if speler.hoek <= 1 and hoek >= math.pi * 7 / 4:
+            hoek_verschil = math.pi * 2 - hoek_verschil
+
+        if speler.hoek >= math.pi * 7 / 4 and hoek <= 1:
+            hoek_verschil = math.pi * 2 - hoek_verschil
+
+        if hoek_verschil >= (math.pi / 3.7):
+            continue
+
+        linear_solve_a = np.array([[rx,speler.r_camera[0]/500],[ry,speler.r_camera[1]/500]])
+        scherm_kolom = np.linalg.solve(linear_solve_a, linear_solve_b)[1]  + 500
+        if 0 >= scherm_kolom > BREEDTE:
+            #norm = (rx ** 2 + ry ** 2) ** (1 / 2)
+            afstand = rx * speler.r_speler + ry * speler.r_speler
+            kolommen.append(scherm_kolom)
+            afstanden = max(afstanden, afstand)
+        if len(kolommen) > 1:
+            k1 = min(kolommen)
+            k2 = max(kolommen)
+            hoogte = HOOGTE/2 + 445 * afstanden
+            renderer.copy(texture, dstrect=(k1, 0, k2-k1, hoogte))
+
+
+
+
 
 def draw_arrow(renderer, arrow, speler, pad):
     if len(pad) > 6:

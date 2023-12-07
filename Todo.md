@@ -2,22 +2,22 @@
 
 ## Code
 #### Needs fixxes
-- Sprite glitches in muren
-- Rondrijdende auto's in correcte richting zetten DONE
+- ~~Sprite glitches in muren~~  &#9745;
+- ~~Rondrijdende auto's in correcte richting zetten (done?)~~ &#9745;
 - Politie auto pathfinding en tracker wanneer actief
 - Pakkje correct in de lucht laten zweven
 - Aanpassen keybindings naar betere indeling
-- Pakjes niet leverbaar aan hagen
+- ~~Pakjes niet leverbaar aan hagen~~
 
 #### In te voegen
-- Generator auto DONE
-- Scores bijhouden &rarr; opslaan in .ini?
+- Scores bijhouden &rightarrow; opslaan in .ini?
+- ~~Generator auto~~ &#9745;
 - Garage voor selecteren van postauto
 - Postkantoor op map zelf
-- Pakkjes oppakken, in auto en uit auto halen
+- ~~Pakkjes oppakken, in auto en uit auto halen (done??)~~ &#9745;
 - Dialog boxes?
-- Game over screen 
-- Muziek: Ander geluid als persoon iets hit? (done?)
+- Game over screen &#9745; &rightarrow; score weergeven?
+- ~~Muziek: Ander geluid als persoon iets hit? (done?)~~ &#9745;
 - Generated sprites: Andere types?
 
 
