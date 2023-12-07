@@ -597,10 +597,12 @@ def collision_detection(renderer, speler, sprites, hartje):
             continue
         if sprite.afstand < 1 and sprite.schadelijk:
             if sprite.soort == "Boom":
-                speler.aantal_hartjes -= 1
+                if speler.in_auto == False:
+                    speler.aantal_hartjes -= 1
                 sprites_bomen.remove(sprite)
             elif sprite.soort == "Auto":
-                speler.aantal_hartjes -= 2
+                if speler.in_auto == False:
+                    speler.aantal_hartjes -= 2
                 sprites_autos.remove(sprite)
             elif sprite.soort == "Politie":
                 game_over = True
