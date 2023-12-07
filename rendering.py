@@ -157,6 +157,21 @@ def renderText(font, renderer, text, x, y):
     renderer.copy(text, dstrect=(int((x - x_s) / 2), y, x_s, y_s))
 
 
+def render_balkje(Tijd,Time_bar,renderer):
+    index = 10 - (round(Tijd/6))
+    if index >= 10:
+        renderer.copy(Time_bar[10], dstrect=(10, 192, 180, 80))
+        return False
+    elif index < 0:
+        return True
+    else:
+        renderer.copy(Time_bar[index], dstrect=(10, 192, 180, 80))
+        return False
+
+
+def render_pakjes_aantal(pakjes_aantal,renderer):
+    font_2 = sdl2.ext.FontTTF(font='counter.ttf', size=60, color=kleuren[5])
+    renderText(font_2, renderer, str(pakjes_aantal), 1910, 10)
 
 def render_floor_and_sky(renderer, kleuren_textures):
     """Rendert achtergrond top half blauw bottom grijs"""
@@ -165,12 +180,11 @@ def render_floor_and_sky(renderer, kleuren_textures):
     # Floor in grijs
     renderer.fill((0, HOOGTE // 2, BREEDTE, HOOGTE // 2), kleuren[6])
     # SKY in blauw"""
+
     renderer.copy(kleuren_textures[9],
-                  srcrect=(0, 0, 1, 1),
                   dstrect=(0, 0, BREEDTE, HOOGTE // 2))
     # Floor in grijs
     renderer.copy(kleuren_textures[6],
-                  srcrect=(0, 0, 1, 1),
                   dstrect=(0, HOOGTE // 2, BREEDTE, HOOGTE // 2))
 
 
@@ -208,6 +222,7 @@ def draw_path(renderer, kleuren_textures, path, speler, packet):
 
 
 def render_map(renderer,kleuren_textures, pngs_mappen, map_settings,speler,pad, sprites):
+
     map_png, gps_grote_map = pngs_mappen
     map_positie, afstand_map, worldshape = map_settings
 
@@ -222,6 +237,7 @@ def render_map(renderer,kleuren_textures, pngs_mappen, map_settings,speler,pad, 
         linker_bovenhoek_x = worldshape[1] - 2 * afstand_map
     if afstand_map + map_positie[1] > worldshape[0]:
         linker_bovenhoek_y = worldshape[0] - 2 * afstand_map
+
     renderer.copy(gps_grote_map,
                   srcrect=(0, 0, gps_grote_map.size[0], gps_grote_map.size[1]),
                   dstrect=(80, 70, BREEDTE - 120, HOOGTE - 140),

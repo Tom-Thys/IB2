@@ -65,6 +65,8 @@ POSITIE_GAME_OVER = [
 #
 # Globale variabelen
 #
+balkje_tijd = 0
+pakjes_aantal = 0
 game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
 paused = False
@@ -590,13 +592,16 @@ def collision_auto(zichtbare_sprites):
 
 
 def collision_detection(renderer, speler, sprites, hartje):
-    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over
+    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over, balkje_tijd,pakjes_aantal
     for sprite in sprites:
         if sprite.soort == "Doos":
             if abs(sprite.position[0] - eindbestemming[0]) <= 1 and abs(sprite.position[1] - eindbestemming[1]) <= 1:
                 lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
                 rnd = randint(0, len(lijst_objective_complete) - 1)
                 muziek_spelen(lijst_objective_complete[rnd], channel=5)
+                balkje_tijd -= 30
+                print(balkje_tijd)
+                pakjes_aantal += 1
                 if randint(0, 10) <= 1:
                     muziek_spelen("dogs barking", channel=6)
                 eindbestemming = bestemming_selector()
@@ -865,8 +870,8 @@ def quit(button, event):
 
 # @profile
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
-    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, game_over
+    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos, balkje_tijd, pakjes_aantal
     map_positie = [50, world_map.shape[0] - 50]
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
@@ -929,6 +934,15 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     map_doos = factory.from_image(resources.get_path("map_doos.png"))
     speler_png = factory.from_image(resources.get_path("speler_sprite.png"))
     arrow = factory.from_image(resources.get_path("arrow.png"))
+
+
+    time_bar = []
+    Time = sdl2.ext.Resources(__file__, "resources/Time")
+    for i in range (11):
+        afbeelding_naam =  str(i) + ".png"
+
+        time_bar.append(factory.from_image(Time.get_path(afbeelding_naam)))
+
     speler.doos = doos
     speler.map_doos = map_doos
     speler.png = speler_png
@@ -940,7 +954,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     Groene_auto = sdl2.ext.Resources(__file__, "resources/Groene_auto")
     Witte_auto = sdl2.ext.Resources(__file__, "resources/Witte_auto")
     Grijze_auto = sdl2.ext.Resources(__file__, "resources/Grijze_auto")
-    factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE, renderer=renderer)
 
     bomen = []
     rode_autos = []
@@ -1073,6 +1086,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             if voertuig.vector == []: continue;
             sprites_autos.append(voertuig)
         t0 = 0
+        start_tijd = time.time()
         while game_state == 2 and not moet_afsluiten:
             # Onthoud de huidige tijd
             start_time = time.time()
@@ -1110,7 +1124,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             sprites = sprites_bomen + sprites_autos + sprites_dozen
             updatable = not (show_map or paused or game_over)
             zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable)
-            #collision_detection(renderer, speler, sprites, hartje)
+            collision_detection(renderer, speler, sprites, hartje)
             collision_auto(zichtbare_sprites)
 
 
@@ -1161,18 +1175,18 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                     pass
                     # reversing beep ofz
 
-            if sprites == []:
-                pass
-            else:
-                # draai_sprites(sprites[0], 1)
-                # draai_sprites(speler.car,1)
-                pass
-            # print(speler.p_x)
+
             if quiting > 0:
                 quiting -= 1
                 renderText(font_2, renderer, "DON'T QUIT THE GAME!!!", BREEDTE, HOOGTE / 2)
 
             # Verwissel de rendering context met de frame buffer
+            balkje_tijd += ( time.time() - start_tijd)
+            start_tijd = time.time()
+            straf = render_balkje(balkje_tijd,time_bar,renderer)
+            if straf:
+                game_over = True
+            render_pakjes_aantal(pakjes_aantal,renderer)
             renderer.present()
 
     # Sluit SDL2 af
