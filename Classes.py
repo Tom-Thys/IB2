@@ -13,6 +13,7 @@ from sdl2 import *
 
 class Sprite:
     def __init__(self, image, images, map_png, x, y, height, soort, schaal=0.4):
+        """image, images (can be []), map_png, x, y, height, soort, schaal=0.4"""
         self.images = images
         self.image = image  # The image of the sprite
         self.map_png = map_png
@@ -59,7 +60,7 @@ class Sprite:
 class Doos_Sprite(Sprite):
     """Doos neemt alle functies met sprite over met een extra vector zodat hij gegooid kan worden"""
 
-    def __init__(self, image, map_png, x, y, height, is_boom, vector, deletable=True):
+    def __init__(self, image, map_png, x, y, height, vector, deletable=True):
         super().__init__(image, [], map_png, x, y, height, "Doos")
         self.deletable = deletable
         self.vector = vector
@@ -215,7 +216,7 @@ class Player:
         """Maakt Doos sprite aan en update deze zodat een paar keer voor betere visuals
         :return: Doos_Sprite"""
         self.laatste_doos = time.time()
-        sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, -600, False, self.r_speler / 5, )
+        sprite = Doos_Sprite(self.doos, self.map_doos, self.p_x, self.p_y, -600, self.r_speler / 5, )
         for i in range(51):
             sprite.update(world_map)
         return sprite
@@ -340,6 +341,14 @@ class Player:
             self.car.hoek = self.hoek
             self.car.x = self.p_x
             self.car.y = self.p_y
+
+    def kantoor_set(self):
+        self.p_x = 3
+        self.p_y = 3
+        self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
+        if self.in_auto:
+            self.in_auto = False
+            self.car.player_inside = False
 
 
 class PostBus(Sprite):

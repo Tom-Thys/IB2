@@ -2,36 +2,19 @@
 # import pstats
 # from line_profiler_pycharm import profile
 
-import math
+
 import time
-import random
-import numpy as np
 import heapq
 import logging
-import threading
-from multiprocessing import Process, Manager, set_start_method
+from multiprocessing import Process, Manager
 import sdl2.ext
-import sys
 import sdl2.sdlimage
 import sdl2.sdlmixer
-from sdl2 import *
 from worlds import *
 from Classes import Voertuig, Player, PostBus, Politie
-# from Code_niet_langer_in_gebruik import *
 from rendering import *
 from configparser import ConfigParser
-from PIL import Image
 
-# from pydub import AudioSegment
-# import pydub
-"""from PIL import Image
-from pydub import AudioSegment
-import pydub
-import pyrubberband
-import soundfile
-import librosa
-import soundfile"""
-import ctypes
 
 config = ConfigParser()
 
@@ -65,13 +48,14 @@ POSITIE_GAME_OVER = [
 #
 # Globale variabelen
 #
+game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage, 4: kantoor
 balkje_tijd = 0
 pakjes_aantal = 0
-game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage,
 sound = True
 paused = False
 show_map = False
 game_over = False
+starting_game = True
 game_over_index = 0
 game_over_positie = [0, 0]
 quiting = 0
@@ -91,6 +75,7 @@ lijst_mogelijke_bestemmingen = []
 sprites_dozen = []
 sprites_bomen = []
 sprites_autos = []
+kantoor_sprites = []
 # verwerking van config file: ook globale variabelen
 config.read("config.ini")
 volume = int(config.get("settings", "volume"))
@@ -107,7 +92,7 @@ r_speler_hoek = math.pi / 4
 d_camera = 1
 
 # Kantoor postbode
-pakjesx, pakjesy = 467, 441
+pakjesx, pakjesy = 451, 433
 
 # world
 world_map = np.zeros((10, 10))
@@ -175,8 +160,9 @@ def verwerk_input(delta, events=0):
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     if events == 0:
         events = sdl2.ext.get_events()
+
     key_states = sdl2.SDL_GetKeyboardState(None)
-    if game_state == 2 and not paused and not show_map and not game_over:
+    if game_state in [2,4] and not paused and not show_map and not game_over:
         if key_states[20]:
             print("a")
         if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
@@ -348,7 +334,7 @@ def verwerk_input(delta, events=0):
                         moet_afsluiten = True
                 else:
                     if key == sdl2.SDLK_SPACE:
-                        if not speler.doos_vast:
+                        if not speler.doos_vast and not speler.in_auto:
                             if pakjesx - 1 < speler.p_x < pakjesx + 1 and pakjesy - 1 < speler.p_y < pakjesy + 1:
                                 speler.doos_vast = True
                                 continue
@@ -369,6 +355,8 @@ def verwerk_input(delta, events=0):
                             sprites_dozen.append(geworpen_doos)
                             muziek_spelen("throwing", channel=2)
                             speler.doos_vast = False
+                if key == sdl2.SDLK_k:
+                    game_state = 4
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_t:
@@ -420,7 +408,7 @@ def verwerk_input(delta, events=0):
         # Wordt afgeleverd als de gebruiker de muis heeft bewogen.
         # Aangezien we relative motion gebruiken zijn alle coordinaten
         # relatief tegenover de laatst gerapporteerde positie van de muis.
-        elif event.type == sdl2.SDL_MOUSEMOTION and game_state == 2 and not paused and not show_map and not game_over:
+        elif event.type == sdl2.SDL_MOUSEMOTION and game_state in [2, 4] and not paused and not show_map and not game_over:
             # Aangezien we in onze game maar 1 as hebben waarover de camera
             # kan roteren zijn we enkel geinteresseerd in bewegingen over de
             # X-as
@@ -870,8 +858,9 @@ def quit(button, event):
 
 # @profile
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, game_over
-    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos, balkje_tijd, pakjes_aantal
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
+    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos
+    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game
     map_positie = [50, world_map.shape[0] - 50]
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
@@ -911,7 +900,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         factory.from_image(resources.get_path("Paars_huis.png")),  # 6
         factory.from_image(resources.get_path("Geel_huis.png")),  # 7
         factory.from_image(resources.get_path("Hedge_donker.png")),  # 8
-        factory.from_image(resources.get_path("stop bord pixel art.png"))  # 9
+        factory.from_image(resources.get_path("stop bord pixel art.png")),  # 9
+        factory.from_image(resources.get_path("warehouse.png"))  # 10
     ]
     muren_info = []
     for i, muur in enumerate(soort_muren):
@@ -1060,6 +1050,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                               dstrect=(settings_menu_positie[0], settings_menu_positie[1], 80, 50))
             renderer.present()
 
+
+        # All settings going into the game
         sdl2.SDL_SetRelativeMouseMode(True)
         if game_state != 0:  # enkel als game_state van menu naar game gaat mag game start gespeeld worden
             muziek_spelen(0)
@@ -1072,19 +1064,33 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             with open("config.ini", "w") as f:
                 config.write(f)
 
-        # Setup voor de game
-        sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree, world_map,
-                                               sprites_bomen, aantalbomen=50)
-        # sprites_autos
-        for i in range(100):
-            omgeving = 20
-            x = randint(speler.tile[0] - omgeving, speler.tile[0] + omgeving) * 9 + 4
-            y = randint(speler.tile[1] - omgeving, speler.tile[1] + omgeving) * 9 + 4
-            if x <= 0 or x >= 1000 or y <= 0 or y >= 1000:
-                continue;
-            voertuig = Voertuig(tree, kleuren_autos[randint(0, 3)], map_voertuig, x, y, HOOGTE, world_map)
-            if voertuig.vector == []: continue;
-            sprites_autos.append(voertuig)
+        if starting_game: # only runs once --> no changes als je terugkeert van garage
+            starting_game = False
+
+            # Setup voor de game
+            sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree, world_map,
+                                                   sprites_bomen, aantalbomen=50)
+            # sprites_autos
+            for i in range(100):
+                omgeving = 20
+                x = randint(speler.tile[0] - omgeving, speler.tile[0] + omgeving) * 9 + 4
+                y = randint(speler.tile[1] - omgeving, speler.tile[1] + omgeving) * 9 + 4
+                if x <= 0 or x >= 1000 or y <= 0 or y >= 1000:
+                    continue;
+                voertuig = Voertuig(tree, kleuren_autos[randint(0, 3)], map_voertuig, x, y, HOOGTE, world_map)
+                if voertuig.vector == []: continue;
+                sprites_autos.append(voertuig)
+            undeletable_sprites = []
+            for i in range(15):
+                x = random.uniform(450, 452)
+                y = random.uniform(432, 434)
+                Doos = Sprite(doos, [], map_doos, x, y, HOOGTE, "Doos")
+                Doos.schadelijk = False
+                Doos.map_grootte = 3
+                undeletable_sprites.append(Doos)
+
+
+
         t0 = 0
         start_tijd = time.time()
         while game_state == 2 and not moet_afsluiten:
@@ -1121,7 +1127,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
             sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree,
                                                    world_map, sprites_bomen)
-            sprites = sprites_bomen + sprites_autos + sprites_dozen
+            sprites = sprites_bomen + sprites_autos + sprites_dozen + undeletable_sprites
             updatable = not (show_map or paused or game_over)
             zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable)
             collision_detection(renderer, speler, sprites, hartje)
@@ -1152,6 +1158,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 render_map(renderer, kleuren_textures, pngs_mappen, map_settings, speler, pad, sprites)
                 menu_nav()
             elif game_over:
+                balkje_tijd = 0
                 renderer.copy(game_over_menu,
                               srcrect=(0, 0, game_over_menu.size[0], game_over_menu.size[1]),
                               dstrect=(0, 0, BREEDTE, HOOGTE))
@@ -1181,12 +1188,40 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 renderText(font_2, renderer, "DON'T QUIT THE GAME!!!", BREEDTE, HOOGTE / 2)
 
             # Verwissel de rendering context met de frame buffer
-            balkje_tijd += ( time.time() - start_tijd)
+            balkje_tijd += (time.time() - start_tijd)
             start_tijd = time.time()
-            straf = render_balkje(balkje_tijd,time_bar,renderer)
+            straf = render_balkje(balkje_tijd, time_bar, renderer)
             if straf:
                 game_over = True
-            render_pakjes_aantal(pakjes_aantal,renderer)
+            render_pakjes_aantal(pakjes_aantal, renderer)
+            renderer.present()
+
+
+
+        if game_state == 4:
+            speler.kantoor_set()
+            world_map = kantoor_map
+            if speler.car != 0:
+                Auto = Sprite(speler.car.image,speler.car.images,speler.car.map_png, 5, 15, HOOGTE, "PostBus")
+                Auto.schadelijk = False
+                kantoor_sprites.append(Auto)
+        while game_state == 4 and not moet_afsluiten:
+            start_time = time.time()
+            speler.idle()
+            renderer.clear()
+            render_floor_and_sky(renderer, kleuren_textures)
+            # Render de huidige frame
+            (d, d_v, kl), (z_d, z_v, z_k), _ = (speler.n_raycasting(world_map, deuren))
+            renderen(renderer, d, d_v, kl, muren_info, 0)
+            render_sprites(renderer, kantoor_sprites, speler, d, delta, False)
+
+
+
+
+            delta = time.time() - start_time
+            verwerk_input(delta)
+            next(fps_generator)
+            # Verwissel de rendering context met de frame buffer
             renderer.present()
 
     # Sluit SDL2 af

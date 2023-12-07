@@ -8,7 +8,9 @@ from random import randint
 from Classes import Deur, Sprite, Voertuig
 from PIL import Image
 
-#random.seed(20)
+postkantoor = (434, 452)
+
+# random.seed(20)
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn
@@ -40,6 +42,12 @@ garage_map = [[10, 10, 10, 10, 10, 10, 10, 10],
               [10, 0, 0, 0, 0, 0, 0, 10],
               [10, 10, 10, 10, 10, 10, 10, 10]]
 
+kantoor_map = np.zeros((20, 20), dtype='int32')
+kantoor_map[:, 0] = 10
+kantoor_map[0, :] = 10
+kantoor_map[-1, :] = 10
+kantoor_map[:, -1] = 10
+
 worldlijst = [world_map, world_map_2, garage_map]
 
 kleuren = [
@@ -57,7 +65,10 @@ kleuren = [
     sdl2.ext.Color(255, 255, 0, 100),  # 11 = Yellow
 ]
 colors = [0, 0, 0, 102, 102, 102, 176, 176, 176, 255, 255, 255]
-kleur_dict = {0: (0, 0, 0), 1: (170, 85, 85), 2: (170, 85, 85), 3: (141, 170, 127), 4: (102, 127, 171), 5: (205, 201, 201), 6: (180, 162, 200), 7: (218, 165, 32), 8: (0, 255, 0), 9: (255, 0, 20)}
+kleur_dict = {0: (0, 0, 0), 1: (170, 85, 85), 2: (170, 85, 85), 3: (141, 170, 127), 4: (102, 127, 171),
+              5: (205, 201, 201), 6: (180, 162, 200), 7: (218, 165, 32), 8: (0, 255, 0), 9: (255, 0, 20),
+              10: (255, 255, 255)}
+
 laatste_huis_pos = 7
 
 
@@ -96,23 +107,23 @@ def main():
     make_world_png(worldlijst)
 
 
-
-def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, worldmap, HOOGTE, sprites_autos, aantalautos=1):
+def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, worldmap, HOOGTE, sprites_autos,
+                        aantalautos=1):
     for sprite in sprites_autos:
         if sprite.afstand >= 100:
-            #print(sprite.afstand)
+            # print(sprite.afstand)
             sprites_autos.remove(sprite)
     if len(sprites_autos) == aantalautos:
         return sprites_autos
-    for i in range(aantalautos- len(sprites_autos)):
+    for i in range(aantalautos - len(sprites_autos)):
         omgeving = 10
-        x = randint(speler_x - omgeving, speler_x + omgeving)*9 + 4
-        y = randint(speler_y - omgeving, speler_y + omgeving)*9 + 4
+        x = randint(speler_x - omgeving, speler_x + omgeving) * 9 + 4
+        y = randint(speler_y - omgeving, speler_y + omgeving) * 9 + 4
         if x <= 0 or x >= 1000 or y <= 0 or y >= 1000:
             continue
         else:
             if (speler_x - x) ** 2 + (speler_y - y) ** 2 >= 100:
-                voertuig = Voertuig(tree, kleuren_autos[randint(0,3)], map_voertuig, x, y, HOOGTE, worldmap)
+                voertuig = Voertuig(tree, kleuren_autos[randint(0, 3)], map_voertuig, x, y, HOOGTE, worldmap)
                 if voertuig.vector == []:
                     continue
                 sprites_autos.append(voertuig)
@@ -146,16 +157,17 @@ def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tr
             x = random.uniform(x_min, x_max)
             y = random.uniform(y_min, y_max)
             if (worldmap[math.floor(y), math.floor(x)] <= 0
-                    and worldmap[math.floor(y), math.floor(x+1)] <= 0
-                    and worldmap[math.floor(y+1), math.floor(x)] <= 0
-                    and worldmap[math.floor(y), math.floor(x-1)] <= 0
-                    and worldmap[math.floor(y-1), math.floor(x)] <= 0
+                    and worldmap[math.floor(y), math.floor(x + 1)] <= 0
+                    and worldmap[math.floor(y + 1), math.floor(x)] <= 0
+                    and worldmap[math.floor(y), math.floor(x - 1)] <= 0
+                    and worldmap[math.floor(y - 1), math.floor(x)] <= 0
                     and (speler_x - x) ** 2 + (speler_y - y) ** 2 >= 100):
                 sprites.append(Sprite(tree, bomen, sprite_map_png, x, y, HOOGTE, "Boom", schaal=0.2))
-                sprites[-1].draai_sprites(randint(0,360))
+                sprites[-1].draai_sprites(randint(0, 360))
                 break
 
     return sprites
+
 
 coords_huizen = []
 for i in range(9):
@@ -163,6 +175,7 @@ for i in range(9):
         if 3 <= i <= 5 or 3 <= j <= 5:
             continue
         coords_huizen.append((i, j))
+
 
 def world_generation(openingen=list):
     kaart = np.zeros((9, 9), dtype='int32')
@@ -219,13 +232,13 @@ def world_generation(openingen=list):
     for i in range(1, 5):
         if i not in openingen:
             if i == 1:
-                kaart = openingen_sluiten(kaart, (3,6), (0,3))
+                kaart = openingen_sluiten(kaart, (3, 6), (0, 3))
             elif i == 2:
-                kaart = openingen_sluiten(kaart, (0,3), (3, 6))
+                kaart = openingen_sluiten(kaart, (0, 3), (3, 6))
             elif i == 3:
-                kaart = openingen_sluiten(kaart, (3,6), (6, 9))
+                kaart = openingen_sluiten(kaart, (3, 6), (6, 9))
             else:
-                kaart = openingen_sluiten(kaart, (6,9), (3, 6))
+                kaart = openingen_sluiten(kaart, (6, 9), (3, 6))
     # print(kaart)
     return kaart, openingen
 
@@ -235,6 +248,7 @@ def openingen_sluiten(kaart, y, x):
         for j in range(x[0], x[1]):
             kaart[i, j] = randint(2, laatste_huis_pos)
     return kaart
+
 
 def converter(input_image):
     r_image_in, g_image_in, b_image_in, alfa = input_image.split()
@@ -290,7 +304,7 @@ class Map():
         y, x = np.shape(self.tile_map)
         self.added = []
         # map = np.ones((9, 9), dtype='int32')
-        map = np.full((9, 9), fill_value=laatste_huis_pos+2, dtype='int32')
+        map = np.full((9, 9), fill_value=laatste_huis_pos + 2, dtype='int32')
         openingen = []
         surrounding_tiles = Tile((map, openingen))
         self.tile_map[0, :] = surrounding_tiles
@@ -328,10 +342,9 @@ class Map():
             for j in range(1, y - 1):
                 self.direct_map_making(i, j)
                 self.added.append((i, j))
-        """for i in range(1, x - 1):
-            for j in range(1, y - 1):
-                self.drivable(i, j)"""
         self.update()
+        self.world_map[postkantoor[0] - 3:postkantoor[0], postkantoor[1] - 3] = 10
+        self.world_map[postkantoor[0] - 3, postkantoor[1] - 3:postkantoor[1]] = 10
 
         if True:
             im = Image.fromarray(self.world_map)
@@ -369,7 +382,7 @@ class Map():
                     openingen.append(2)
             self.tile_map[x_pos, y_pos] = Tile(world_generation(openingen))
 
-    def drivable(self, x_pos, y_pos):
+    """def drivable(self, x_pos, y_pos):
         if self.tile_map[x_pos, y_pos] == 0:
             return
         kaart = self.tile_map[x_pos, y_pos].map
@@ -523,7 +536,7 @@ class Map():
                         self.tile_map[x_pos, y_pos] = Tile(world_generation(openingen))
                         self.added.append((x_pos, y_pos))
         # looping
-        self.update()
+        self.update()"""
 
 
 if __name__ == '__main__':
