@@ -10,13 +10,13 @@
 - Pakjes niet leverbaar aan hagen
 
 #### In te voegen
-- Generator auto
+- Generator auto DONE
 - Scores bijhouden &rarr; opslaan in .ini?
 - Garage voor selecteren van postauto
 - Postkantoor op map zelf
 - Pakkjes oppakken, in auto en uit auto halen
 - Dialog boxes?
-- Game over screen
+- Game over screen 
 - Muziek: Ander geluid als persoon iets hit? (done?)
 - Generated sprites: Andere types?
 

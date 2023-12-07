@@ -558,35 +558,32 @@ def collision_auto(zichtbare_sprites):
     global sprites_bomen, sprites_autos
     place_array = np.array([[sprite.x, sprite.y] for sprite in zichtbare_sprites])
     lenght = len(zichtbare_sprites)
-    verwijdert = []
+
     for i, sprite in enumerate(zichtbare_sprites):
         if sprite.soort == "Auto":
 
             wh_self_array_x = place_array[:, 0] - sprite.x
             wh_self_array_y = place_array[:, 1] - sprite.y
-            distances = np.sqrt(wh_self_array_y * 2 + wh_self_array_x * 2)
+            distances = wh_self_array_y * 2 + wh_self_array_x * 2
+            distances[i] = 100
 
-            check = distances < 0.8
+            check = distances < 1
             if check.any():
                 pop_indexes = np.arange(0, lenght)[check]
 
                 for index in pop_indexes:
-                    # print(index, sprite)
                     check_sprite = zichtbare_sprites[index]
                     soort = check_sprite.soort
-                    if check_sprite in verwijdert:
-                        check[index] = False
-                        continue
-                    elif soort in ["Doos", "PostBus", "Auto"]:
+                    if soort in ["Doos", "PostBus", "Auto"]:
                         check[index] = False
                         continue
                     elif soort == "Boom":
-                        verwijdert.append(check_sprite)
-                        sprites_bomen.remove(zichtbare_sprites[index])
-                    elif soort == "Auto":
-                        pass
+                        sprites_bomen.remove(check_sprite)
+                    elif soort == "Politie":
+                        raise NotImplementedError("Politie tegengekomen")
                     else:
-                        raise TypeError(soort)
+                        raise NotImplementedError(soort)
+                    zichtbare_sprites.pop(index)
 
                 place_array = place_array[~check, :]
                 lenght = len(place_array)
@@ -596,7 +593,7 @@ def collision_detection(renderer, speler, sprites, hartje):
     global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over
     for sprite in sprites:
         if sprite.soort == "Doos":
-            if tuple(sprite.position[:]) == eindbestemming[:]:
+            if abs(sprite.position[0] - eindbestemming[0]) <= 1 and abs(sprite.position[1] - eindbestemming[1]) <= 1:
                 lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
                 rnd = randint(0, len(lijst_objective_complete) - 1)
                 muziek_spelen(lijst_objective_complete[rnd], channel=5)
@@ -607,8 +604,10 @@ def collision_detection(renderer, speler, sprites, hartje):
             continue
         if sprite.afstand < 1 and sprite.schadelijk:
             if sprite.soort == "Boom":
+                speler.aantal_hartjes -= 1
                 sprites_bomen.remove(sprite)
             elif sprite.soort == "Auto":
+                speler.aantal_hartjes -= 2
                 sprites_autos.remove(sprite)
             else:
                 raise TypeError("Kan sprite niet verwijderen")
@@ -623,7 +622,7 @@ def collision_detection(renderer, speler, sprites, hartje):
                     speler.hit = True
 
             else:
-                speler.aantal_hartjes -= 1
+
                 speler.hit = True
     if speler.in_auto:
         if speler.car.crashed:
@@ -643,7 +642,7 @@ def collision_detection(renderer, speler, sprites, hartje):
             muziek_spelen("hit sound", channel=5)
             speler.hit = False
         hartjes = speler.aantal_hartjes
-        if hartjes == 0:
+        if hartjes <= 0:
             game_over = True
         i = 1
         while i <= hartjes:
@@ -829,10 +828,10 @@ def bestemming_selector(mode=""):
     x, y = speler.position
     spelerpositie = list(speler.position)
 
-    range_min = [spelerpositie[1] - 20, spelerpositie[0] - 20]  # "linkerbovenhoek" v/d de matrix
-    range_max = [spelerpositie[1] + 20, spelerpositie[0] + 20]  # "rechteronderhoek" v/d matrix
-    range_te_dicht_min = [spelerpositie[1] - 5, spelerpositie[0] - 5]
-    range_te_dicht_max = [spelerpositie[1] + 5, spelerpositie[0] + 5]
+    range_min = [spelerpositie[1] - 30, spelerpositie[0] - 30]  # "linkerbovenhoek" v/d de matrix
+    range_max = [spelerpositie[1] + 30, spelerpositie[0] + 30]  # "rechteronderhoek" v/d matrix
+    range_te_dicht_min = [spelerpositie[1] - 10, spelerpositie[0] - 10]
+    range_te_dicht_max = [spelerpositie[1] + 10, spelerpositie[0] + 10]
     dichte_locaties = list(
         filter(lambda m: m[0] >= range_min[0] and m[1] >= range_min[1] and m[0] <= range_max[0] and m[1] <= range_max[1] \
                          and (m[0] >= range_te_dicht_max[0] and m[1] >= range_te_dicht_max[1] or m[0] <=
