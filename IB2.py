@@ -333,8 +333,8 @@ def verwerk_input(delta, events=0):
                     if game_over_index == 2 and key == sdl2.SDLK_SPACE:
                         moet_afsluiten = True
                 else:
-                    if key == sdl2.SDLK_SPACE:
-                        if not speler.doos_vast and not speler.in_auto:
+                    if key == sdl2.SDLK_SPACE and not speler.in_auto:
+                        if not speler.doos_vast:
                             if pakjesx - 1 < speler.p_x < pakjesx + 1 and pakjesy - 1 < speler.p_y < pakjesy + 1:
                                 speler.doos_vast = True
                                 continue
@@ -414,12 +414,12 @@ def verwerk_input(delta, events=0):
             # X-as
             draai = event.motion.xrel
             if speler.in_auto:
-                speler.sideways_move(1, math.pi / 40 * draai * move_speed, world_map)
+                speler.sideways_move(1, math.pi / 10 * draai * move_speed, world_map)
             else:
-                speler.draaien(-math.pi / 400 * draai * move_speed)
+                speler.draaien(-math.pi / 100 * draai * move_speed)
                 beweging = event.motion.yrel
 
-                speler.move(1, beweging / 100 * move_speed, world_map)
+                speler.move(1, beweging / 20 * move_speed, world_map)
             continue
 
     # Polling-gebaseerde input. Dit gebruiken we bij voorkeur om bv het ingedrukt

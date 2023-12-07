@@ -206,28 +206,31 @@ def world_generation(openingen=list):
         kaart[1, 5] = -1
         kaart[3, 7] = -1"""
     if len(openingen) < 3:
-        extra_openingen = randint(0, 3 - len(openingen))  # Extra openingen
-        if extra_openingen == 0 and len(openingen) <= 1:
-            extra_openingen = randint(1, 3)
+        extra_openingen = 1 + randint(0, 1)
+        if len(openingen) < 1:
+            extra_openingen += 2
+        elif len(openingen) < 2:
+            extra_openingen += 1
+        if len(openingen) + extra_openingen == 3 and randint(0, 12) == 0:
+            extra_openingen += 1
         for i in range(extra_openingen):
-            loops = 0
-            while loops < 6:
-                loops += 1
+            while True:
                 opening = randint(1, 4)
                 if opening not in openingen:
                     openingen.append(opening)
-                    continue
+                    break
     elif len(openingen) == 3:
         openingen.pop(randint(0, 2))
-        if randint(0, 10) == 0:
+        if randint(0, 15) == 0:
             openingen.pop(randint(0, 1))
             if randint(0, 20) == 0:
                 openingen.pop(0)
     else:
+        print(openingen)
         openingen.pop(randint(0, 3))
-        if randint(0, 2) == 0:
+        if randint(0, 5) == 0:
             openingen.pop(randint(0, 2))
-            if randint(0, 6) == 6:
+            if randint(0, 15) == 6:
                 openingen.pop(randint(0, 1))
     for i in range(1, 5):
         if i not in openingen:
@@ -322,7 +325,7 @@ class Map():
         kaart = np.zeros((9, 9), dtype='int32')
         kaart[:, 4] = -2
         kaart[4, :] = -2
-        intiele_tile = Tile((kaart, [1]))
+        intiele_tile = Tile((kaart, [1, 2, 3, 4]))
         tile_2 = Tile((kaart, [1, 2, 3, 4]))
         tile_3 = Tile((kaart, [1, 2, 3, 4]))
         self.tile_map[48, 50] = tile_3
