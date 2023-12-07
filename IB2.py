@@ -555,30 +555,41 @@ def render_sprites(renderer, sprites, player, d, delta, update):
     sprites.images = laatste_items + rest_van_de_lijst"""
 
 def collision_auto(zichtbare_sprites):
-    global  sprites_bomen, sprites_autos
+    global sprites_bomen, sprites_autos
     place_array = np.array([[sprite.x, sprite.y] for sprite in zichtbare_sprites])
-    lenght = len(place_array)
+    lenght = len(zichtbare_sprites)
+    verwijdert = []
     for i, sprite in enumerate(zichtbare_sprites):
         if sprite.soort == "Auto":
 
             wh_self_array_x = place_array[:, 0] - sprite.x
             wh_self_array_y = place_array[:, 1] - sprite.y
-            distances = np.sqrt(wh_self_array_y ** 2 + wh_self_array_x ** 2)
+            distances = np.sqrt(wh_self_array_y * 2 + wh_self_array_x * 2)
 
-            check = distances < 1.5
+            check = distances < 0.8
             if check.any():
                 pop_indexes = np.arange(0, lenght)[check]
 
                 for index in pop_indexes:
                     # print(index, sprite)
-                    soort = sprites[index].soort
-                    if soort == "Doos" or soort == "Postbus":
+                    check_sprite = zichtbare_sprites[index]
+                    soort = check_sprite.soort
+                    if check_sprite in verwijdert:
+                        check[index] = False
                         continue
-                    if soort == "Boom":
-                        sprites_bomen.remove(sprites[index])
+                    elif soort in ["Doos", "PostBus", "Auto"]:
+                        check[index] = False
+                        continue
+                    elif soort == "Boom":
+                        verwijdert.append(check_sprite)
+                        sprites_bomen.remove(zichtbare_sprites[index])
+                    elif soort == "Auto":
+                        pass
+                    else:
+                        raise TypeError(soort)
 
-        place_array = np.array([[sprite.x, sprite.y] for sprite in sprites])
-        lenght = len(place_array)
+                place_array = place_array[~check, :]
+                lenght = len(place_array)
 
 
 def collision_detection(renderer, speler, sprites, hartje):
@@ -890,11 +901,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
     soort_muren = [
         factory.from_image(resources.get_path("muur_test.png")),  # 1
-        factory.from_image(resources.get_path("Red_house.png")),  # 2
-        factory.from_image(resources.get_path("Pink_house.png")),  # 3
-        factory.from_image(resources.get_path("yellow_house.png")),  # 4
-        factory.from_image(resources.get_path("Gruis_house.png")),  # 5
-        factory.from_image(resources.get_path("hedge.png")),  # 6
+        factory.from_image(resources.get_path("Rood_huis.png")),  # 2
+        factory.from_image(resources.get_path("groen_huis.png")),  # 3
+        factory.from_image(resources.get_path("Blauw_huis.png")),  # 4
+        factory.from_image(resources.get_path("Grijs_huis.png")),  # 5
+        factory.from_image(resources.get_path("Hedge_donker.png")),  # 6
         factory.from_image(resources.get_path("stop bord pixel art.png"))  # 7
     ]
     muren_info = []
