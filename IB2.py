@@ -453,7 +453,7 @@ def handen_sprite(renderer, handen_doos):
 
 
 def render_sprites(renderer, sprites, player, d, delta, update):
-    global world_map, sprites_autos
+    global world_map, sprites_autos,sprites_bomen
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player.p_x, player.p_y))  # Sorteren op afstand
 
     max_dist = 80
@@ -536,17 +536,26 @@ def render_sprites(renderer, sprites, player, d, delta, update):
 
         if kolom == -1:
             continue
-
+        if sprite.fall == 0:
+            renderer.copy(image, srcrect=(
+                initieel / sprite_size_breedte * spriteBreedte, 0, spriteBreedte * breedte / sprite_size_breedte,
+                sprite_size_hoogte * sprite.afstand),
+                          dstrect=(kolom, screen_y, breedte, sprite_size_hoogte))
+            zichtbaar.append(sprite)
+            continue
+        print(time.time()-sprite.fall)
         renderer.copy(image, srcrect=(
             initieel / sprite_size_breedte * spriteBreedte, 0, spriteBreedte * breedte / sprite_size_breedte,
             sprite_size_hoogte * sprite.afstand),
-                      dstrect=(kolom, screen_y, breedte, sprite_size_hoogte))
-        zichtbaar.append(sprite)
+                      dstrect=(kolom, screen_y+1000*(time.time()-sprite.fall)/sprite_distance, breedte, sprite_size_hoogte),angle= 400*(time.time()-sprite.fall))
+        if time.time() - sprite.fall >= 0.2:
+            sprites_bomen.remove(sprite)
+
     return zichtbaar
 
 
 def collision_auto(zichtbare_sprites):
-    global sprites_bomen, sprites_autos
+    global  sprites_autos
     place_array = np.array([[sprite.x, sprite.y] for sprite in zichtbare_sprites])
     lenght = len(zichtbare_sprites)
 
@@ -568,7 +577,7 @@ def collision_auto(zichtbare_sprites):
                         check[index] = False
                         continue
                     elif soort == "Boom":
-                        sprites_bomen.remove(check_sprite)
+                        check_sprite.fall = time.time()
                     elif soort == "Politie":
                         raise NotImplementedError("Politie tegengekomen")
                     else:

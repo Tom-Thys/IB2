@@ -12,7 +12,7 @@ from sdl2 import *
 
 
 class Sprite:
-    def __init__(self, image, images, map_png, x, y, height, soort, schaal=0.4):
+    def __init__(self, image, images, map_png, x, y, height, soort, schaal=0.4,fall = 0):
         """image, images (can be []), map_png, x, y, height, soort, schaal=0.4"""
         self.images = images
         self.image = image  # The image of the sprite
@@ -28,6 +28,7 @@ class Sprite:
         self.schadelijk = True
         self.soort = soort
         self.schaal = schaal
+        self.fall = fall
 
     def afstanden(self, x, y):
         """Berekend afstand ifv speler.
