@@ -80,7 +80,12 @@ kantoor_sprites = []
 config.read("config.ini")
 volume = int(config.get("settings", "volume"))
 sensitivity_rw = int(config.get("settings",
-                                "sensitivity"))  # echte sensitivity gaat van 100 - 300, 300 traagst, 100 snelst. Raw sensitivity gaat van 0 tot 100
+                                "sensitivity"))
+highscore = int(config.get("gameplay",
+                                "highscore"))
+money = int(config.get("gameplay",
+                                "money"))
+# echte sensitivity gaat van 100 - 300, 300 traagst, 100 snelst. Raw sensitivity gaat van 0 tot 100
 sensitivity = -2 * sensitivity_rw + 300
 
 # wordt op True gezet als het spel afgesloten moet worden
@@ -150,7 +155,7 @@ gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "ca
 def verwerk_input(delta, events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
     global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie
-    global afstand_map, quiting, game_over, game_over_index
+    global afstand_map, quiting, game_over, game_over_index, money,highscore,pakjes_aantal
 
     move_speed = delta * 2
     if speler.in_auto:
@@ -209,6 +214,11 @@ def verwerk_input(delta, events=0):
         # afsluit door bv op het kruisje te klikken
         if event.type == sdl2.SDL_QUIT:
             moet_afsluiten = True
+            money += pakjes_aantal * 5
+            pakjes_aantal = 0
+            config.set("gameplay", "money", f"{money}")
+            if pakjes_aantal > highscore:
+                config.set("gameplay", "highscore", f"{pakjes_aantal}")
             break
         # Een SDL_KEYDOWN event wordt afgeleverd wanneer de gebruiker een
         # toets op het toetsenbord indrukt.
@@ -220,6 +230,11 @@ def verwerk_input(delta, events=0):
                 quiting += 100
                 if quiting > 1000:
                     moet_afsluiten = True
+                    money += pakjes_aantal * 5
+                    pakjes_aantal = 0
+                    config.set("gameplay", "money", f"{money}")
+                    if pakjes_aantal > highscore:
+                        config.set("gameplay", "highscore", f"{pakjes_aantal}")
                     break
             if key == sdl2.SDLK_g:
                 x, y = speler.position
@@ -249,6 +264,11 @@ def verwerk_input(delta, events=0):
                         return
                     if main_menu_index == 2:
                         moet_afsluiten = True
+                        money += pakjes_aantal * 5
+                        pakjes_aantal = 0
+                        config.set("gameplay", "money", f"{money}")
+                        if pakjes_aantal > highscore:
+                            config.set("gameplay", "highscore", f"{pakjes_aantal}")
                         break
             if game_state == 1:
                 if key == sdl2.SDLK_DOWN:
@@ -315,6 +335,15 @@ def verwerk_input(delta, events=0):
                 elif show_map:
                     pass
                 elif game_over:
+                    print(
+                        "game_over, money = " + str(money) + " highscore :" + str(highscore) + " aantal pakjes: " + str(
+                            pakjes_aantal))
+                    if pakjes_aantal > highscore:
+                        config.set("gameplay", "highscore", f"{pakjes_aantal}")
+                        highscore = pakjes_aantal
+                    money += pakjes_aantal * 5
+                    pakjes_aantal = 0
+                    config.set("gameplay", "money", f"{money}")
                     if key == sdl2.SDLK_UP or key == sdl2.SDLK_e:
                         game_over_index -= 1
                         muziek_spelen("main menu select", channel=2)
@@ -547,7 +576,6 @@ def render_sprites(renderer, sprites, player, d, delta, update):
                           dstrect=(kolom, screen_y, breedte, sprite_size_hoogte))
             zichtbaar.append(sprite)
             continue
-        print(time.time()-sprite.fall)
         renderer.copy(image, srcrect=(
             initieel / sprite_size_breedte * spriteBreedte, 0, spriteBreedte * breedte / sprite_size_breedte,
             sprite_size_hoogte * sprite.afstand),
@@ -599,13 +627,13 @@ def collision_auto(zichtbare_sprites):
 def collision_detection(renderer, speler, sprites, hartje):
     global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over, balkje_tijd,pakjes_aantal
     for sprite in sprites:
+
         if sprite.soort == "Doos":
             if abs(sprite.position[0] - eindbestemming[0]) <= 1 and abs(sprite.position[1] - eindbestemming[1]) <= 1:
                 lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
                 rnd = randint(0, len(lijst_objective_complete) - 1)
                 muziek_spelen(lijst_objective_complete[rnd], channel=5)
                 balkje_tijd -= 30
-                print(balkje_tijd)
                 pakjes_aantal += 1
                 if randint(0, 10) <= 1:
                     muziek_spelen("dogs barking", channel=6)
@@ -879,7 +907,7 @@ def quit(button, event):
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
     global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos
-    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game
+    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game,money,highscore
     map_positie = [50, world_map.shape[0] - 50]
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
@@ -888,6 +916,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # bestemming_selector("start")
     lijst_mogelijke_bestemmingen = inf_world.mogelijke_bestemmingen
     eindbestemming = bestemming_selector()
+
     shared_eindbestemming[:] = eindbestemming[:]
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
@@ -1155,7 +1184,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             collision_detection(renderer, speler, sprites, hartje)
             collision_auto(zichtbare_sprites)
 
-
+            #pakjes_aantal += 1
             # t.append(time.time()-t1)
             verwerk_input(delta)
             menu_nav()
@@ -1221,6 +1250,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
 
 
+
         if game_state == 4:
             speler.kantoor_set()
             world_map = kantoor_map
@@ -1248,6 +1278,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             # Verwissel de rendering context met de frame buffer
             renderer.present()
         world_map = inf_world.world_map
+
 
     # Sluit SDL2 af
     sdl2.ext.quit()
