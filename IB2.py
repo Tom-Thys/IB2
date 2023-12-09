@@ -79,12 +79,9 @@ kantoor_sprites = []
 # verwerking van config file: ook globale variabelen
 config.read("config.ini")
 volume = int(config.get("settings", "volume"))
-sensitivity_rw = int(config.get("settings",
-                                "sensitivity"))
-highscore = int(config.get("gameplay",
-                                "highscore"))
-money = int(config.get("gameplay",
-                                "money"))
+sensitivity_rw = int(config.get("settings", "sensitivity"))
+highscore = int(config.get("gameplay", "highscore"))
+money = int(config.get("gameplay", "money"))
 # echte sensitivity gaat van 100 - 300, 300 traagst, 100 snelst. Raw sensitivity gaat van 0 tot 100
 sensitivity = -2 * sensitivity_rw + 300
 
@@ -269,6 +266,8 @@ def verwerk_input(delta, events=0):
                         config.set("gameplay", "money", f"{money}")
                         if pakjes_aantal > highscore:
                             config.set("gameplay", "highscore", f"{pakjes_aantal}")
+                        with open("config.ini", "w") as f:
+                            config.write(f)
                         break
             if game_state == 1:
                 if key == sdl2.SDLK_DOWN:
@@ -344,6 +343,8 @@ def verwerk_input(delta, events=0):
                     money += pakjes_aantal * 5
                     pakjes_aantal = 0
                     config.set("gameplay", "money", f"{money}")
+                    with open("config.ini", "w") as f:
+                        config.write(f)
                     if key == sdl2.SDLK_UP or key == sdl2.SDLK_e:
                         game_over_index -= 1
                         muziek_spelen("main menu select", channel=2)
@@ -637,7 +638,10 @@ def collision_detection(renderer, speler, sprites, hartje):
                 pakjes_aantal += 1
                 if randint(0, 10) <= 1:
                     muziek_spelen("dogs barking", channel=6)
-                eindbestemming = bestemming_selector()
+                if not speler.doos_vast and speler.car.dozen == 0:
+                    eindbestemming = (pakjesx, pakjesy)
+                else:
+                    eindbestemming = bestemming_selector()
                 sprites_dozen.remove(sprite)
             continue
         if sprite.afstand < 1 and sprite.schadelijk:
@@ -869,7 +873,6 @@ def bestemming_selector(mode=""):
         return"""
     x, y = speler.position
     spelerpositie = list(speler.position)
-
     range_min = [spelerpositie[1] - 30, spelerpositie[0] - 30]  # "linkerbovenhoek" v/d de matrix
     range_max = [spelerpositie[1] + 30, spelerpositie[0] + 30]  # "rechteronderhoek" v/d matrix
     range_te_dicht_min = [spelerpositie[1] - 10, spelerpositie[0] - 10]
@@ -1110,6 +1113,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                        f"{volume}")  # indien er uit de settings menu gekomen wordt, verander de config file met juiste settings
             config.set("settings", "sensitivity", f"{sensitivity_rw}")
             sensitivity = -2 * sensitivity_rw + 300
+            config.set("gameplay", "highscore", f"{highscore}")
+            config.set("gameplay", "money", f"{money}")
             with open("config.ini", "w") as f:
                 config.write(f)
 
