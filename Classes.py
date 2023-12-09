@@ -117,6 +117,11 @@ class Player:
         self.isWalking = False
         self.doos_vast = False
         self.hit = False
+        self.in_kantoor = False
+        aantal_deuren = 6
+        self.kantoor_deuren = np.ones(aantal_deuren, dtype='float64')
+        self.kantoor_open_deuren = np.full(aantal_deuren, False)
+        self.kantoor_deuren_update = np.ones(aantal_deuren)
         self.messages = []
         self.delta_x = np.zeros(self.breedte)
         self.delta_y = np.zeros(self.breedte)
@@ -233,7 +238,7 @@ class Player:
 
         kleuren = np.zeros(self.breedte, dtype="int")
 
-        z_kleuren = np.zeros(self.breedte, dtype="int")
+        #z_kleuren = np.zeros(self.breedte, dtype="int")
         z_d_muur = np.ones(self.breedte)
         z_d_muur_vlak = np.zeros(self.breedte)
 
@@ -259,8 +264,7 @@ class Player:
         checker = np.full(self.breedte, True)
 
         while True:
-            # reset van muren_check vormt plekken waarop we muren raken
-            z_buffer[:] = False
+
 
             # kijken of we d_v of d_h nodig hebben deze loop
             dist_cond = d_v < d_h
@@ -269,7 +273,7 @@ class Player:
             # Mogen enkel muren checken die nog niet geraakt zijn en binnen de afstand liggen
             break_1 = d_v < l
             break_2 = d_h < l
-            break_z = z_kleuren == 0
+            #break_z = z_kleuren == 0
             break_cond = (dist_cond * break_1 + ~dist_cond * break_2) * checker
             # Break 1 enkel tellen als we met d_v werken en d_h enkel als we met d_h werken
             # Binair vermenigvuldigen als break3 = 0 dan wordt break_cond op die plek 0
@@ -302,22 +306,20 @@ class Player:
             # Deze tellen ook enkel maar als de break conditie niet telt
             valid_indices = np.logical_and.reduce(
                 (0 <= x_f, x_f < x_max, 0 <= y_f, y_f < y_max, break_cond))
-            z_valid = valid_indices * break_z
             """HIER LOGICA INVOEGEN VOOR ALS EEN RAY OUT OF BOUND GAAT --> Map herwerken"""
 
             # muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] > 0, True, False)
             checker[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] > 0, False, True)
-            z_buffer[z_valid] = np.where(world_map[y_f[z_valid], x_f[z_valid]] < -2, True, False)
+            if self.in_kantoor:
+                #z_valid = valid_indices * break_z
+                z_buffer[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] < -2, True, False)
 
-            # op de plekken waar logica correct is kijken of we een muur raken
-            if z_buffer.any():
-                z_kleuren[z_buffer] = world_map[y_f[z_buffer], x_f[z_buffer]]
-                # r_straal*r_speler voor fish eye eruit te halen
-                z_d_muur = np.where(z_buffer, least_distance * (
-                            self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 0)
-                # Als dist_cond dan raken we een muur langs de x kant dus is y de veranderlijke als we doorschuiven --> meegeven als var voor vaste textuur
-                z_d_muur_vlak[z_buffer] = np.where(dist_cond[z_buffer], y[z_buffer], x[z_buffer])
-                # z_kleuren = np.where((z_d_muur_vlak % 1) < deuren[z_kleuren].positie, 0, z_kleuren)
+                # op de plekken waar logica correct is kijken of we een muur raken
+                if z_buffer.any():
+                    z_kleuren = world_map[y_f[z_buffer], x_f[z_buffer]]
+                    checker[z_buffer] = np.where(dist_cond[z_buffer], np.where((y[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False, True),np.where((x[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False, True))
+                    # r_straal*r_speler voor fish eye eruit te halen
+                    z_buffer[:] = False
 
             # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
             d_v += dist_cond * self.delta_x * checker
@@ -328,9 +330,10 @@ class Player:
         d_muur = np.where(valid_indices, least_distance * (
                     self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 60)
         z_d_muur *= (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1])
-        return (d_muur, d_muur_vlak, kleuren), ((1 / z_d_muur), z_d_muur_vlak, z_kleuren), dist_cond
+        return (d_muur, d_muur_vlak, kleuren), dist_cond
 
     def reset(self):
+        self.in_kantoor = False
         self.p_x = self.initial[0]
         self.p_y = self.initial[1]
         self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
@@ -344,12 +347,26 @@ class Player:
             self.car.y = self.p_y
 
     def kantoor_set(self):
+        self.in_kantoor = True
         self.p_x = 3
         self.p_y = 3
         self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
         if self.in_auto:
             self.in_auto = False
             self.car.player_inside = False
+
+    def update_kantoor_deuren(self):
+        if (self.kantoor_deuren_update != 0).any():
+            self.kantoor_deuren += 0.001 * self.kantoor_deuren_update
+            check1 = self.kantoor_deuren >= 1
+            self.kantoor_deuren[check1] = 1
+            self.kantoor_deuren_update[check1] = -1
+
+            check2 = self.kantoor_deuren < 0
+            self.kantoor_deuren[check2] = 0
+            self.kantoor_deuren_update[check2] = 1
+            self.kantoor_open_deuren[check2] = True
+
 
 
 class PostBus(Sprite):

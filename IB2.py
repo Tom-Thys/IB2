@@ -338,25 +338,29 @@ def verwerk_input(delta, events=0):
                             if pakjesx - 1 < speler.p_x < pakjesx + 1 and pakjesy - 1 < speler.p_y < pakjesy + 1:
                                 speler.doos_vast = True
                                 continue
-                            if not speler.car.dozen: continue;
+                            for doos in sprites_dozen:
+                                if doos.afstand < 1.5:
+                                    sprites_dozen.remove(doos)
+                                    speler.doos_vast = True
+                                    break
+                            if not speler.car.dozen or speler.doos_vast: continue;
                             backend_car = speler.car.x - speler.car.vector[0], speler.car.y - speler.car.vector[1]
                             afstand_back = (speler.p_x - backend_car[0]) ** 2 + (speler.p_y - backend_car[1]) ** 2
                             if speler.car.afstand < 2 and afstand_back < 2.5:
                                 speler.doos_vast = True
                                 speler.car.dozen -= 1
                                 continue
-                            for doos in sprites_dozen:
-                                if doos.afstand < 1.5:
-                                    sprites_dozen.remove(doos)
-                                    speler.doos_vast = True
-                                    break
                         elif speler.laatste_doos < time.time() - 0.5:
                             geworpen_doos = speler.trow(world_map)
                             sprites_dozen.append(geworpen_doos)
                             muziek_spelen("throwing", channel=2)
                             speler.doos_vast = False
-                if key == sdl2.SDLK_k:
+            if key == sdl2.SDLK_k:
+                if game_state == 2:
                     game_state = 4
+                elif game_state == 4:
+                    game_state = 2
+                    speler.reset()
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_t:
@@ -366,11 +370,11 @@ def verwerk_input(delta, events=0):
                     speler.car.player_enter(speler)
                     if speler.in_auto:
                         muziek_spelen("car start", channel=7)
-            if key == sdl2.SDLK_y:
+            if key == sdl2.SDLK_y or key == sdl2.SDLK_r:
                 if speler.car.versnelling != 6 and (
                         speler.car.versnelling == 0 or speler.car.speed > (speler.car.versnelling - 0.5) * 0.05):
                     speler.car.versnelling += 1
-            elif key == sdl2.SDLK_h:
+            elif key == sdl2.SDLK_h or key == sdl2.SDLK_z:
                 if speler.car.versnelling != 0:
                     speler.car.versnelling -= 1
             if key == sdl2.SDLK_b:
@@ -380,6 +384,7 @@ def verwerk_input(delta, events=0):
                 logging.info(f"Speler hoek = {speler.hoek}")
                 logging.info(f"Speler positie = {speler.position}")
                 logging.info(f"Auto = {speler.car}")
+                print(sprites_autos, sprites, speler.car.vector)
 
             if key == sdl2.SDLK_f or key == sdl2.SDLK_s:
                 pass
@@ -414,11 +419,10 @@ def verwerk_input(delta, events=0):
             # X-as
             draai = event.motion.xrel
             if speler.in_auto:
-                speler.sideways_move(1, math.pi / 10 * draai * move_speed, world_map)
+                speler.sideways_move(1, math.pi / 40 * draai * move_speed, world_map)
             else:
                 speler.draaien(-math.pi / 100 * draai * move_speed)
                 beweging = event.motion.yrel
-
                 speler.move(1, beweging / 20 * move_speed, world_map)
             continue
 
@@ -520,13 +524,13 @@ def render_sprites(renderer, sprites, player, d, delta, update):
         afstand = (x ** 2 + y ** 2) ** (1 / 2)
 
         kolom, breedte, initieel = -1, 0, 0
-        for i, afstand in enumerate(afstand):
+        for i in range(sprite_size_breedte):
             k = i + screen_x
             if k >= BREEDTE:
                 break
             if k < 0:
                 continue
-            if not d[k] <= afstand:
+            if not d[k] <= sprite.afstand:
                 if kolom == -1:
                     kolom = k
                     breedte = 1
@@ -571,7 +575,11 @@ def collision_auto(zichtbare_sprites):
                 pop_indexes = np.arange(0, lenght)[check]
 
                 for index in pop_indexes:
-                    check_sprite = zichtbare_sprites[index]
+                    try:
+                        check_sprite = zichtbare_sprites[index]
+                    except:
+                        check[index] = False
+                        continue
                     soort = check_sprite.soort
                     if soort in ["Doos", "PostBus", "Auto"]:
                         check[index] = False
@@ -910,9 +918,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         factory.from_image(resources.get_path("Grijs_huis.png")),  # 5
         factory.from_image(resources.get_path("Paars_huis.png")),  # 6
         factory.from_image(resources.get_path("Geel_huis.png")),  # 7
-        factory.from_image(resources.get_path("Hedge_donker.png")),  # 8
-        factory.from_image(resources.get_path("stop bord pixel art.png")),  # 9
-        factory.from_image(resources.get_path("warehouse.png"))  # 10
+        factory.from_image(resources.get_path("Oranje_huis.png")),  # 8
+        factory.from_image(resources.get_path("Hedge_donker.png")),  # 9
+        factory.from_image(resources.get_path("stop bord pixel art.png")),  # 10
+        factory.from_image(resources.get_path("warehouse.png"))  # 11
     ]
     muren_info = []
     for i, muur in enumerate(soort_muren):
@@ -1129,10 +1138,12 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             render_floor_and_sky(renderer, kleuren_textures)
             draw_bestemming(renderer, eindbestemming, speler, kleuren_textures[4])
             # Render de huidige frame
-            (d, d_v, kl), (z_d, z_v, z_k), _ = (speler.n_raycasting(world_map, deuren))
+            (d, d_v, kl), _ = (speler.n_raycasting(world_map, deuren))
+
+
             renderen(renderer, d, d_v, kl, muren_info, angle)
-            if np.any(z_k) != 0:
-                z_renderen(renderer, z_d, z_v, z_k, muren_info)
+            """if np.any(z_k) != 0:
+                z_renderen(renderer, z_d, z_v, z_k, muren_info)"""
             sprites_autos = sprites_auto_update(speler.tile[0], speler.tile[1], kleuren_autos, tree, map_voertuig,
                                                 world_map, HOOGTE, sprites_autos, aantalautos=100)
 
@@ -1179,11 +1190,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 verwerk_input(delta)
                 menu_nav()
             else:
-                positie_check()
+
                 next(fps_generator)
                 map_positie = list(speler.position)
                 if speler.in_auto:
-                    auto_info_renderen(renderer, dash_font, (dashboard, wheel), speler.car)
+                    auto_info_renderen(renderer, dash_font, (dashboard, wheel, doos), speler.car)
                 elif speler.doos_vast:
                     handen_sprite(renderer, handen_doos)
                 # speler.renderen(renderer, world_map)
@@ -1199,12 +1210,13 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 renderText(font_2, renderer, "DON'T QUIT THE GAME!!!", BREEDTE, HOOGTE / 2)
 
             # Verwissel de rendering context met de frame buffer
-            balkje_tijd += (time.time() - start_tijd)
+            if updatable:
+                balkje_tijd += (time.time() - start_tijd)
+                render_pakjes_aantal(pakjes_aantal, renderer)
+                straf = render_balkje(balkje_tijd, time_bar, renderer)
             start_tijd = time.time()
-            straf = render_balkje(balkje_tijd, time_bar, renderer)
             if straf:
                 game_over = True
-            render_pakjes_aantal(pakjes_aantal, renderer)
             renderer.present()
 
 
@@ -1219,10 +1231,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         while game_state == 4 and not moet_afsluiten:
             start_time = time.time()
             speler.idle()
+            speler.update_kantoor_deuren()
             renderer.clear()
             render_floor_and_sky(renderer, kleuren_textures)
             # Render de huidige frame
-            (d, d_v, kl), (z_d, z_v, z_k), _ = (speler.n_raycasting(world_map, deuren))
+            (d, d_v, kl), _ = (speler.n_raycasting(world_map, deuren))
             renderen(renderer, d, d_v, kl, muren_info, 0)
             render_sprites(renderer, kantoor_sprites, speler, d, delta, False)
 
@@ -1234,6 +1247,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             next(fps_generator)
             # Verwissel de rendering context met de frame buffer
             renderer.present()
+        world_map = inf_world.world_map
 
     # Sluit SDL2 af
     sdl2.ext.quit()

@@ -42,11 +42,6 @@ garage_map = [[10, 10, 10, 10, 10, 10, 10, 10],
               [10, 0, 0, 0, 0, 0, 0, 10],
               [10, 10, 10, 10, 10, 10, 10, 10]]
 
-kantoor_map = np.zeros((20, 20), dtype='int32')
-kantoor_map[:, 0] = 10
-kantoor_map[0, :] = 10
-kantoor_map[-1, :] = 10
-kantoor_map[:, -1] = 10
 
 worldlijst = [world_map, world_map_2, garage_map]
 
@@ -66,10 +61,27 @@ kleuren = [
 ]
 colors = [0, 0, 0, 102, 102, 102, 176, 176, 176, 255, 255, 255]
 kleur_dict = {0: (0, 0, 0), 1: (170, 85, 85), 2: (170, 85, 85), 3: (141, 170, 127), 4: (102, 127, 171),
-              5: (205, 201, 201), 6: (180, 162, 200), 7: (218, 165, 32), 8: (0, 255, 0), 9: (255, 0, 20),
-              10: (255, 255, 255)}
+              5: (205, 201, 201), 6: (180, 162, 200), 7: (218, 165, 32), 8: (204, 119, 102), 9: (0, 255, 0),
+              10: (255, 0, 20), 11: (255, 255, 255)}
 
-laatste_huis_pos = 7
+laatste_huis_pos = 8
+
+
+kantoor_map = np.zeros((20, 20), dtype='int32')
+kantoor_map[:, 0] = laatste_huis_pos + 3
+kantoor_map[0, :] = laatste_huis_pos + 3
+kantoor_map[-1, :] = laatste_huis_pos + 3
+kantoor_map[:, -1] = laatste_huis_pos + 3
+kantoor_map[-2, -1] = -5
+kantoor_map[-3, -1] = -6
+
+aantal_deuren = abs(np.min(kantoor_map))
+
+kantoor_deuren = np.ones(aantal_deuren,dtype='float64')
+kantoor_open_deuren = np.full(aantal_deuren, False)
+kantoor_deuren_update = np.full(aantal_deuren, False)
+
+
 
 
 def make_world_png(worldmap, unit_d=1):
@@ -205,7 +217,18 @@ def world_generation(openingen=list):
     if kleur != 6:
         kaart[1, 5] = -1
         kaart[3, 7] = -1"""
-    if len(openingen) < 3:
+    nr = randint(1,4)
+    if nr == 1:
+        if randint(0,70):
+            nr += randint(1,3)
+    openingen = []
+    for i in range(nr):
+        while True:
+            open = randint(1, 4)
+            if open not in openingen:
+                openingen.append(open)
+                break
+    """if len(openingen) < 3:
         extra_openingen = 1 + randint(0, 1)
         if len(openingen) < 1:
             extra_openingen += 2
@@ -231,7 +254,7 @@ def world_generation(openingen=list):
         if randint(0, 5) == 0:
             openingen.pop(randint(0, 2))
             if randint(0, 15) == 6:
-                openingen.pop(randint(0, 1))
+                openingen.pop(randint(0, 1))"""
     for i in range(1, 5):
         if i not in openingen:
             if i == 1:
@@ -346,8 +369,8 @@ class Map():
                 self.direct_map_making(i, j)
                 self.added.append((i, j))
         self.update()
-        self.world_map[postkantoor[0] - 3:postkantoor[0], postkantoor[1] - 3] = 10
-        self.world_map[postkantoor[0] - 3, postkantoor[1] - 3:postkantoor[1]] = 10
+        self.world_map[postkantoor[0] - 3:postkantoor[0], postkantoor[1] - 3] = laatste_huis_pos + 3
+        self.world_map[postkantoor[0] - 3, postkantoor[1] - 3:postkantoor[1]] = laatste_huis_pos + 3
 
         if True:
             im = Image.fromarray(self.world_map)

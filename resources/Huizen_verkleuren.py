@@ -33,12 +33,13 @@ Blauw = (102, 127, 171)
 Paars = (180, 162, 200)
 Geel =  (218, 165, 32)
 Rood = (170, 85, 85)
+Oranje = (204, 119, 102)
 Haag = (0, 255, 0)
 Einde_map_kleur = (255, 0, 20)
 Post = (255,255,255)
 
 #Volgorde van import in renderer (Geen_texture_kleur altijd eerst, gevolgd door 1x Rood(bakstenen) Eindemapkleur laatst)
-volgorde = [Geen_texture_kleur, Rood, Rood, Groen, Blauw, Grijs, Paars, Geel, Haag, Einde_map_kleur, Post]
+volgorde = [Geen_texture_kleur, Rood, Rood, Groen, Blauw, Grijs, Paars, Geel, Oranje, Haag, Einde_map_kleur, Post]
 """Als er aanpassingen gebeuren aan deze lijst en de import van textures moeten deze worden doorgetrokken
 Naar de worlds.py file op lijn 60"""
 
@@ -48,9 +49,9 @@ if __name__ == "__main__":
     input_afbeelding = "Huis.png"
 
     # aanpassen
-    output_afbeelding = "Geel_huis.png"
+    output_afbeelding = "Oranje_huis.png"
 
-    aanpassen_afbeelding(input_afbeelding, output_afbeelding, Geel)
+    aanpassen_afbeelding(input_afbeelding, output_afbeelding, Oranje)
 
     kleuren_dict = {}
     for i, kleur in enumerate(volgorde):

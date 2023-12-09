@@ -125,6 +125,11 @@ def renderen(renderer, d, d_v, k, muren_info, angle):
                 hoogte *= d_muur
                 renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, 890),
                         dstrect=(kolom, scherm_y - hoogte / 2, 1, hoogte))
+            elif k_muur < 0:
+                wall_texture, breedte, hoogte = muren_info[0]
+                hoogte *= d_muur
+                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, 890),
+                              dstrect=(kolom, scherm_y - hoogte / 2, 1, hoogte))
     else:
         for kolom, (d_muur, unit_d, k_muur) in enumerate(zip(d, d_v, k)):
             if k_muur >= 0:
@@ -282,12 +287,16 @@ def auto_info_renderen(renderer, font, pngs, car):
     renderText(font, renderer, car.versnellingen[car.versnelling], 1400, HOOGTE - 100)
     snelheid = str(abs(round(car.speed * 400)))
     renderText(font, renderer, snelheid, 600, HOOGTE - 100)
+    renderText(font, renderer, str(car.dozen), 50, HOOGTE - 100)
+    renderer.copy(pngs[2], dstrect=(50,HOOGTE - 105, 60, 60))
 
     x_pos = (BREEDTE - 250) // 2
     y_pos = HOOGTE - 230
     hoek = -car.stuurhoek * 180 / math.pi * 100 * car.speed
     renderer.copy(pngs[1], dstrect=(x_pos, y_pos, 250, 250), angle=hoek)
     car.stuurhoek = 0
+
+
 
 def draw_bestemming(renderer, bestemming, speler, texture):
     kolommen = []
