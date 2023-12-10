@@ -160,7 +160,8 @@ def renderText(font, renderer, text, x, y):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     x_s, y_s = text.size
     renderer.copy(text, dstrect=(int((x - x_s) / 2), y, x_s, y_s))
-
+def render_police(logo,renderer):
+    renderer.copy(logo, dstrect=(405, 56, 180, 180))
 
 def render_balkje(Tijd,Time_bar,renderer):
     index = 10 - (round(Tijd/6))
