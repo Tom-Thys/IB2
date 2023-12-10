@@ -57,6 +57,7 @@ POSITIE_GARAGE = [
 # Globale variabelen
 #
 game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage, 4: kantoor
+prijzen = [0, 200]
 balkje_tijd = 0
 pakjes_aantal = 0
 sound = True
@@ -91,6 +92,9 @@ volume = int(config.get("settings", "volume"))
 sensitivity_rw = int(config.get("settings", "sensitivity"))
 highscore = int(config.get("gameplay", "highscore"))
 money = int(config.get("gameplay", "money"))
+gekocht_str = config.get("gameplay", "gekocht")
+gekocht = [eval(i) for i in gekocht_str.split(" ")]
+selected_car = int(config.get("gameplay", "selected_car"))
 # echte sensitivity gaat van 100 - 300, 300 traagst, 100 snelst. Raw sensitivity gaat van 0 tot 100
 sensitivity = -2 * sensitivity_rw + 300
 
@@ -147,7 +151,9 @@ geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_4.wav", "UTF-8")),  # 13
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_loop.wav", "UTF-8")),  # 14
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car crash.wav", "UTF-8")),  # 15
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/hit sound.wav", "UTF-8"))
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/hit sound.wav", "UTF-8")),  # 16
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/cash register.wav", "UTF-8")),  # 17
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/fail.wav", "UTF-8"))  # 18
 ]
 gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "car gear 4", "car gear 4"]
 
@@ -163,6 +169,7 @@ def verwerk_input(delta, events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
     global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie
     global afstand_map, quiting, game_over, game_over_index, money,highscore,pakjes_aantal, garage_index
+    global selected_car, gekocht, prijzen
 
     move_speed = delta * 2
     if speler.in_auto:
@@ -242,6 +249,8 @@ def verwerk_input(delta, events=0):
                     config.set("gameplay", "money", f"{money}")
                     if pakjes_aantal > highscore:
                         config.set("gameplay", "highscore", f"{pakjes_aantal}")
+                        with open("config.ini", "w") as f:
+                            config.write(f)
                     break
             if key == sdl2.SDLK_g:
                 x, y = speler.position
@@ -400,6 +409,27 @@ def verwerk_input(delta, events=0):
                     garage_index += 1
                 if key == sdl2.SDLK_LEFT:
                     garage_index -= 1
+                if key == sdl2.SDLK_SPACE:
+                    if garage_index in gekocht:
+                        selected_car = garage_index
+                        muziek_spelen("main menu select", channel=7)
+                    else:
+                        if money-prijzen[garage_index] >= 0:
+                            money -= prijzen[garage_index]
+                            muziek_spelen("cash register", channel=7)
+                            selected_car = garage_index
+                            gekocht.append(garage_index)
+                            config.set("gameplay", "money", f"{money}")
+                            gekocht_str = "".join(f"{i} " for i in gekocht)
+                            print(gekocht_str)
+                            config.set("gameplay", "gekocht", gekocht_str)
+                        else:
+                            muziek_spelen("fail", channel=7)
+                            pass
+                    config.set("gameplay", "selected_car", f"{selected_car}")
+                    with open("config.ini", "w") as f:
+                        config.write(f)
+
             if key == sdl2.SDLK_g:
                 game_state = 3 if game_state == 2 else 2
             if key == sdl2.SDLK_k:
@@ -512,7 +542,7 @@ def garage(renderer, font, index, garage_menu, rode_autos, humvee):
         info = (0, 0, 0, 0, 0, 0)
     elif garage_index == 1:
         auto = humvee
-        info = (5, 5, 5, 5, 5, 5)
+        info = (200, 5, 5, 5, 5, 5)
     image = auto[math.floor(index)]
     prijs = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[0]}"))
     pakjes = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[1]}"))
@@ -539,6 +569,8 @@ def garage(renderer, font, index, garage_menu, rode_autos, humvee):
                   dstrect=(POSITIE_GARAGE[4][0], POSITIE_GARAGE[4][1], hp.size[0], hp.size[1]))
     renderer.copy(gears,
                   dstrect=(POSITIE_GARAGE[5][0], POSITIE_GARAGE[5][1], gears.size[0], gears.size[1]))
+    print(selected_car)
+    print(gekocht)
 
 
 def render_sprites(renderer, sprites, player, d, delta, update):
@@ -801,7 +833,9 @@ def muziek_spelen(geluid, looped=False, channel=1):
             "car gear 4": geluiden[13],
             "car loop": geluiden[14],
             "car crash": geluiden[15],
-            "hit sound": geluiden[16]
+            "hit sound": geluiden[16],
+            "cash register": geluiden[17],
+            "fail": geluiden[18]
         }
         if looped == False:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
