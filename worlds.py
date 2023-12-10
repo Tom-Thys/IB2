@@ -5,7 +5,7 @@ import numpy as np
 import sdl2.ext
 from sdl2 import *
 from random import randint
-from Classes import Deur, Sprite, Voertuig
+from Classes import Deur, Sprite, Voertuig, Politie
 from PIL import Image
 
 postkantoor = (434, 452)
@@ -118,7 +118,14 @@ def main():
     # Maak png van wereldmap
     make_world_png(worldlijst)
 
+def genereer_politie(spelerp_x, spelerp_y, polities, tree, map_voertuig, HOOGTE,speler):
+        omgeving = 1
+        x = randint(spelerp_x - omgeving, spelerp_x + omgeving) * 9 + 4
+        y = randint(spelerp_y - omgeving, spelerp_y + omgeving) * 9 + 4
 
+        if (spelerp_x - x) ** 2 + (spelerp_y - y) ** 2 >= 1:
+            voertuig = Politie(tree,polities, map_voertuig, x, y, HOOGTE,speler)
+        return voertuig
 def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, worldmap, HOOGTE, sprites_autos,
                         aantalautos=1):
     for sprite in sprites_autos:

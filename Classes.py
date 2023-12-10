@@ -660,7 +660,7 @@ class Politie(Sprite):
         super().__init__(image, images, map_png, x, y, height, "Politie", schaal)
         self.pad = (0, 0)
         self.speler = speler
-        self.achtervolgen = False
+        self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
 
     def update(self, *args):
@@ -681,9 +681,23 @@ class Politie(Sprite):
 
             self.x += speed * vector[0]
             self.y += speed * vector[1]
+            if self.position[0] == self.nieuwe_pos[0]:
+                x = self.position[1] - self.nieuwe_pos[1]
+                if x >= 0:
+                    x = 130
+                else:
+                    x = 310
+
+            if self.position[1] == self.nieuwe_pos[1]:
+                x = self.position[0] - self.nieuwe_pos[0]
+                if x >= 0:
+                    x = 220
+                else:
+                    x = 40
+            self.draai_sprites(x - self.hoek)
+            self.hoek = x
+
 
     def padfind(self):
-        if self.afstand < 25 and self.achtervolgen:
             self.pad = pathfinding_gps((self.x, self.y))
-        else:
-            self.achtervolgen = False
+
