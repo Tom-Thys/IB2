@@ -4,6 +4,8 @@
 
 
 import time
+import warnings
+
 from pathfinding import pathfinding_gps2, politie_pathfinding
 import logging
 from multiprocessing import Process, Manager
@@ -261,12 +263,11 @@ def verwerk_input(delta, events=0):
                 for coord in coords:
                     positie = (y + coord[1], x + coord[0])  # huidige node x en y + "verschuiving" x en y
                     # kijken of deze nodes binnen de wereldmap vallen
-                    if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[
-                        1] < 0:
+                    if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[1] < 0:
                         continue
-                    if world_map[positie] < -100:
-                        deur = deuren[world_map[positie]]
-                        deur.start()
+                    if world_map[positie] < -2:
+                        deur = [world_map[positie]]
+                        speler.start_deur(deur)
             if game_state == 0:
                 if key == sdl2.SDLK_DOWN:
                     main_menu_index += 1
@@ -709,7 +710,10 @@ def collision_auto(zichtbare_sprites):
                     elif soort == "Boom":
                         check_sprite.fall = time.time()
                     elif soort == "Politie":
-                        raise NotImplementedError("Politie tegengekomen")
+                        warnings.warn("Not implemented")
+                        check[index] = False
+                        continue
+                        #raise NotImplementedError("Politie tegengekomen")
                     else:
                         raise NotImplementedError(soort)
                     zichtbare_sprites.remove(check_sprite)
@@ -749,7 +753,7 @@ def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_vo
             elif sprite.soort == "Politie":
                 game_over = True
             else:
-                raise TypeError("Kan sprite niet verwijderen")
+                warnings.warn("Kan sprite niet verwijderen" + "  " + str(sprite.soort))
             if speler.in_auto:
                 speler.car.hp -= 1
                 speler.car.crashed = True
