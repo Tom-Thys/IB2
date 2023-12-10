@@ -2,7 +2,7 @@ import math
 import time
 import random
 import numpy as np
-from Code_niet_langer_in_gebruik import pathfinding_gps
+from pathfinding import politie_pathfind
 
 # from line_profiler_pycharm import profile
 # from numba import njit
@@ -12,7 +12,7 @@ from sdl2 import *
 
 
 class Sprite:
-    def __init__(self, image, images, map_png, x, y, height, soort, schaal=0.4,fall = 0):
+    def __init__(self, image, images, map_png, x, y, height, soort, schaal=0.4, fall=0):
         """image, images (can be []), map_png, x, y, height, soort, schaal=0.4"""
         self.images = images
         self.image = image  # The image of the sprite
@@ -110,10 +110,10 @@ class Player:
         self.r_stralen = np.zeros((self.breedte, 2))
         self.car = None
         self.in_auto = False
-        self.aantal_hartjes = 5
-        self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9) #Aanmaak autos rond speler
-        self.initial = (x, y, hoek) #Reset values
-        self.laatste_doos = 0 #Time
+        self.aantal_hartjes = 0
+        self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)  # Aanmaak autos rond speler
+        self.initial = (x, y, hoek)  # Reset values
+        self.laatste_doos = 0  # Time
         self.isWalking = False
         self.doos_vast = False
         self.hit = False
@@ -217,7 +217,6 @@ class Player:
         self.hoek = self.hoek % (2 * math.pi)
         self.hoeken = self.hoeken % (2 * math.pi)
 
-
     def trow(self, world_map):
         """Maakt Doos sprite aan en update deze zodat een paar keer voor betere visuals
         :return: Doos_Sprite"""
@@ -227,7 +226,7 @@ class Player:
             sprite.update(world_map)
         return sprite
 
-    def n_raycasting(self, world_map, deuren):
+    def n_raycasting(self, world_map):
         """Gebruik maken van de numpy raycaster om de afstanden en kleuren van muren te bepalen
         Neemt world map in zodat er gemakkelijk van map kan gewisseld worden"""
 
@@ -238,7 +237,7 @@ class Player:
 
         kleuren = np.zeros(self.breedte, dtype="int")
 
-        #z_kleuren = np.zeros(self.breedte, dtype="int")
+        # z_kleuren = np.zeros(self.breedte, dtype="int")
         z_d_muur = np.ones(self.breedte)
         z_d_muur_vlak = np.zeros(self.breedte)
 
@@ -265,7 +264,6 @@ class Player:
 
         while True:
 
-
             # kijken of we d_v of d_h nodig hebben deze loop
             dist_cond = d_v < d_h
             least_distance = np.where(dist_cond, d_v, d_h)
@@ -273,7 +271,7 @@ class Player:
             # Mogen enkel muren checken die nog niet geraakt zijn en binnen de afstand liggen
             break_1 = d_v < l
             break_2 = d_h < l
-            #break_z = z_kleuren == 0
+            # break_z = z_kleuren == 0
             break_cond = (dist_cond * break_1 + ~dist_cond * break_2) * checker
             # Break 1 enkel tellen als we met d_v werken en d_h enkel als we met d_h werken
             # Binair vermenigvuldigen als break3 = 0 dan wordt break_cond op die plek 0
@@ -311,13 +309,17 @@ class Player:
             # muren_check[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] > 0, True, False)
             checker[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] > 0, False, True)
             if self.in_kantoor:
-                #z_valid = valid_indices * break_z
+                # z_valid = valid_indices * break_z
                 z_buffer[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] < -2, True, False)
 
                 # op de plekken waar logica correct is kijken of we een muur raken
                 if z_buffer.any():
                     z_kleuren = world_map[y_f[z_buffer], x_f[z_buffer]]
-                    checker[z_buffer] = np.where(dist_cond[z_buffer], np.where((y[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False, True),np.where((x[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False, True))
+                    checker[z_buffer] = np.where(dist_cond[z_buffer],
+                                                 np.where((y[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False,
+                                                          True),
+                                                 np.where((x[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False,
+                                                          True))
                     # r_straal*r_speler voor fish eye eruit te halen
                     z_buffer[:] = False
 
@@ -328,7 +330,7 @@ class Player:
         kleuren[valid_indices] = world_map[y_f[valid_indices], x_f[valid_indices]]
         d_muur_vlak = np.where(dist_cond, y, x)
         d_muur = np.where(valid_indices, least_distance * (
-                    self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 60)
+                self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 60)
         z_d_muur *= (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1])
         return (d_muur, d_muur_vlak, kleuren), dist_cond
 
@@ -345,6 +347,7 @@ class Player:
             self.car.hoek = self.hoek
             self.car.x = self.p_x
             self.car.y = self.p_y
+            self.car.speed = 0
 
     def kantoor_set(self):
         self.in_kantoor = True
@@ -368,7 +371,6 @@ class Player:
             self.kantoor_open_deuren[check2] = True
 
 
-
 class PostBus(Sprite):
 
     def __init__(self, image, images, map_png, x, y, height, type=0, hp=20, schaal=0.2):
@@ -388,6 +390,8 @@ class PostBus(Sprite):
         self.stuurhoek = 0
         self.versnelling = 1
         self.versnellingen = ["R", "1", "2", "3", "4", "5", "6"]
+        self.max_versnelling = 6
+        self.snelheid_incr = 0.05
         self.input_delay = 0
         self.crash_time = 0
         self.dozen = 6
@@ -399,7 +403,7 @@ class PostBus(Sprite):
         if self.speed == 0:
             return
         elif self.speed < 0:
-            self.turning_mult = 40
+            self.turning_mult = 50
         else:
             self.turning_mult = (self.optrek / speed) ** 1.2 * 500
         if self.player_inside == False:
@@ -470,18 +474,18 @@ class PostBus(Sprite):
     def brake(self):
         if self.speed > self.afrem:
             self.speed -= self.afrem
-            if self.speed < (self.versnelling-1.5) * 0.05:
+            if self.speed < (self.versnelling - 1.5) * 0.05:
                 self.versnelling -= 1
         else:
             self.speed = 0.0
 
-    def accelerate(self,speler):
+    def accelerate(self, speler):
         if self.versnelling != 0:
             if self.speed < 0:
                 self.speed = 0
             elif self.speed < 0.05 * self.versnelling:
-                #Changing the 0.05 affects line 171 IB2 (sound) and the up and downshifting line 330 IB2
-                #In class affects in speed_update and braking
+                # Changing the 0.05 affects line 171 IB2 (sound) and the up and downshifting line 330 IB2
+                # In class affects in speed_update and braking
                 self.speed += self.optrek
             else:
                 speler.messages.append(("Shift", time.time()))
@@ -494,23 +498,21 @@ class PostBus(Sprite):
 
     def speed_update(self):
         if self.speed > 0.05 * self.versnelling:
-            self.speed -= self.afrem/2
-            if self.speed > 0.05 * (self.versnelling+1):
+            self.speed -= self.afrem / 2
+            if self.speed > 0.05 * (self.versnelling + 1):
                 self.speed -= self.afrem
             if self.speed < 0:
                 self.speed = 0
         elif self.speed < 0 and self.versnelling:
-            if self.speed > -self.optrek/5:
+            if self.speed > -self.optrek / 5:
                 self.speed = 0
             else:
-                self.speed += self.optrek/5
-
+                self.speed += self.optrek / 5
 
     def draaien(self, hoek):
         self.hoek = (hoek + self.hoek) % (2 * math.pi)
         self.vector = np.array([math.cos(self.hoek), math.sin(self.hoek)])
         self.draai_sprites(round(-hoek * 180 / math.pi))
-
 
     def player_enter(self, speler):
         """Kijkt of speler dicht genoeg tegen auto staat om in te stappen.\n
@@ -546,34 +548,6 @@ class PostBus(Sprite):
         self.hp -= 1
 
 
-class Deur:
-    def __init__(self, kleur=0):
-        self.moving = True
-        self.open = False
-        self.richting = 1
-        self.positie = 0
-        self.kleur = kleur
-
-    def update(self):
-        if self.moving:
-            self.positie += self.richting / 500
-            if self.positie >= 1:
-                self.moving = False
-                self.open = True
-                self.richting = -1
-                self.positie = 1
-            elif self.positie <= 0:
-                self.moving = False
-                self.richting = 1
-                self.positie = 0
-
-    def start(self):
-        if self.moving:
-            self.richting *= -1
-        self.moving = True
-        self.open = False
-
-
 class Voertuig(Sprite):
     def __init__(self, image, images, map_png, x, y, height, world_map, schaal=0.2):
         super().__init__(image, images, map_png, int(x) + 0.5, int(y) + 0.5, height, "Auto", schaal)
@@ -594,9 +568,9 @@ class Voertuig(Sprite):
         for sprite in sprites:
             if sprite == self:
                 continue
-            print(abs(self.x-sprite.x+self.y-sprite.y))
-            if abs(self.x-sprite.x+self.y-sprite.y) <= 0.5:
-                    return sprite
+            print(abs(self.x - sprite.x + self.y - sprite.y))
+            if abs(self.x - sprite.x + self.y - sprite.y) <= 0.5:
+                return sprite
         return 0
 
     def update(self, world_map, speler, delta, *args):
@@ -635,55 +609,50 @@ class Voertuig(Sprite):
             if x >= 0:
                 x = 130
             else:
-                x=310
+                x = 310
 
         if self.position[1] == self.nieuwe_pos[1]:
             x = self.position[0] - self.nieuwe_pos[0]
             if x >= 0:
-                x=220
+                x = 220
             else:
                 x = 40
-        self.draai_sprites( x - self.hoek)
+        self.draai_sprites(x - self.hoek)
         self.hoek = x
 
         self.update(world_map, None, 0.1)
-
-    def __getitem__(self, item):
-        return np.array([[self.x]
-                         [self.y]])[item]
-    def get_x(self):
-        return self.x
 
 
 class Politie(Sprite):
     def __init__(self, image, images, map_png, x, y, height, speler, schaal=0.2):
         super().__init__(image, images, map_png, x, y, height, "Politie", schaal)
         self.pad = (0, 0)
-        self.speler = speler
+        self.prev_playerpos = [-1,-1]
         self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
 
-    def update(self, *args):
-        self.padfind()
+    def update(self, world_map, speler, *args):
+        self.padfind(world_map, speler)
         if self.achtervolgen:
             if len(self.pad) > 2:
                 self.hoek = math.atan2(self.pad[-2][1], self.pad[-2][0])
             else:
-                self.hoek = math.atan2(self.y - self.speler.p_y, self.x - self.speler.p_x)
+                self.hoek = math.atan2(self.y - speler.p_y, self.x - speler.p_x)
 
-            if self.speler.in_auto:
-                speed = abs(self.speler.car.speed - 0.002)
+            if speler.in_auto:
+                speed = abs(speler.car.speed - 0.002)
             else:
                 speed = 0.05
-
-            vector = (self.pad[-1][1] - self.pad[-2][1],
-                      self.pad[-1][0] - self.pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
+            if len(self.pad) > 1 and False:
+                vector = (self.pad[-1][1] - self.pad[-2][1],
+                          self.pad[-1][0] - self.pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
+            else:
+                vector = (self.y - speler.p_y, self.x - speler.p_x)
 
             self.x += speed * vector[0]
             self.y += speed * vector[1]
 
-
-
-    def padfind(self):
-            self.pad = pathfinding_gps((self.x, self.y))
-
+    def padfind(self, world_map, speler):
+        if self.prev_playerpos[:] != speler.position[:] and self.achtervolgen:
+            self.prev_playerpos = speler.position
+            self.pad = politie_pathfind(world_map , (self.x, self.y), speler.position)

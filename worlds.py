@@ -5,7 +5,7 @@ import numpy as np
 import sdl2.ext
 from sdl2 import *
 from random import randint
-from Classes import Deur, Sprite, Voertuig, Politie
+from Classes import Sprite, Voertuig, Politie
 from PIL import Image
 
 postkantoor = (434, 452)
@@ -33,7 +33,6 @@ world_map = np.array([[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 world_map_2 = np.zeros((30, 5), dtype='int')
 world_map_2[0, -2] = 3
 
-deuren = {0: Deur(), -1000: Deur(), -1001: Deur()}
 
 garage_map = [[10, 10, 10, 10, 10, 10, 10, 10],
               [10, 0, 0, 0, 0, 0, 0, 10],
@@ -124,7 +123,7 @@ def genereer_politie(spelerp_x, spelerp_y, polities, tree, map_voertuig, HOOGTE,
         y = randint(spelerp_y - omgeving, spelerp_y + omgeving) * 9 + 4
 
         if (spelerp_x - x) ** 2 + (spelerp_y - y) ** 2 >= 1:
-            voertuig = Politie(tree,polities, map_voertuig, x, y, HOOGTE,speler)
+            voertuig = Politie(tree, polities, map_voertuig, x, y, HOOGTE,speler)
         return voertuig
 def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, worldmap, HOOGTE, sprites_autos,
                         aantalautos=1):
@@ -223,8 +222,8 @@ def world_generation(openingen=list):
     kaart[:3, -3:] = kleur
     if kleur != 6:
         kaart[1, 5] = -1
-        kaart[3, 7] = -1"""
-    nr = randint(1,4)
+        kaart[3, 7] = -1
+    nr = randint(1, 4)
     if nr == 1:
         if randint(0,70):
             nr += randint(1,3)
@@ -234,21 +233,22 @@ def world_generation(openingen=list):
             open = randint(1, 4)
             if open not in openingen:
                 openingen.append(open)
-                break
-    """if len(openingen) < 3:
-        extra_openingen = 1 + randint(0, 1)
+                break"""
+    if len(openingen) < 3:
+        extra_openingen = randint(0,1) + randint(0,1)
         if len(openingen) < 1:
             extra_openingen += 2
         elif len(openingen) < 2:
             extra_openingen += 1
-        if len(openingen) + extra_openingen == 3 and randint(0, 12) == 0:
-            extra_openingen += 1
         for i in range(extra_openingen):
-            while True:
+            loops = 0
+            length = len(openingen)
+            while loops < 6 and length < 4:
+                loops += 1
                 opening = randint(1, 4)
                 if opening not in openingen:
                     openingen.append(opening)
-                    break
+                    length += 1
     elif len(openingen) == 3:
         openingen.pop(randint(0, 2))
         if randint(0, 15) == 0:
@@ -261,7 +261,7 @@ def world_generation(openingen=list):
         if randint(0, 5) == 0:
             openingen.pop(randint(0, 2))
             if randint(0, 15) == 6:
-                openingen.pop(randint(0, 1))"""
+                openingen.pop(randint(0, 1))
     for i in range(1, 5):
         if i not in openingen:
             if i == 1:
@@ -395,7 +395,7 @@ class Map():
 
     def direct_map_making(self, x_pos, y_pos):
         if self.tile_map[x_pos, y_pos] == 0:
-            if randint(0, 75) == 0:
+            if randint(0, 65) == 0:
                 kaart = np.zeros((9, 9), dtype='int32')
                 self.tile_map[x_pos, y_pos] = Tile((kaart, [1, 2, 3, 4]))
                 return

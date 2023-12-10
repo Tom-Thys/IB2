@@ -4,7 +4,7 @@
 
 
 import time
-import heapq
+from pathfinding import pathfinding_gps2
 import logging
 from multiprocessing import Process, Manager
 import sdl2.ext
@@ -782,7 +782,7 @@ def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_vo
             speler.hit = False
         hartjes = speler.aantal_hartjes
         if hartjes <= 0 and politie_wagen == 0:
-            politie_wagen=genereer_politie(speler.tile[0], speler.tile[1], polities, tree, map_voertuig, HOOGTE,speler)
+            politie_wagen = genereer_politie(speler.tile[0], speler.tile[1], polities, tree, map_voertuig, HOOGTE,speler)
             sprites_autos.append(politie_wagen)
         i = 1
         while i <= hartjes:
@@ -898,70 +898,6 @@ def menu_nav():
         game_over_positie = POSITIE_GAME_OVER[game_over_index]
 
 
-def heuristiek(a, b):
-    y = abs(a[0] - b[0])
-    x = abs(a[1] - b[1])
-    return 14 * y + 10 * (x - y) if y < x else 14 * x + 10 * (y - x)
-
-
-def pathfinding_gps2(world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
-    time.sleep(1)  # wachten tot game volledig gestart en eindbestemming besloten is
-    oud_speler_positie = [0, 0]
-    oud_eindbestemming = [0, 0]
-    while True:
-        spelerpos = tuple(shared_spelerpositie)
-        eindbestemming = tuple(shared_eindbestemming)
-        if abs(oud_speler_positie[0] - spelerpos[0]) > 1 or abs(oud_speler_positie[1] - spelerpos[1]) > 1 \
-                or (eindbestemming[0] != oud_eindbestemming[0] or eindbestemming[1] != oud_eindbestemming[1]):
-            # print(f"pad: {pad}, best: {eindbestemming}")
-            oud_speler_positie[:] = spelerpos[:]
-            eindpositie = eindbestemming
-            start = spelerpos
-            buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # nu definieren, oogt beter bij de for loop
-            close_set = set()  # set is ongeorderd, onveranderbaar en niet geïndexeerd
-            came_from = {}  # dictionary die "parents" van de node klasse vervangt, aangezien zelfgemaakte klassen niet zo goed meespelen met heaps
-            g_score = {start: 0}  # dictionary die g scores bijhoudt van alle posities
-            f_score = {start: heuristiek(start, eindpositie)}  # dictionary die onze f scores bijhoudt bij iteratie
-            oheap = []  # ~open_list van eerste pathfinding algoritme, bevat alle posities die we behandelen voor het kortste pad te vinden
-            heapq.heappush(oheap, (
-                f_score[start], start))  # we pushen de startpositie en f score op de oheap (f score later nodig)
-
-            while oheap:  # kijken dat er posities zijn die we kunnen behandelen
-                current = heapq.heappop(oheap)[
-                    1]  # pop en return kleinste item van de heap: hier bekijken we de kleinste f score, [1] betekent dat we de positie terug willen
-                if current == eindpositie:
-                    pad = []
-                    while current in came_from:
-                        pad.append(current)
-                        current = came_from[current]
-                    if shared_pad[:] == pad[:]:
-                        time.sleep(0.5)
-                    else:
-                        shared_pad[:] = pad[:]
-                    break
-                close_set.add(
-                    current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
-
-                for positie in buren:  # door alle buren gaan + hun g score berekenen
-                    buur = (current[0] + positie[0], current[1] + positie[1])
-                    buur_g_score = g_score[current] + heuristiek(current, buur)
-                    if buur[0] > world_map.shape[1] or buur[0] < 0 or buur[1] > world_map.shape[0] or \
-                            buur[1] < 0:
-                        continue  # gaat naar de volgende buur
-                    # kijken of we op deze positie kunnen stappen
-                    if world_map[buur[1]][buur[0]] > 0:
-                        continue
-                    if buur in close_set and buur_g_score >= g_score.get(buur,
-                                                                         0):  # dictionary.get(): buur: de positie van waar we de g score van terug willen, 0 indien er geen buur bestaat
-                        continue  # kijken of de buur al behandeld is en ofdat de g score van de buur die we nu berekenen groter is als een vorige buur (indien kleiner kan dit wel een beter pad geven)
-                    if buur_g_score < g_score.get(buur, 0) or buur not in [i[1] for i in
-                                                                           oheap]:  # indien huidige buur g score lager is als een vorige buur of als de buur niet in de heap zit
-                        came_from[buur] = current  # buur komt van huidige positie
-                        g_score[buur] = buur_g_score
-                        f_score[buur] = buur_g_score + heuristiek(buur, eindpositie)
-                        heapq.heappush(oheap, (f_score[buur], buur))
-
-
 def positie_check():
     if speler.position == (450, 450):
         pass
@@ -1010,7 +946,7 @@ def quit(button, event):
 
 # @profile
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie
+    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites
     global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos
     global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_autos
     map_positie = [50, world_map.shape[0] - 50]
@@ -1263,8 +1199,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             shared_eindbestemming[:] = list(eindbestemming[:])
             pad[:] = shared_pad[:]
             speler.idle()
-            for key, deur in deuren.items():
-                deur.update()
 
             if time.time() < speler.car.crash_time + 0.16:
                 if t0 < speler.car.crash_time or time.time() < t0:
@@ -1281,7 +1215,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             render_floor_and_sky(renderer, kleuren_textures)
             draw_bestemming(renderer, eindbestemming, speler, kleuren_textures[4])
             # Render de huidige frame
-            (d, d_v, kl), _ = (speler.n_raycasting(world_map, deuren))
+            (d, d_v, kl), _ = (speler.n_raycasting(world_map))
 
 
             renderen(renderer, d, d_v, kl, muren_info, angle)
@@ -1353,10 +1287,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 renderText(font_2, renderer, "DON'T QUIT THE GAME!!!", BREEDTE, HOOGTE / 2)
 
             # Verwissel de rendering context met de frame buffer
-            if updatable:
-                balkje_tijd += (time.time() - start_tijd)
-                render_pakjes_aantal(pakjes_aantal, renderer)
-                straf = render_balkje(balkje_tijd, time_bar, renderer)
+            balkje_tijd += (time.time() - start_tijd)
+            render_pakjes_aantal(pakjes_aantal, renderer)
+            straf = render_balkje(balkje_tijd, time_bar, renderer)
             start_tijd = time.time()
             if straf:
                 game_over = True
@@ -1391,7 +1324,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             renderer.clear()
             render_floor_and_sky(renderer, kleuren_textures)
             # Render de huidige frame
-            (d, d_v, kl), _ = (speler.n_raycasting(world_map, deuren))
+            (d, d_v, kl), _ = (speler.n_raycasting(world_map))
             renderen(renderer, d, d_v, kl, muren_info, 0)
             render_sprites(renderer, kantoor_sprites, speler, d, delta, False)
 

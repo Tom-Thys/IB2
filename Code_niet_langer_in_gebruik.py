@@ -1,7 +1,5 @@
 import math
 import numpy as np
-#from Classes import Deur
-
 
 def nr_rond(nr, tol=5):
     p = 10 ** tol
@@ -313,8 +311,8 @@ def numpy_raycaster(p_x, p_y, r_stralen, r_speler, breedte, world_map):
 
 
 
-def pathfinding_gps(eindpositie=(8, 8)):
-    return [(450, 450), (451, 450), (451, 449), (452, 449), (452, 448), (453, 448), (453, 447), (453, 446), (453, 445), (453, 444), (453, 443), (453, 442), (453, 441)]
+def pathfinding_gps(world_map, speler, eindpositie=(8, 8)):
+    y_size, x_size = np.shape(world_map)
     # Voor het pathfinden van de gps gebruiken we het A* algoritme
     # Begin- en eindnodes initialiseren met 0 cost
     begin = Node(None, speler.position)
@@ -354,8 +352,7 @@ def pathfinding_gps(eindpositie=(8, 8)):
             node_positie = (current_node.positie[0] + nieuwe_positie[0],
                             current_node.positie[1] + nieuwe_positie[1])  # huidige node x en y + "verschuiving" x en y
             # kijken of deze nodes binnen de wereldmap vallen
-            if node_positie[0] > world_map.shape[1] or node_positie[0] < 0 or node_positie[1] > world_map.shape[0] or \
-                    node_positie[1] < 0:
+            if node_positie[0] > x_size or node_positie[0] < 0 or node_positie[1] > y_size or node_positie[1] < 0:
                 continue  # gaat naar de volgende nieuwe_positie
             # kijken of we op deze node kunnen stappen
             if world_map[node_positie[1]][node_positie[0]] > 0:
@@ -385,7 +382,7 @@ def pathfinding_gps(eindpositie=(8, 8)):
             #print(x)
             child.h = 14*y + 10*(x-y) if y < x else 14*x + 10*(y-x)
             child.f = child.g + child.h
-            print(f"h = {child.h}, g = {child.g}, f = {child.f}")
+            #print(f"h = {child.h}, g = {child.g}, f = {child.f}")
 
             # kijken of child_node in de open lijst zit
             is_open = False
@@ -421,3 +418,32 @@ def pitch_shift(semitones):
     shifted_audio_bytes = y_shifted_PCM.tobytes()
     shifted_audio_ctypes = (ctypes.c_ubyte * len(shifted_audio_bytes)).from_buffer_copy(shifted_audio_bytes)
     return shifted_audio_ctypes
+
+
+
+class Deur:
+    def __init__(self, kleur=0):
+        self.moving = True
+        self.open = False
+        self.richting = 1
+        self.positie = 0
+        self.kleur = kleur
+
+    def update(self):
+        if self.moving:
+            self.positie += self.richting / 500
+            if self.positie >= 1:
+                self.moving = False
+                self.open = True
+                self.richting = -1
+                self.positie = 1
+            elif self.positie <= 0:
+                self.moving = False
+                self.richting = 1
+                self.positie = 0
+
+    def start(self):
+        if self.moving:
+            self.richting *= -1
+        self.moving = True
+        self.open = False
