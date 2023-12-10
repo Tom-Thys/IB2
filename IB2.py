@@ -4,7 +4,7 @@
 
 
 import time
-from pathfinding import pathfinding_gps2
+from pathfinding import pathfinding_gps2, politie_pathfinding
 import logging
 from multiprocessing import Process, Manager
 import sdl2.ext
@@ -1198,6 +1198,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             shared_spelerpositie[:] = speler.position[:]
             shared_eindbestemming[:] = list(eindbestemming[:])
             pad[:] = shared_pad[:]
+            politie_pad[:] = shared_poltie_pad[:]
+            shared_politiepositie[:] = politie_postie[:]
             speler.idle()
 
             if time.time() < speler.car.crash_time + 0.16:
@@ -1346,10 +1348,14 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 if __name__ == '__main__':
     # Speler aanmaken
     speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
+    politie_postie = [450,450]
+    politie_pad = []
     with Manager() as manager:
         shared_eindbestemming = manager.list(eindbestemming)
         shared_spelerpositie = manager.list(speler.position)
         shared_pad = manager.list(pad)
+        shared_politiepositie = manager.list(politie_postie)
+        shared_poltie_pad = manager.list(politie_pad)
 
         inf_world = Map()
         inf_world.start()
@@ -1360,9 +1366,14 @@ if __name__ == '__main__':
         # profiler.enable()
         p2 = Process(target=pathfinding_gps2, args=(shared_world_map, shared_pad,
                                                     shared_eindbestemming, shared_spelerpositie), daemon=True)
+
+        p3 = Process(target=politie_pathfinding, args=(shared_world_map, shared_poltie_pad,
+                                                    shared_spelerpositie, shared_politiepositie), daemon=True)
         p2.start()
+        p3.start()
         main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie)
         p2.kill()
+        p3.kill()
         # profiler.disable()
         # stats = pstats.Stats(profiler)
         # stats.dump_stats('data.prof')

@@ -2,7 +2,7 @@ import math
 import time
 import random
 import numpy as np
-from pathfinding import politie_pathfind
+from pathfinding import politie_pathfinding
 
 # from line_profiler_pycharm import profile
 # from numba import njit
@@ -626,10 +626,11 @@ class Voertuig(Sprite):
 class Politie(Sprite):
     def __init__(self, image, images, map_png, x, y, height, speler, schaal=0.2):
         super().__init__(image, images, map_png, x, y, height, "Politie", schaal)
-        self.pad = (0, 0)
+        self.pad = []
         self.prev_playerpos = [-1,-1]
         self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
+        self.tick = 0
 
     def update(self, world_map, speler, *args):
         self.padfind(world_map, speler)
@@ -643,7 +644,8 @@ class Politie(Sprite):
                 speed = abs(speler.car.speed - 0.002)
             else:
                 speed = 0.05
-            if len(self.pad) > 1 and False:
+            if len(self.pad) > 1:
+                print(self.pad)
                 vector = (self.pad[-1][1] - self.pad[-2][1],
                           self.pad[-1][0] - self.pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
             else:
@@ -653,6 +655,11 @@ class Politie(Sprite):
             self.y += speed * vector[1]
 
     def padfind(self, world_map, speler):
-        if self.prev_playerpos[:] != speler.position[:] and self.achtervolgen:
+        self.pad = []
+        return
+        self.tick += 1
+        if self.achtervolgen and self.tick % 20 == 0: #self.prev_playerpos[:] != speler.position[:] and moet ook voor politie
             self.prev_playerpos = speler.position
             self.pad = politie_pathfind(world_map , (self.x, self.y), speler.position)
+            if type(self.pad) != list:
+                self.pad = []
