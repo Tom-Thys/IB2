@@ -62,6 +62,7 @@ prijzen = [0, 200]
 lijst_autos = []
 balkje_tijd = 0
 pakjes_aantal = 0
+politie_wagen = 0
 sound = True
 paused = False
 show_map = False
@@ -717,8 +718,8 @@ def collision_auto(zichtbare_sprites):
                 lenght = len(place_array)
 
 
-def collision_detection(renderer, speler, sprites, hartje):
-    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over, balkje_tijd,pakjes_aantal
+def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_voertuig):
+    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over, balkje_tijd,pakjes_aantal,politie_wagen
     for sprite in sprites:
 
         if sprite.soort == "Doos":
@@ -780,8 +781,9 @@ def collision_detection(renderer, speler, sprites, hartje):
             muziek_spelen("hit sound", channel=5)
             speler.hit = False
         hartjes = speler.aantal_hartjes
-        if hartjes <= 0:
-            game_over = True
+        if hartjes <= 0 and politie_wagen == 0:
+            politie_wagen=genereer_politie(speler.tile[0], speler.tile[1], polities, tree, map_voertuig, HOOGTE,speler)
+            sprites_autos.append(politie_wagen)
         i = 1
         while i <= hartjes:
             x_pos = BREEDTE - 50 - 50 * i
@@ -1076,6 +1078,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     map_doos = factory.from_image(resources.get_path("map_doos.png"))
     speler_png = factory.from_image(resources.get_path("speler_sprite.png"))
     arrow = factory.from_image(resources.get_path("arrow.png"))
+    logo = factory.from_image(resources.get_path("police.png"))
 
 
     time_bar = []
@@ -1097,6 +1100,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     Witte_auto = sdl2.ext.Resources(__file__, "resources/Witte_auto")
     Grijze_auto = sdl2.ext.Resources(__file__, "resources/Grijze_auto")
     humvee_map = sdl2.ext.Resources(__file__, "resources/Humvee")
+    politie = sdl2.ext.Resources(__file__, "resources/Politie_auto")
 
     bomen = []
     rode_autos = []
@@ -1105,6 +1109,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     witte_autos = []
     grijze_autos = []
     humvee = []
+    polities = []
     for i in range(361):
         afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
@@ -1114,9 +1119,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         witte_autos.append(factory.from_image(Witte_auto.get_path(afbeelding_naam)))
         grijze_autos.append(factory.from_image(Grijze_auto.get_path(afbeelding_naam)))
         humvee.append(factory.from_image(humvee_map.get_path(afbeelding_naam)))
-        #polities.append(factory.from_imaqe(politie.get_path(afbeelding_naam)))
-
-    kleuren_autos = [rode_autos, groene_autos, witte_autos, grijze_autos]
+        polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
+        kleuren_autos = [rode_autos, groene_autos, witte_autos, grijze_autos]
     # Eerste Auto aanmaken
     lijst_autos = [PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4), PostBus(tree, humvee, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)]
     auto = lijst_autos[selected_car]
@@ -1291,7 +1295,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             sprites = sprites_bomen + sprites_autos + sprites_dozen + undeletable_sprites
             updatable = not (show_map or paused or game_over)
             zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable)
-            collision_detection(renderer, speler, sprites, hartje)
+            collision_detection(renderer, speler, sprites, hartje,polities, tree, map_voertuig)
             collision_auto(zichtbare_sprites)
 
             #pakjes_aantal += 1
@@ -1356,6 +1360,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             start_tijd = time.time()
             if straf:
                 game_over = True
+
+            if politie_wagen != 0:
+                render_police(logo,renderer)
             renderer.present()
 
         while game_state == 3 and not moet_afsluiten:
