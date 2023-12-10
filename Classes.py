@@ -681,21 +681,7 @@ class Politie(Sprite):
 
             self.x += speed * vector[0]
             self.y += speed * vector[1]
-            if self.position[0] == self.nieuwe_pos[0]:
-                x = self.position[1] - self.nieuwe_pos[1]
-                if x >= 0:
-                    x = 130
-                else:
-                    x = 310
 
-            if self.position[1] == self.nieuwe_pos[1]:
-                x = self.position[0] - self.nieuwe_pos[0]
-                if x >= 0:
-                    x = 220
-                else:
-                    x = 40
-            self.draai_sprites(x - self.hoek)
-            self.hoek = x
 
 
     def padfind(self):
