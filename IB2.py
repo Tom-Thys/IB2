@@ -60,8 +60,8 @@ POSITIE_GARAGE = [
 # Globale variabelen
 #
 game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage, 4: kantoor
-prijzen = [0, 200]
-lijst_autos = []
+prijzen = [0, 20, 100]
+lijst_postbussen = []
 balkje_tijd = 0
 pakjes_aantal = 0
 politie_wagen = 0
@@ -174,7 +174,7 @@ def verwerk_input(delta, events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
     global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie
     global afstand_map, quiting, game_over, game_over_index, money,highscore,pakjes_aantal, garage_index
-    global selected_car, gekocht, prijzen, lijst_autos
+    global selected_car, gekocht, prijzen, lijst_postbussen
 
     move_speed = delta * 2
     if speler.in_auto:
@@ -416,14 +416,14 @@ def verwerk_input(delta, events=0):
                 if key == sdl2.SDLK_SPACE:
                     if garage_index in gekocht:
                         selected_car = garage_index
-                        speler.car = lijst_autos[selected_car]
+                        speler.car = lijst_postbussen[selected_car]
                         muziek_spelen("main menu select", channel=7)
                     else:
                         if money-prijzen[garage_index] >= 0:
                             money -= prijzen[garage_index]
                             muziek_spelen("cash register", channel=7)
                             selected_car = garage_index
-                            speler.car = lijst_autos[selected_car]
+                            speler.car = lijst_postbussen[selected_car]
                             gekocht.append(garage_index)
                             config.set("gameplay", "money", f"{money}")
                             gekocht_str = "".join(f"{i} " for i in gekocht)
@@ -453,8 +453,8 @@ def verwerk_input(delta, events=0):
                     if speler.in_auto:
                         muziek_spelen("car start", channel=7)
             if key == sdl2.SDLK_y or key == sdl2.SDLK_r:
-                if speler.car.versnelling != 6 and (
-                        speler.car.versnelling == 0 or speler.car.speed > (speler.car.versnelling - 0.5) * 0.05):
+                if speler.car.versnelling != speler.car.max_versnelling and (
+                        speler.car.versnelling == 0 or speler.car.speed > (speler.car.versnelling - 0.5) * speler.car.snelheid_incr):
                     speler.car.versnelling += 1
             elif key == sdl2.SDLK_h or key == sdl2.SDLK_z:
                 if speler.car.versnelling != 0:
@@ -538,25 +538,29 @@ def handen_sprite(renderer, handen_doos):
                   dstrect=(200 + 8 * math.sin(((2 * math.pi) / 36) * verandering), 230, BREEDTE - 400, HOOGTE))
 
 
-def garage(renderer, font, index, garage_menu, rode_autos, humvee):
+def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
     global garage_index
     # info: (prijs, #pakjes, snelheid, versnelling, HP, Gears)
-    auto = []
-    info = (0, 0, 0, 0, 0, 0)
-    if garage_index == 0:
-        auto = rode_autos
-        info = (0, 0, 0, 0, 0, 0)
-    elif garage_index == 1:
-        auto = humvee
-        info = (200, 5, 5, 5, 5, 5)
-    image = auto[math.floor(index)]
-    money_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{money}"))
-    prijs = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[0]}"))
-    pakjes = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[1]}"))
-    snelheid = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[2]}"))
-    versnelling = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[3]}"))
-    hp = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[4]}"))
-    gears = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[5]}"))
+    postbus = lijst_postbussen[garage_index]
+    auto = postbus.images
+    info = postbus.info
+
+    image = auto[math.floor(anim_index)]
+
+    if not postbus.render_text:
+        money_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{money}"))
+        prijs = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[0]}"))
+        pakjes = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[1]}"))
+        snelheid = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[2]}"))
+        versnelling = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[3]}"))
+        hp = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[4]}"))
+        gears = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[5]}"))
+        postbus.render_text = (money_txt, prijs, pakjes, snelheid, versnelling, hp, gears)
+    else:
+        (money_txt, prijs, pakjes, snelheid, versnelling, hp, gears) = postbus.render_text
+
+    y_size = prijs.size[1]
+
     renderer.copy(garage_menu,
                   srcrect=(0, 0, BREEDTE, HOOGTE),
                   dstrect=(0, 0, BREEDTE, HOOGTE))
@@ -565,19 +569,19 @@ def garage(renderer, font, index, garage_menu, rode_autos, humvee):
                    size=(image.size[0], image.size[1]),
                    align=(0.5, 0.5))
     renderer.copy(prijs,
-                  dstrect=(POSITIE_GARAGE[0][0], POSITIE_GARAGE[0][1], prijs.size[0], prijs.size[1]))
+                  dstrect=(POSITIE_GARAGE[0][0], POSITIE_GARAGE[0][1], prijs.size[0], y_size))
     renderer.copy(pakjes,
-                  dstrect=(POSITIE_GARAGE[1][0], POSITIE_GARAGE[1][1], pakjes.size[0], pakjes.size[1]))
+                  dstrect=(POSITIE_GARAGE[1][0], POSITIE_GARAGE[1][1], pakjes.size[0], y_size))
     renderer.copy(snelheid,
-                  dstrect=(POSITIE_GARAGE[2][0], POSITIE_GARAGE[2][1], snelheid.size[0], snelheid.size[1]))
+                  dstrect=(POSITIE_GARAGE[2][0], POSITIE_GARAGE[2][1], snelheid.size[0], y_size))
     renderer.copy(versnelling,
-                  dstrect=(POSITIE_GARAGE[3][0], POSITIE_GARAGE[3][1], versnelling.size[0], versnelling.size[1]))
+                  dstrect=(POSITIE_GARAGE[3][0], POSITIE_GARAGE[3][1], versnelling.size[0], y_size))
     renderer.copy(hp,
-                  dstrect=(POSITIE_GARAGE[4][0], POSITIE_GARAGE[4][1], hp.size[0], hp.size[1]))
+                  dstrect=(POSITIE_GARAGE[4][0], POSITIE_GARAGE[4][1], hp.size[0], y_size))
     renderer.copy(gears,
-                  dstrect=(POSITIE_GARAGE[5][0], POSITIE_GARAGE[5][1], gears.size[0], gears.size[1]))
+                  dstrect=(POSITIE_GARAGE[5][0], POSITIE_GARAGE[5][1], gears.size[0], y_size))
     renderer.copy(money_txt,
-                  dstrect=(POSITIE_GARAGE[6][0], POSITIE_GARAGE[6][1], money_txt.size[0], money_txt.size[1]))
+                  dstrect=(POSITIE_GARAGE[6][0], POSITIE_GARAGE[6][1], money_txt.size[0], y_size))
 
 
 def render_sprites(renderer, sprites, player, d, delta, update):
@@ -873,8 +877,8 @@ def menu_nav():
     elif game_state == 3:
         if garage_index < 0:
             garage_index = 0
-        if garage_index > 1:
-            garage_index = 1
+        if garage_index > 2:
+            garage_index = 2
     elif paused:
         if pauze_index > 3:
             pauze_index = 0
@@ -952,7 +956,7 @@ def quit(button, event):
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites
     global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos
-    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_autos
+    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen
     map_positie = [50, world_map.shape[0] - 50]
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
@@ -1035,12 +1039,13 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
     boom = sdl2.ext.Resources(__file__, "resources/boom")
     rode_auto = sdl2.ext.Resources(__file__, "resources/Rode_auto")
-    blauwe_auto = sdl2.ext.Resources(__file__, "resources/Humvee")
+    blauwe_auto = sdl2.ext.Resources(__file__, "resources/Blauwe_auto")
     Groene_auto = sdl2.ext.Resources(__file__, "resources/Groene_auto")
     Witte_auto = sdl2.ext.Resources(__file__, "resources/Witte_auto")
     Grijze_auto = sdl2.ext.Resources(__file__, "resources/Grijze_auto")
     humvee_map = sdl2.ext.Resources(__file__, "resources/Humvee")
     politie = sdl2.ext.Resources(__file__, "resources/Politie_auto")
+    van_file = sdl2.ext.Resources(__file__, "resources/Van")
 
     bomen = []
     rode_autos = []
@@ -1050,6 +1055,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     grijze_autos = []
     humvee = []
     polities = []
+    van = []
     for i in range(361):
         afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
@@ -1060,10 +1066,13 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         grijze_autos.append(factory.from_image(Grijze_auto.get_path(afbeelding_naam)))
         humvee.append(factory.from_image(humvee_map.get_path(afbeelding_naam)))
         polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
-        kleuren_autos = [rode_autos, groene_autos, witte_autos, grijze_autos]
+        van.append(factory.from_image(van_file.get_path(afbeelding_naam)))
+    kleuren_autos = [rode_autos, groene_autos, witte_autos, grijze_autos]
     # Eerste Auto aanmaken
-    lijst_autos = [PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4), PostBus(tree, humvee, map_auto, 452, 440, HOOGTE, type=0, hp=10, schaal=0.4)]
-    auto = lijst_autos[selected_car]
+    lijst_postbussen = [PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, schaal=0.4),
+                        PostBus(tree, humvee, map_auto, 452, 440, HOOGTE, type=1, schaal=0.4),
+                        PostBus(tree, van, map_auto, 452, 440, HOOGTE, type=2, schaal=0.4)]
+    auto = lijst_postbussen[selected_car]
     auto.draai_sprites(125)
     speler.car = auto
     sprites_autos.append(auto)
@@ -1225,8 +1234,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
 
             renderen(renderer, d, d_v, kl, muren_info, angle)
-            """if np.any(z_k) != 0:
-                z_renderen(renderer, z_d, z_v, z_k, muren_info)"""
             sprites_autos = sprites_auto_update(speler.tile[0], speler.tile[1], kleuren_autos, tree, map_voertuig,
                                                 world_map, HOOGTE, sprites_autos, aantalautos=100)
 
@@ -1310,14 +1317,14 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             start_time = time.time()
             speler.idle()
             renderer.clear()
-            delta = time.time() - start_time
             menu_nav()
-            garage(renderer, garage_font, garage_auto_index, garage_menu, rode_autos, humvee)
+            garage(renderer, garage_font, garage_auto_index, garage_menu, lijst_postbussen)
             garage_auto_index += 0.01
-            verwerk_input(delta)
             if garage_auto_index > 360:
                 garage_auto_index = 0
             renderer.present()
+            delta = time.time() - start_time
+            verwerk_input(delta)
         if game_state == 4:
             speler.kantoor_set()
             world_map = kantoor_map
@@ -1325,6 +1332,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 Auto = Sprite(speler.car.image,speler.car.images,speler.car.map_png, 5, 15, HOOGTE, "PostBus")
                 Auto.schadelijk = False
                 kantoor_sprites.append(Auto)
+            else:
+                game_state = 3
         while game_state == 4 and not moet_afsluiten:
             start_time = time.time()
             speler.idle()

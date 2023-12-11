@@ -3,7 +3,7 @@ import time
 import random
 import numpy as np
 import warnings
-from pathfinding import politie_pathfinding
+import sdl2
 
 # from line_profiler_pycharm import profile
 # from numba import njit
@@ -297,7 +297,6 @@ class Player:
             """Zou paar procentjes sparen als we enkel met break cond sparen but future error prevention"""
             valid_indices = np.logical_and.reduce((0 <= x_f, x_f < x_max, 0 <= y_f, y_f < y_max, break_cond))
 
-
             checker[valid_indices] = np.where(world_map[y_f[valid_indices], x_f[valid_indices]] > 0, False, True)
             if self.in_kantoor:
                 """Logica voor deuren -- was vroeger klein beetje anders, deze is efficienter -> minder rendertijd"""
@@ -307,8 +306,10 @@ class Player:
                 if z_buffer.any():
                     z_kleuren = world_map[y_f[z_buffer], x_f[z_buffer]]
                     checker[z_buffer] = np.where(dist_cond[z_buffer],
-                                            np.where((y[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False, True),
-                                            np.where((x[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False, True))
+                                                 np.where((y[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False,
+                                                          True),
+                                                 np.where((x[z_buffer] % 1) < self.kantoor_deuren[z_kleuren], False,
+                                                          True))
                     z_buffer[:] = False
 
             # incrementeren, d_v als dist_cond True is, d_h als dist_cond False is
@@ -366,13 +367,17 @@ class Player:
             self.kantoor_deuren_update[check2] = 1
             self.kantoor_open_deuren[check2] = True
 
-    def start_deur(self,deur):
+    def start_deur(self, deur):
         if self.kantoor_deuren_update[deur] != 0:
             self.kantoor_deuren_update[deur] *= -1
         elif self.kantoor_deuren[deur]:
             self.kantoor_deuren_update[deur] = -1
         else:
             self.kantoor_deuren_update[deur] = 1
+
+
+# Prijs, Pakjes, snelheid, optrek, hp, gears
+auto_gegeven = [(0, 3, 10, 1, 6, 3), (20, 6, 20, 2, 8, 4), (100, 10, 30, 2, 10, 5)]
 
 
 class PostBus(Sprite):
@@ -382,23 +387,27 @@ class PostBus(Sprite):
         self.schadelijk = False
         self.map_grootte = 6
         self.type = type
-        self.hp = hp
         self.speed = 0
         self.vector = np.array([1, 0])
-        self.afrem = 0.002
-        self.optrek = 0.001
         self.hoek = -math.pi / 2
         self.player_inside = False
         self.crashed = False
         self.turning_mult = 2
         self.stuurhoek = 0
         self.versnelling = 1
-        self.versnellingen = ["R", "1", "2", "3", "4", "5", "6"]
-        self.max_versnelling = 6
+        self.versnellingen = ["R", "1", "2", "3", "4", "5", "6", "7"]
         self.snelheid_incr = 0.05
         self.input_delay = 0
         self.crash_time = 0
-        self.dozen = 6
+        self.dozen = 5 # Start hoeveelheid dozen
+        self.max_dozen = auto_gegeven[type][1]
+        self.snelheid_incr = auto_gegeven[type][2] / 400
+        self.optrek = auto_gegeven[type][3]/1000
+        self.afrem = self.optrek * 2
+        self.hp = auto_gegeven[type][4]
+        self.max_versnelling = auto_gegeven[type][5]
+        self.info = auto_gegeven[type]
+        self.render_text = []
 
     def update(self, world_map, speler, delta):
         """Update positie auto"""
@@ -478,7 +487,7 @@ class PostBus(Sprite):
     def brake(self):
         if self.speed > self.afrem:
             self.speed -= self.afrem
-            if self.speed < (self.versnelling - 1.5) * 0.05:
+            if self.speed < (self.versnelling - 1.5) * self.snelheid_incr:
                 self.versnelling -= 1
         else:
             self.speed = 0.0
@@ -487,7 +496,7 @@ class PostBus(Sprite):
         if self.versnelling != 0:
             if self.speed < 0:
                 self.speed = 0
-            elif self.speed < 0.05 * self.versnelling:
+            elif self.speed < self.snelheid_incr * self.versnelling:
                 # Changing the 0.05 affects line 171 IB2 (sound) and the up and downshifting line 330 IB2
                 # In class affects in speed_update and braking
                 self.speed += self.optrek
@@ -501,9 +510,9 @@ class PostBus(Sprite):
                 self.speed -= self.optrek / 2
 
     def speed_update(self):
-        if self.speed > 0.05 * self.versnelling:
+        if self.speed > self.snelheid_incr * self.versnelling:
             self.speed -= self.afrem / 2
-            if self.speed > 0.05 * (self.versnelling + 1):
+            if self.speed > self.snelheid_incr * (self.versnelling + 1):
                 self.speed -= self.afrem
             if self.speed < 0:
                 self.speed = 0
@@ -547,7 +556,6 @@ class PostBus(Sprite):
                 speler.p_x = self.x - 0.5
                 speler.p_y = self.y - 0.5
                 speler.position[:] = math.floor(speler.p_x), math.floor(speler.p_y)
-
 
 
 class Voertuig(Sprite):
@@ -629,7 +637,7 @@ class Politie(Sprite):
     def __init__(self, image, images, map_png, x, y, height, speler,politie_pad, schaal=0.2):
         super().__init__(image, images, map_png, x, y, height, "Politie", schaal)
         self.pad = []
-        self.prev_playerpos = [-1,-1]
+        self.prev_playerpos = [-1, -1]
         self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
         self.tick = 0
