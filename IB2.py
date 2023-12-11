@@ -136,8 +136,8 @@ kleuren_textures = []
 
 # Start Audio
 sdl2.sdlmixer.Mix_Init(0)
-sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024)  # 44100 = 16 bit, cd kwaliteit
-sdl2.sdlmixer.Mix_AllocateChannels(8)
+sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 4, 1024)  # 44100 = 16 bit, cd kwaliteit
+sdl2.sdlmixer.Mix_AllocateChannels(10)  # 9: ENKEL POLITIEWAGEN
 sdl2.sdlmixer.Mix_MasterVolume(volume)
 geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),  # 0
@@ -158,7 +158,8 @@ geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car crash.wav", "UTF-8")),  # 15
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/hit sound.wav", "UTF-8")),  # 16
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/cash register.wav", "UTF-8")),  # 17
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/fail.wav", "UTF-8"))  # 18
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/fail.wav", "UTF-8")),  # 18
+    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/politie sirene.wav", "UTF-8"))  # 19
 ]
 gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "car gear 4", "car gear 4"]
 
@@ -824,7 +825,7 @@ def show_fps(font, renderer):
         yield fps
 
 
-def muziek_spelen(geluid, looped=False, channel=1):
+def muziek_spelen(geluid, looped=False, channel=1, distance=0, angle=0):
     global volume, geluiden
     if not sound:
         return
@@ -832,6 +833,7 @@ def muziek_spelen(geluid, looped=False, channel=1):
         sdl2.sdlmixer.Mix_HaltChannel(channel)
     else:
         sdl2.sdlmixer.Mix_MasterVolume(volume)
+        sdl2.sdlmixer.Mix_Volume(9, 80)
         if sdl2.sdlmixer.Mix_Playing(channel) == 1:
             return
         elif type(geluid) != str:
@@ -857,12 +859,15 @@ def muziek_spelen(geluid, looped=False, channel=1):
             "car crash": geluiden[15],
             "hit sound": geluiden[16],
             "cash register": geluiden[17],
-            "fail": geluiden[18]
+            "fail": geluiden[18],
+            "politie sirene": geluiden[19]
         }
-        if looped == False:
+        if not looped:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
         else:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], -1)
+        if channel == 9:
+            sdl2.sdlmixer.Mix_SetPosition(9, angle, distance)
 
 
 def menu_nav():
@@ -1283,6 +1288,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 render_map(renderer, kleuren_textures, pngs_mappen, map_settings, speler, pad, sprites)
                 menu_nav()
             elif game_over:
+                muziek_spelen(0, channel=9)
                 balkje_tijd = 0
                 renderer.copy(game_over_menu,
                               srcrect=(0, 0, game_over_menu.size[0], game_over_menu.size[1]),
@@ -1306,6 +1312,15 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 elif speler.car.speed < 0:
                     pass
                     # reversing beep ofz
+                if politie_wagen != 0:
+                    render_police(logo,renderer)
+                    # hoek berekenen
+                    rx = politie_wagen.x - speler.p_x
+                    ry = politie_wagen.y - speler.p_y
+                    hoek_sprite = math.atan2(ry, rx) % (math.pi * 2)
+                    player_hoek = math.atan2(speler.p_x, speler.p_y) % (math.pi * 2)
+                    grond_hoek_verschil = abs(player_hoek - hoek_sprite)
+                    muziek_spelen("politie sirene", channel=9, distance=int(politie_wagen.afstand), angle=int(grond_hoek_verschil), looped=True)
 
 
             if quiting > 0:
@@ -1320,8 +1335,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             if straf:
                 game_over = True
 
-            if politie_wagen != 0:
-                render_police(logo,renderer)
+
             renderer.present()
             game_state = speler.check_postition(game_state)
 
