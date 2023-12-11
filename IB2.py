@@ -544,7 +544,7 @@ def handen_sprite(renderer, handen_doos):
 
 
 def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
-    global garage_index
+    global garage_index, money
     # info: (prijs, #pakjes, snelheid, versnelling, HP, Gears)
     postbus = lijst_postbussen[garage_index]
     auto = postbus.images
