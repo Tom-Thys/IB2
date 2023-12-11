@@ -259,15 +259,6 @@ def verwerk_input(delta, events=0):
                         with open("config.ini", "w") as f:
                             config.write(f)
                     break
-            if key == sdl2.SDLK_g:
-                game_state = 3 if game_state == 2 else 2
-
-            if key == sdl2.SDLK_k:
-                if game_state == 2:
-                    game_state = 4
-                elif game_state == 4:
-                    game_state = 2
-                    speler.reset()
             """if key == sdl2.SDLK_g:
                 x, y = speler.position
                 coords = ((-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1))
@@ -448,6 +439,14 @@ def verwerk_input(delta, events=0):
                     with open("config.ini", "w") as f:
                         config.write(f)
 
+            if key == sdl2.SDLK_g:
+                game_state = 3 if game_state == 2 else 2
+            if key == sdl2.SDLK_k:
+                if game_state == 2:
+                    game_state = 4
+                elif game_state == 4:
+                    game_state = 2
+                    speler.reset()
         elif event.type == sdl2.SDL_KEYUP:
             key = event.key.keysym.sym
             if key == sdl2.SDLK_t:
@@ -794,16 +793,15 @@ def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_vo
             muziek_spelen("hit sound", channel=5)
             speler.hit = False
         hartjes = speler.aantal_hartjes
-
+        if hartjes <= 0 and politie_wagen == 0:
+            politie_wagen = genereer_politie(speler.tile[0], speler.tile[1], polities, tree, map_voertuig, HOOGTE,speler,politie_pad)
+            sprites_autos.append(politie_wagen)
         i = 1
         while i <= hartjes:
             x_pos = BREEDTE - 50 - 50 * i
             y_pos = HOOGTE - 70
             renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
             i += 1
-    if not politie_wagen:
-        politie_wagen = genereer_politie(speler.tile[0], speler.tile[1], polities, tree, map_voertuig, HOOGTE, speler)
-        sprites_autos.append(politie_wagen)
 
 
 def show_fps(font, renderer):
@@ -1079,8 +1077,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # Eerste Auto aanmaken
     lijst_postbussen = [PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, schaal=0.4),
                         PostBus(tree, humvee, map_auto, 452, 440, HOOGTE, type=1, schaal=0.4),
-                        PostBus(tree, van, map_auto, 452, 440, HOOGTE, type=2, schaal=0.3)]
-    auto = lijst_postbussen[2]
+                        PostBus(tree, van, map_auto, 452, 440, HOOGTE, type=2, schaal=0.4)]
+    auto = lijst_postbussen[selected_car]
     auto.draai_sprites(125)
     speler.car = auto
     sprites_autos.append(auto)
@@ -1253,7 +1251,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             sprites = sprites_bomen + sprites_autos + sprites_dozen + undeletable_sprites
             updatable = not (show_map or paused or game_over)
             zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable)
+
             collision_detection(renderer, speler, sprites, hartje,polities, tree, map_voertuig)
+
             collision_auto(zichtbare_sprites)
 
             #pakjes_aantal += 1
