@@ -1217,11 +1217,15 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                                                             font.render_text(f"Sensitivity: {sensitivity_rw}"))
             restore_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Restore settings to default?"))
             reset_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Reset save file?"))
+            highscore_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"High score: {highscore}"))
             renderer.copy(volume_text, dstrect=(10, 200, volume_text.size[0], volume_text.size[1]))
             renderer.copy(sensitivity_rw_text,
                           dstrect=(10, 230, sensitivity_rw_text.size[0], sensitivity_rw_text.size[1]))
             renderer.copy(restore_txt, dstrect=(10, 260, restore_txt.size[0], restore_txt.size[1]))
             renderer.copy(reset_txt, dstrect=(10, 290, reset_txt.size[0], reset_txt.size[1]))
+            renderer.copy(highscore_txt,
+                              srcrect=(0, 0, highscore_txt.size[0], highscore_txt.size[1]),
+                              dstrect=(BREEDTE-250, 70, highscore_txt.size[0], highscore_txt.size[1]))
             if 3 > settings_menu_index > 0:
                 text = sdl2.ext.renderer.Texture(renderer, font.render_text("<>"))
                 renderer.copy(text,
@@ -1379,12 +1383,16 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 spawn_x = 0
                 spawn_y = 0
                 politie_wagen = 0
+                highscore_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"High score: {highscore}"))
                 renderer.copy(game_over_menu,
                               srcrect=(0, 0, game_over_menu.size[0], game_over_menu.size[1]),
                               dstrect=(0, 0, BREEDTE, HOOGTE))
                 renderer.copy(menu_pointer,
                               srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
                               dstrect=(game_over_positie[0], game_over_positie[1], 80, 50))
+                renderer.copy(highscore_txt,
+                              srcrect=(0, 0, highscore_txt.size[0], highscore_txt.size[1]),
+                              dstrect=(BREEDTE//2-highscore_txt.size[0]//2, 140, highscore_txt.size[0], highscore_txt.size[1]))
                 verwerk_input(delta)
                 menu_nav()
             else:
