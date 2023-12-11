@@ -71,7 +71,7 @@ def heuristiek(a, b):
 
 def politie_pathfinding(world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     y_size, x_size = np.shape(world_map)
-    time.sleep(0.2)  # wachten tot game volledig gestart en eindbestemming besloten is
+    #time.sleep(0.2)  # wachten tot game volledig gestart en eindbestemming besloten is
     oud_speler_positie = [0, 0]
     oud_eindbestemming = [0, 0]
     while True:
@@ -98,15 +98,12 @@ def politie_pathfinding(world_map, shared_pad, shared_eindbestemming, shared_spe
                 if current == eindpositie:
                     pad = []
                     while current in came_from:
-                        pad.append(current)
+                        pad.append(list(current))
                         current = came_from[current]
-                    if shared_pad[:] == pad[:]:
-                        time.sleep(0.4)
-                    else:
-                        shared_pad[:] = pad[:]
+                    #pad.append(list(eindbestemming))
+                    shared_pad[:] = pad[:]
                     break
-                close_set.add(
-                    current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
+                close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
                 for positie in buren:  # door alle buren gaan + hun g score berekenen
                     buur = (current[0] + positie[0], current[1] + positie[1])
@@ -125,3 +122,5 @@ def politie_pathfinding(world_map, shared_pad, shared_eindbestemming, shared_spe
                         g_score[buur] = buur_g_score
                         f_score[buur] = buur_g_score + heuristiek(buur, eindpositie)
                         heapq.heappush(oheap, (f_score[buur], buur))
+        else:
+            time.sleep(0.0001)

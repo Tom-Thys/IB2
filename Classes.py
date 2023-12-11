@@ -115,7 +115,7 @@ class Player:
         self.r_stralen = np.zeros((self.breedte, 2))
         self.car = None
         self.in_auto = False
-        self.aantal_hartjes = 5
+        self.aantal_hartjes = 0
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)  # Aanmaak autos rond speler
         self.initial = (x, y, hoek)  # Reset values
         self.laatste_doos = 0  # Time
@@ -690,23 +690,27 @@ class Politie(Sprite):
         self.position = [math.floor(self.x), math.floor(self.y)]
 
     def update(self, world_map, speler, *args):
+        self.politie_pad = self.pad
         if self.politie_pad:
             if self.achtervolgen:
                 if speler.in_auto:
                     speed = abs(speler.car.speed - 0.002)
                 else:
-                    speed = 0.05
-
-
+                    speed = 0.01
 
                 if len(self.politie_pad) > 1:
-                    vector = (self.politie_pad[-1][1] - self.politie_pad[-2][1],
-                              self.politie_pad[-1][0] - self.politie_pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
+
+                    vector = (self.politie_pad[0][1] - self.politie_pad[1][1],
+                            self.politie_pad[0][0] - self.politie_pad[1][0])  # Pad uses inverse x/y from normal so reverting here
+                    self.x -= speed * vector[1]
+                    self.y -= speed * vector[0]
+
                 else:
-                    vector = (self.y - speler.p_y,
-                              self.x - speler.p_x)
-                self.x += speed * vector[1]
-                self.y += speed * vector[0]
+                    if self.afstand <= 2:
+                        self.x = speler.p_x
+                        self.y = speler.p_y
+
+
             if self.afstand <= 2:
                 self.x = speler.p_x
                 self.y = speler.p_y
@@ -715,11 +719,7 @@ class Politie(Sprite):
                 self.position = [math.floor(self.x), math.floor(self.y)]
                 if self.position != oude_position:
                     x = 0
-                    print(oude_position)
-                    print("nieuw:")
-                    print(self.position)
-                    print("speler :")
-                    print(speler.position)
+
                     if oude_position[0] == self.position[0]:
                         x = oude_position[1] - self.position[1]
                         if x >= 0:
@@ -735,7 +735,7 @@ class Politie(Sprite):
                             x = 40
                     self.draai_sprites(x - self.hoek)
                     self.hoek = x
-                    print(self.hoek)
+                    #print(self.hoek)
 
 
 

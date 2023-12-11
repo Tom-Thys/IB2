@@ -634,7 +634,7 @@ def render_sprites(renderer, sprites, player, d, delta, update):
 
     for i, sprite in enumerate(sprites):
         if sprite.soort == "Politie":
-            sprite.update(world_map,speler,delta)
+            sprite.update(world_map, speler, delta)
 
         if sprite.afstand >= max_dist: continue;
         if update:
@@ -1455,6 +1455,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                             break
 
             render_sprites(renderer, kantoor_sprites, speler, d, delta, True)
+            if speler.doos_vast:
+                handen_sprite(renderer, handen_doos)
             text = "Momenteel " + str(speler.car.dozen) + " dozen van de maximale " + str(speler.car.max_dozen) + " dozen in de auto"
             renderText(font, renderer, text, BREEDTE, HOOGTE -100)
 
