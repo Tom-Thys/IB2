@@ -626,35 +626,37 @@ class Voertuig(Sprite):
 
 
 class Politie(Sprite):
-    def __init__(self, image, images, map_png, x, y, height, speler, schaal=0.2):
+    def __init__(self, image, images, map_png, x, y, height, speler,politie_pad, schaal=0.2):
         super().__init__(image, images, map_png, x, y, height, "Politie", schaal)
         self.pad = []
         self.prev_playerpos = [-1,-1]
         self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
         self.tick = 0
+        self.politie_pad = politie_pad
 
     def update(self, world_map, speler, *args):
-        self.padfind(world_map, speler)
-        if self.achtervolgen:
-            if len(self.pad) > 2:
-                self.hoek = math.atan2(self.pad[-2][1], self.pad[-2][0])
-            else:
-                self.hoek = math.atan2(self.y - speler.p_y, self.x - speler.p_x)
+        if self.politie_pad != []:
+            print("politie pad = " + str(self.politie_pad))
+            if self.achtervolgen:
+                """
+                if len(self.politie_pad) > 2:
+                    self.hoek = math.atan2(self.pad[-2][1], self.pad[-2][0])
+                else:
+                    self.hoek = math.atan2(self.y - speler.p_y, self.x - speler.p_x)
+                """
+                if speler.in_auto:
+                    speed = abs(speler.car.speed - 0.002)
+                else:
+                    speed = 0.05
+                if len(self.politie_pad) > 1:
+                    vector = (self.politie_pad[-1][1] - self.politie_pad[-2][1],
+                              self.politie_pad[-1][0] - self.politie_pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
+                else:
+                    vector = (self.y - speler.p_y, self.x - speler.p_x)
 
-            if speler.in_auto:
-                speed = abs(speler.car.speed - 0.002)
-            else:
-                speed = 0.05
-            if len(self.pad) > 1:
-                print(self.pad)
-                vector = (self.pad[-1][1] - self.pad[-2][1],
-                          self.pad[-1][0] - self.pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
-            else:
-                vector = (self.y - speler.p_y, self.x - speler.p_x)
+                self.x += speed * vector[0]
+                self.y += speed * vector[1]
 
-            self.x += speed * vector[0]
-            self.y += speed * vector[1]
 
-    def padfind(self, world_map, speler):
-        warnings.warn("Not implemented -- haal pad uit main")
+

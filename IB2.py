@@ -786,7 +786,7 @@ def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_vo
             speler.hit = False
         hartjes = speler.aantal_hartjes
         if hartjes <= 0 and politie_wagen == 0:
-            politie_wagen = genereer_politie(speler.tile[0], speler.tile[1], polities, tree, map_voertuig, HOOGTE,speler)
+            politie_wagen = genereer_politie(speler.tile[0], speler.tile[1], polities, tree, map_voertuig, HOOGTE,speler,politie_pad)
             sprites_autos.append(politie_wagen)
         i = 1
         while i <= hartjes:
@@ -1235,7 +1235,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             sprites = sprites_bomen + sprites_autos + sprites_dozen + undeletable_sprites
             updatable = not (show_map or paused or game_over)
             zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable)
+
             collision_detection(renderer, speler, sprites, hartje,polities, tree, map_voertuig)
+
             collision_auto(zichtbare_sprites)
 
             #pakjes_aantal += 1
@@ -1342,6 +1344,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             next(fps_generator)
             # Verwissel de rendering context met de frame buffer
             renderer.present()
+            politie_wagen.politie_pad = politie_pad
         world_map = inf_world.world_map
 
 
