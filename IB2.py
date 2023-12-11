@@ -34,7 +34,9 @@ POSITIE_MAIN_MENU = [
 POSITIE_SETTINGS_MENU = [
     [170, 55],  # 0: Back
     [150, 200],  # 1: volume
-    [200, 230]  # 2: sensitivity
+    [200, 230],  # 2: sensitivity
+    [350, 260],  # 3: restore
+    [220, 290]  # 4: reset
 ]
 POSITIE_PAUZE = [
     [540, 175],  # 0: Continue
@@ -311,6 +313,25 @@ def verwerk_input(delta, events=0):
                         pass
                     if settings_menu_index == 2:
                         pass
+                    if settings_menu_index == 3:
+                        config.set("settings", "volume", "50")
+                        config.set("settings", "sensitivity", "50")
+                        volume = 50
+                        sensitivity_rw = 50
+                        with open("config.ini", "w") as f:
+                            config.write(f)
+                    if settings_menu_index == 4:
+                        config.set("gameplay", "highscore", "0")
+                        config.set("gameplay", "money", "0")
+                        config.set("gameplay", "gekocht", "0")
+                        config.set("gameplay", "selected_car", "0")
+                        highscore = 0
+                        money = 0
+                        gekocht = [0]
+                        selected_car = 0
+                        speler.car = lijst_postbussen[selected_car]
+                        with open("config.ini", "w") as f:
+                            config.write(f)
                 if key == sdl2.SDLK_LEFT:
                     if settings_menu_index == 1:
                         volume -= 1
@@ -881,10 +902,10 @@ def menu_nav():
             main_menu_index = 2
         main_menu_positie = POSITIE_MAIN_MENU[main_menu_index]
     elif game_state == 1:
-        if settings_menu_index > 2:
+        if settings_menu_index > 4:
             settings_menu_index = 0
         if settings_menu_index < 0:
-            settings_menu_index = 2
+            settings_menu_index = 4
         settings_menu_positie = POSITIE_SETTINGS_MENU[settings_menu_index]
     elif game_state == 3:
         if garage_index < 0:
@@ -1162,11 +1183,19 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             volume_text = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Volume: {volume}"))
             sensitivity_rw_text = sdl2.ext.renderer.Texture(renderer,
                                                             font.render_text(f"Sensitivity: {sensitivity_rw}"))
+            restore_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Restore settings to default?"))
+            reset_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"Reset save file?"))
             renderer.copy(volume_text, dstrect=(10, 200, volume_text.size[0], volume_text.size[1]))
             renderer.copy(sensitivity_rw_text,
                           dstrect=(10, 230, sensitivity_rw_text.size[0], sensitivity_rw_text.size[1]))
-            if settings_menu_index != 0:
+            renderer.copy(restore_txt, dstrect=(10, 260, restore_txt.size[0], restore_txt.size[1]))
+            renderer.copy(reset_txt, dstrect=(10, 290, reset_txt.size[0], reset_txt.size[1]))
+            if 3 > settings_menu_index > 0:
                 text = sdl2.ext.renderer.Texture(renderer, font.render_text("<>"))
+                renderer.copy(text,
+                              dstrect=(settings_menu_positie[0], settings_menu_positie[1], text.size[0], text.size[1]))
+            elif settings_menu_index >= 3:
+                text = sdl2.ext.renderer.Texture(renderer, font.render_text("<-"))
                 renderer.copy(text,
                               dstrect=(settings_menu_positie[0], settings_menu_positie[1], text.size[0], text.size[1]))
             else:
