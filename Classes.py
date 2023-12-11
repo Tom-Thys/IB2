@@ -684,6 +684,8 @@ class Politie(Sprite):
                     print(oude_position)
                     print("nieuw:")
                     print(self.position)
+                    print("speler :")
+                    print(speler.position)
                     if oude_position[0] == self.position[0]:
                         x = oude_position[1] - self.position[1]
                         if x >= 0:

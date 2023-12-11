@@ -178,6 +178,10 @@ def render_balkje(Tijd,Time_bar,renderer):
 def render_pakjes_aantal(pakjes_aantal,renderer):
     font_2 = sdl2.ext.FontTTF(font='counter.ttf', size=60, color=kleuren[5])
     renderText(font_2, renderer, str(pakjes_aantal), 1910, 10)
+def render_tijd(renderer,tijd):
+    font_2 = sdl2.ext.FontTTF(font='counter.ttf', size=60, color=kleuren[5])
+    tijd = round(tijd)
+    renderText(font_2, renderer, str(tijd), 1000, 200)
 
 def render_floor_and_sky(renderer, kleuren_textures):
     """Rendert achtergrond top half blauw bottom grijs"""

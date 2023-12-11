@@ -72,6 +72,9 @@ paused = False
 show_map = False
 game_over = False
 starting_game = True
+politie_tijd = 0
+spawn_x = 0
+spawn_y = 0
 game_over_index = 0
 game_over_positie = [0, 0]
 quiting = 0
@@ -389,6 +392,9 @@ def verwerk_input(delta, events=0):
                         highscore = pakjes_aantal
                     money += pakjes_aantal * 5
                     pakjes_aantal = 0
+                    politie_tijd = 0
+                    spawn_x = 0
+                    spawn_y = 0
                     config.set("gameplay", "money", f"{money}")
                     with open("config.ini", "w") as f:
                         config.write(f)
@@ -621,6 +627,9 @@ def render_sprites(renderer, sprites, player, d, delta, update):
     zichtbaar = []
 
     for i, sprite in enumerate(sprites):
+        if sprite.soort == "Politie":
+            sprite.update(world_map,speler,delta)
+
         if sprite.afstand >= max_dist: continue;
         if update:
             if sprite.update(world_map, speler, delta):
@@ -753,7 +762,7 @@ def collision_auto(zichtbare_sprites):
 
 
 def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_voertuig):
-    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over, balkje_tijd,pakjes_aantal,politie_wagen
+    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over,politie_tijd,spawn_x,spawn_y, balkje_tijd,pakjes_aantal,politie_wagen
     for sprite in sprites:
 
         if sprite.soort == "Doos":
@@ -792,6 +801,7 @@ def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_vo
                 speler.car.crashed = True
                 speler.car.crash_time = time.time()
                 if speler.car.hp == 0:
+                    speler.aantal_hartjes -= 1
                     speler.car.hp = 9
                     speler.car.player_leaving(world_map, speler)
                     speler.car.crashed = False
@@ -818,9 +828,16 @@ def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_vo
             muziek_spelen("hit sound", channel=5)
             speler.hit = False
         hartjes = speler.aantal_hartjes
-        if hartjes <= 0 and politie_wagen == 0:
-            politie_wagen = genereer_politie(speler.tile[0], speler.tile[1], polities, tree, map_voertuig, HOOGTE,speler,politie_pad)
+        if hartjes <= 0 and politie_tijd == 0:
+            politie_tijd = time.time()
+            spawn_x = speler.p_x
+            spawn_y = speler.p_y
+
+        if time.time()-politie_tijd >= 5 and politie_wagen == 0 and spawn_x != 0:
+            politie_wagen = genereer_politie(spawn_x, spawn_y, polities, tree, map_voertuig, HOOGTE,speler,politie_pad,world_map)
             sprites_autos.append(politie_wagen)
+        elif spawn_x != 0 and time.time()-politie_tijd<=5:
+            render_tijd(renderer, time.time() - politie_tijd)
         i = 1
         while i <= hartjes:
             x_pos = BREEDTE - 50 - 50 * i
@@ -988,8 +1005,8 @@ def quit(button, event):
 # @profile
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites
-    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos
-    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen
+    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos,politie_wagen
+    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen,politie_tijd,spawn_x,spawn_y
     map_positie = [50, world_map.shape[0] - 50]
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
@@ -1319,6 +1336,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             elif game_over:
                 muziek_spelen(0, channel=9)
                 balkje_tijd = 0
+                politie_tijd = 0
+                spawn_x = 0
+                spawn_y = 0
+                politie_wagen = 0
                 renderer.copy(game_over_menu,
                               srcrect=(0, 0, game_over_menu.size[0], game_over_menu.size[1]),
                               dstrect=(0, 0, BREEDTE, HOOGTE))
@@ -1341,15 +1362,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 elif speler.car.speed < 0:
                     pass
                     # reversing beep ofz
-                if politie_wagen != 0:
-                    render_police(logo,renderer)
-                    # hoek berekenen
-                    rx = politie_wagen.x - speler.p_x
-                    ry = politie_wagen.y - speler.p_y
-                    hoek_sprite = math.atan2(ry, rx) % (math.pi * 2)
-                    player_hoek = math.atan2(speler.p_x, speler.p_y) % (math.pi * 2)
-                    grond_hoek_verschil = abs(player_hoek - hoek_sprite)
-                    muziek_spelen("politie sirene", channel=9, distance=int(politie_wagen.afstand), angle=int(grond_hoek_verschil), looped=True)
 
 
             if quiting > 0:
@@ -1365,6 +1377,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 game_over = True
 
 
+            if (
+                    politie_wagen != 0):
+                render_police(logo,renderer)
             renderer.present()
             game_state = speler.check_postition(game_state)
 

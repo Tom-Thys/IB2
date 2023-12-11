@@ -118,19 +118,45 @@ def main():
     # Maak png van wereldmap
     make_world_png(worldlijst)
 
-def genereer_politie(spelerp_x, spelerp_y, polities, tree, map_voertuig, HOOGTE,speler,politie_pad):
-        omgeving = 1
-        x = randint(spelerp_x - omgeving, spelerp_x + omgeving) * 9 + 4
-        y = randint(spelerp_y - omgeving, spelerp_y + omgeving) * 9 + 4
+def genereer_politie(spelerp_x, spelerp_y, polities, tree, map_voertuig, HOOGTE,speler,politie_pad,worldmap):
+    voertuig = 0
+    x_max = speler.p_x + 5
+    x_min = speler.p_x - 5
+    y_max = speler.p_y + 5
+    y_min = speler.p_y - 5
+    # Checken of de coordinaten in het veld liggen
+    if x_max >= 1000:
+        x_max = 999
+    if y_max >= 1000:
+        y_max = 999
+    if x_min <= 0:
+        x_min = 1
+    if y_min <= 0:
+        y_min = 1
 
-        if (spelerp_x - x) ** 2 + (spelerp_y - y) ** 2 >= 1:
-            voertuig = Politie(tree, polities, map_voertuig, x, y, HOOGTE,speler,politie_pad)
-        return voertuig
+    while voertuig == 0:
+        x = random.uniform(x_min, x_max)
+        y = random.uniform(y_min, y_max)
+        if (worldmap[math.floor(y), math.floor(x)] <= 0
+                and worldmap[math.floor(y), math.floor(x + 1)] <= 0
+                and worldmap[math.floor(y + 1), math.floor(x)] <= 0
+                and worldmap[math.floor(y), math.floor(x - 1)] <= 0
+                and worldmap[math.floor(y - 1), math.floor(x)] <= 0):
+            voertuig = Politie(tree, polities, map_voertuig, spelerp_x, spelerp_y, HOOGTE,speler,politie_pad)
+    print(voertuig.position)
+    return voertuig
+
+
+
+
+
 
 def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, worldmap, HOOGTE, sprites_autos,
                         aantalautos=1):
     for sprite in sprites_autos:
         if sprite.afstand >= 100:
+            if sprite.soort == "Politie":
+                continue
             # print(sprite.afstand)
             sprites_autos.remove(sprite)
     if len(sprites_autos) == aantalautos:
