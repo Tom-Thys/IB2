@@ -60,7 +60,7 @@ POSITIE_GARAGE = [
 # Globale variabelen
 #
 game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage, 4: kantoor
-prijzen = [0, 200]
+prijzen = [0, 20, 100]
 lijst_postbussen = []
 balkje_tijd = 0
 pakjes_aantal = 0
@@ -538,14 +538,14 @@ def handen_sprite(renderer, handen_doos):
                   dstrect=(200 + 8 * math.sin(((2 * math.pi) / 36) * verandering), 230, BREEDTE - 400, HOOGTE))
 
 
-def garage(renderer, font, index, garage_menu, lijst_postbussen):
+def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
     global garage_index
     # info: (prijs, #pakjes, snelheid, versnelling, HP, Gears)
     postbus = lijst_postbussen[garage_index]
     auto = postbus.images
     info = postbus.info
 
-    image = auto[math.floor(index)]
+    image = auto[math.floor(anim_index)]
 
     if not postbus.render_text:
         money_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{money}"))
@@ -877,8 +877,8 @@ def menu_nav():
     elif game_state == 3:
         if garage_index < 0:
             garage_index = 0
-        if garage_index > 1:
-            garage_index = 1
+        if garage_index > 2:
+            garage_index = 2
     elif paused:
         if pauze_index > 3:
             pauze_index = 0
@@ -1317,7 +1317,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             renderer.clear()
             menu_nav()
             garage(renderer, garage_font, garage_auto_index, garage_menu, lijst_postbussen)
-            garage_auto_index += 0.05
+            garage_auto_index += 0.01
             if garage_auto_index > 360:
                 garage_auto_index = 0
             renderer.present()
