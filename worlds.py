@@ -409,10 +409,10 @@ class Map():
         self.world_map[postkantoor[0] - 3, postkantoor[1] - 2] = laatste_huis_pos + 4
         self.world_map[postkantoor[0] - 3, postkantoor[1] - 1] = laatste_huis_pos + 5
         self.world_map[postkantoor[0] - 3, postkantoor[1] - 1] = laatste_huis_pos + 5
-        self.world_map[postkantoor[0] - 3, postkantoor[1] + 5] = laatste_huis_pos + 5
-        self.world_map[postkantoor[0] - 3, postkantoor[1] + 6] = laatste_huis_pos + 5
-        self.world_map[postkantoor[0] - 1, postkantoor[1] + 7] = laatste_huis_pos + 5
-        self.world_map[postkantoor[0] - 2, postkantoor[1] + 7] = laatste_huis_pos + 5
+        self.world_map[postkantoor[0] - 3, postkantoor[1] + 5] = laatste_huis_pos + 6
+        self.world_map[postkantoor[0] - 3, postkantoor[1] + 6] = laatste_huis_pos + 7
+        self.world_map[postkantoor[0] - 1, postkantoor[1] + 7] = laatste_huis_pos + 9
+        self.world_map[postkantoor[0] - 2, postkantoor[1] + 7] = laatste_huis_pos + 8
         #self.world_map[postkantoor[0] - 3, postkantoor[1] - 3:postkantoor[1]] = laatste_huis_pos + 3
 
         if True:

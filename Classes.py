@@ -123,7 +123,7 @@ class Player:
         self.doos_vast = False
         self.hit = False
         self.in_kantoor = False
-        aantal_deuren = 6
+        aantal_deuren = 10
         self.kantoor_deuren = np.ones(aantal_deuren, dtype='float64')
         self.kantoor_open_deuren = np.full(aantal_deuren, False)
         self.kantoor_deuren_update = np.ones(aantal_deuren)
@@ -164,13 +164,28 @@ class Player:
             y_2 = (y + atm * richting * self.r_speler[1]) % y_dim
 
             if world_map[math.floor(y)][math.floor(x)] <= 0 and world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
+                if self.in_kantoor:
+                    deur = world_map[math.floor(y_2)][math.floor(x_2)]
+                    if deur < -2:
+                        if not self.kantoor_open_deuren[deur]:
+                            return
                 self.p_x = x
                 self.p_y = y
             if world_map[math.floor(y)][math.floor(self.p_x)] <= 0 and world_map[math.floor(y_2)][
                 math.floor(self.p_x)] <= 0:
+                if self.in_kantoor:
+                    deur = world_map[math.floor(y_2)][math.floor(self.p_x)]
+                    if deur < -2:
+                        if not self.kantoor_open_deuren[deur]:
+                            return
                 self.p_y = y
             if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and world_map[math.floor(self.p_y)][
                 math.floor(x_2)] <= 0:
+                if self.in_kantoor:
+                    deur = world_map[math.floor(self.p_y)][math.floor(x_2)]
+                    if deur < -2:
+                        if not self.kantoor_open_deuren[deur]:
+                            return
                 self.p_x = x
         self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)
@@ -194,13 +209,28 @@ class Player:
             y_2 = (y + atm * richting * self.r_camera[1]) % y_dim
 
             if world_map[math.floor(y)][math.floor(x)] <= 0 and world_map[math.floor(y_2)][math.floor(x_2)] <= 0:
+                if self.in_kantoor:
+                    deur = world_map[math.floor(y_2)][math.floor(x_2)]
+                    if deur < -2:
+                        if not self.kantoor_open_deuren[deur]:
+                            return
                 self.p_x = x
                 self.p_y = y
             if world_map[math.floor(y)][math.floor(self.p_x)] <= 0 and world_map[math.floor(y_2)][
                 math.floor(self.p_x)] <= 0:
+                if self.in_kantoor:
+                    deur = world_map[math.floor(y_2)][math.floor(self.p_x)]
+                    if deur < -2:
+                        if not self.kantoor_open_deuren[deur]:
+                            return
                 self.p_y = y
             if world_map[math.floor(self.p_y)][math.floor(x)] <= 0 and world_map[math.floor(self.p_y)][
                 math.floor(x_2)] <= 0:
+                if self.in_kantoor:
+                    deur = world_map[math.floor(self.p_y)][math.floor(x_2)]
+                    if deur < -2:
+                        if not self.kantoor_open_deuren[deur]:
+                            return
                 self.p_x = x
         self.position[:] = math.floor(self.p_x), math.floor(self.p_y)
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)
@@ -347,9 +377,10 @@ class Player:
     def check_postition(self, game_state):
         if postkantoor[0] - 3 < self.p_y < postkantoor[0] and postkantoor[1] - 3 < self.p_x < postkantoor[1]:
             return 4
+        elif postkantoor[0] - 3 < self.p_y < postkantoor[0] and postkantoor[1] + 8 > self.p_x > postkantoor[1] + 5:
+            return 3
         else:
             return game_state
-
 
 
     def kantoor_set(self):
@@ -372,14 +403,15 @@ class Player:
             self.kantoor_deuren += 0.004 * self.kantoor_deuren_update
             check1 = self.kantoor_deuren >= 1
             self.kantoor_deuren[check1] = 1
-            self.kantoor_deuren_update[check1] = -1
+            self.kantoor_deuren_update[check1] = 0
 
             check2 = self.kantoor_deuren < 0
             self.kantoor_deuren[check2] = 0
-            self.kantoor_deuren_update[check2] = 1
+            self.kantoor_deuren_update[check2] = 0
             self.kantoor_open_deuren[check2] = True
 
     def start_deur(self, deur):
+        self.kantoor_open_deuren[deur] = False
         if self.kantoor_deuren_update[deur] != 0:
             self.kantoor_deuren_update[deur] *= -1
         elif self.kantoor_deuren[deur]:
@@ -411,6 +443,8 @@ class PostBus(Sprite):
         self.input_delay = 0
         self.crash_time = 0
         self.dozen = 5 # Start hoeveelheid dozen
+        if not self.type:
+            self.dozen = 3
         self.max_dozen = auto_gegeven[type][1]
         self.snelheid_incr = auto_gegeven[type][2] / 400
         self.optrek = auto_gegeven[type][3]/1000
@@ -656,7 +690,7 @@ class Politie(Sprite):
         self.position = [math.floor(self.x), math.floor(self.y)]
 
     def update(self, world_map, speler, *args):
-        if self.politie_pad != []:
+        if self.politie_pad:
             if self.achtervolgen:
                 if speler.in_auto:
                     speed = abs(speler.car.speed - 0.002)
@@ -671,8 +705,8 @@ class Politie(Sprite):
                 else:
                     vector = (self.y - speler.p_y,
                               self.x - speler.p_x)
-            self.x += speed * vector[1]
-            self.y += speed * vector[0]
+                self.x += speed * vector[1]
+                self.y += speed * vector[0]
             if self.afstand <= 2:
                 self.x = speler.p_x
                 self.y = speler.p_y
@@ -680,7 +714,7 @@ class Politie(Sprite):
                 oude_position = self.position
                 self.position = [math.floor(self.x), math.floor(self.y)]
                 if self.position != oude_position:
-                    x=0
+                    x = 0
                     print(oude_position)
                     print("nieuw:")
                     print(self.position)
