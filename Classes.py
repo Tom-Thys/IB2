@@ -5,6 +5,10 @@ import numpy as np
 import warnings
 import sdl2
 
+
+
+postkantoor = (434, 452)
+
 # from line_profiler_pycharm import profile
 # from numba import njit
 # from line_profiler_pycharm import profile
@@ -340,6 +344,14 @@ class Player:
             self.car.y = self.p_y
             self.car.speed = 0
 
+    def check_postition(self, game_state):
+        if postkantoor[0] - 3 < self.p_y < postkantoor[0] and postkantoor[1] - 3 < self.p_x < postkantoor[1]:
+            return 4
+        else:
+            return game_state
+
+
+
     def kantoor_set(self):
         self.in_kantoor = True
         self.p_x = 3
@@ -396,7 +408,6 @@ class PostBus(Sprite):
         self.stuurhoek = 0
         self.versnelling = 1
         self.versnellingen = ["R", "1", "2", "3", "4", "5", "6", "7"]
-        self.snelheid_incr = 0.05
         self.input_delay = 0
         self.crash_time = 0
         self.dozen = 5 # Start hoeveelheid dozen
@@ -641,6 +652,7 @@ class Politie(Sprite):
         self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
         self.tick = 0
+        self.position = [math.floor(self.x), math.floor(self.y)]
 
     def update(self, world_map, speler, *args):
         self.padfind(world_map, speler)
@@ -653,7 +665,7 @@ class Politie(Sprite):
             if speler.in_auto:
                 speed = abs(speler.car.speed - 0.002)
             else:
-                speed = 0.05
+                speed = 0.005
             if len(self.pad) > 1:
                 print(self.pad)
                 vector = (self.pad[-1][1] - self.pad[-2][1],
@@ -663,6 +675,9 @@ class Politie(Sprite):
 
             self.x += speed * vector[0]
             self.y += speed * vector[1]
+        else:
+            self.afstand = 0
+        self.position = [math.floor(self.x), math.floor(self.y)]
 
     def padfind(self, world_map, speler):
         warnings.warn("Not implemented -- haal pad uit main")

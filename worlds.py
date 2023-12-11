@@ -9,6 +9,7 @@ from Classes import Sprite, Voertuig, Politie
 from PIL import Image
 
 postkantoor = (434, 452)
+garage = ()
 
 # random.seed(20)
 
@@ -61,7 +62,7 @@ kleuren = [
 colors = [0, 0, 0, 102, 102, 102, 176, 176, 176, 255, 255, 255]
 kleur_dict = {0: (0, 0, 0), 1: (170, 85, 85), 2: (170, 85, 85), 3: (141, 170, 127), 4: (102, 127, 171),
               5: (205, 201, 201), 6: (180, 162, 200), 7: (218, 165, 32), 8: (204, 119, 102), 9: (0, 255, 0),
-              10: (255, 0, 20), 11: (255, 255, 255)}
+              10: (255, 0, 20), 11: (255, 255, 255), 12: (255, 255, 255), 13: (255, 255, 255), 14: (255, 255, 255)}
 
 laatste_huis_pos = 8
 
@@ -118,6 +119,7 @@ def main():
     make_world_png(worldlijst)
 
 def genereer_politie(spelerp_x, spelerp_y, polities, tree, map_voertuig, HOOGTE,speler):
+    while True:
         omgeving = 1
         x = randint(spelerp_x - omgeving, spelerp_x + omgeving) * 9 + 4
         y = randint(spelerp_y - omgeving, spelerp_y + omgeving) * 9 + 4
@@ -125,6 +127,7 @@ def genereer_politie(spelerp_x, spelerp_y, polities, tree, map_voertuig, HOOGTE,
         if (spelerp_x - x) ** 2 + (spelerp_y - y) ** 2 >= 1:
             voertuig = Politie(tree, polities, map_voertuig, x, y, HOOGTE,speler)
         return voertuig
+
 def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, worldmap, HOOGTE, sprites_autos,
                         aantalautos=1):
     for sprite in sprites_autos:
@@ -376,8 +379,16 @@ class Map():
                 self.direct_map_making(i, j)
                 self.added.append((i, j))
         self.update()
-        self.world_map[postkantoor[0] - 3:postkantoor[0], postkantoor[1] - 3] = laatste_huis_pos + 3
-        self.world_map[postkantoor[0] - 3, postkantoor[1] - 3:postkantoor[1]] = laatste_huis_pos + 3
+        self.world_map[postkantoor[0] - 2, postkantoor[1] - 3] = laatste_huis_pos + 4
+        self.world_map[postkantoor[0] - 1, postkantoor[1] - 3] = laatste_huis_pos + 5
+        self.world_map[postkantoor[0] - 3, postkantoor[1] - 2] = laatste_huis_pos + 4
+        self.world_map[postkantoor[0] - 3, postkantoor[1] - 1] = laatste_huis_pos + 5
+        self.world_map[postkantoor[0] - 3, postkantoor[1] - 1] = laatste_huis_pos + 5
+        self.world_map[postkantoor[0] - 3, postkantoor[1] + 5] = laatste_huis_pos + 5
+        self.world_map[postkantoor[0] - 3, postkantoor[1] + 6] = laatste_huis_pos + 5
+        self.world_map[postkantoor[0] - 1, postkantoor[1] + 7] = laatste_huis_pos + 5
+        self.world_map[postkantoor[0] - 2, postkantoor[1] + 7] = laatste_huis_pos + 5
+        #self.world_map[postkantoor[0] - 3, postkantoor[1] - 3:postkantoor[1]] = laatste_huis_pos + 3
 
         if True:
             im = Image.fromarray(self.world_map)
