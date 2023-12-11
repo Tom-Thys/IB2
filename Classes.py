@@ -645,7 +645,7 @@ class Voertuig(Sprite):
 
 
 class Politie(Sprite):
-    def __init__(self, image, images, map_png, x, y, height, speler,politie_pad, schaal=0.2):
+    def __init__(self, image, images, map_png, x, y, height, speler, politie_pad, schaal=0.2):
         super().__init__(image, images, map_png, x, y, height, "Politie", schaal)
         self.pad = []
         self.prev_playerpos = [-1, -1]
