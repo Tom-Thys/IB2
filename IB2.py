@@ -759,6 +759,9 @@ def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_vo
                     speler.aantal_hartjes -= 2
                 sprites_autos.remove(sprite)
             elif sprite.soort == "Politie":
+
+                sprites_autos.remove(sprite)
+                politie_wagen = 0
                 game_over = True
             else:
                 warnings.warn("Kan sprite niet verwijderen" + "  " + str(sprite.soort))

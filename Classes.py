@@ -115,7 +115,7 @@ class Player:
         self.r_stralen = np.zeros((self.breedte, 2))
         self.car = None
         self.in_auto = False
-        self.aantal_hartjes = 0
+        self.aantal_hartjes = 5
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)  # Aanmaak autos rond speler
         self.initial = (x, y, hoek)  # Reset values
         self.laatste_doos = 0  # Time
@@ -652,32 +652,54 @@ class Politie(Sprite):
         self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
         self.tick = 0
-        self.politie_pad = politie_pad
+        self.politie_pad = self.pad
         self.position = [math.floor(self.x), math.floor(self.y)]
 
     def update(self, world_map, speler, *args):
         if self.politie_pad != []:
-            print("politie pad = " + str(self.politie_pad))
             if self.achtervolgen:
-                """
-                if len(self.politie_pad) > 2:
-                    self.hoek = math.atan2(self.pad[-2][1], self.pad[-2][0])
-                else:
-                    self.hoek = math.atan2(self.y - speler.p_y, self.x - speler.p_x)
-                """
                 if speler.in_auto:
                     speed = abs(speler.car.speed - 0.002)
                 else:
                     speed = 0.05
+
+
+
                 if len(self.politie_pad) > 1:
                     vector = (self.politie_pad[-1][1] - self.politie_pad[-2][1],
                               self.politie_pad[-1][0] - self.politie_pad[-2][0])  # Pad uses inverse x/y from normal so reverting here
                 else:
-                    vector = (self.y - speler.p_y, self.x - speler.p_x)
+                    vector = (self.y - speler.p_y,
+                              self.x - speler.p_x)
+            self.x += speed * vector[1]
+            self.y += speed * vector[0]
+            if self.afstand <= 2:
+                self.x = speler.p_x
+                self.y = speler.p_y
+            else:
+                oude_position = self.position
+                self.position = [math.floor(self.x), math.floor(self.y)]
+                if self.position != oude_position:
+                    x=0
+                    print(oude_position)
+                    print("nieuw:")
+                    print(self.position)
+                    if oude_position[0] == self.position[0]:
+                        x = oude_position[1] - self.position[1]
+                        if x >= 0:
+                            x = 130
+                        else:
+                            x = 310
 
-            self.x += speed * vector[0]
-            self.y += speed * vector[1]
-        self.position = [math.floor(self.x), math.floor(self.y)]
+                    if oude_position[1] == self.position[1]:
+                        x = oude_position[0] - self.position[0]
+                        if x >= 0:
+                            x = 220
+                        else:
+                            x = 40
+                    self.draai_sprites(x - self.hoek)
+                    self.hoek = x
+                    print(self.hoek)
 
 
 
