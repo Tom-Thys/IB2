@@ -1220,7 +1220,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             if politie_wagen:
                 shared_politiepositie[:] = politie_wagen.position[:]
                 politie_wagen.pad[:] = shared_poltie_pad[:]
-                pad[:] = shared_poltie_pad[:]
 
             speler.idle()
 
