@@ -115,7 +115,7 @@ class Player:
         self.r_stralen = np.zeros((self.breedte, 2))
         self.car = None
         self.in_auto = False
-        self.aantal_hartjes = 0
+        self.aantal_hartjes = 5
         self.tile = math.floor(self.p_x / 9), math.floor(self.p_y / 9)  # Aanmaak autos rond speler
         self.initial = (x, y, hoek)  # Reset values
         self.laatste_doos = 0  # Time
@@ -441,7 +441,7 @@ class PostBus(Sprite):
         self.versnelling = 1
         self.versnellingen = ["R", "1", "2", "3", "4", "5", "6", "7"]
         self.input_delay = 0
-        self.crash_time = 0
+        self.crash_time = time.time() + 2
         self.dozen = 5 # Start hoeveelheid dozen
         if not self.type:
             self.dozen = 3
@@ -685,7 +685,7 @@ class Politie(Sprite):
         self.prev_playerpos = [-1, -1]
         self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
-        self.tick = 0
+        self.speed = 0.05
         self.politie_pad = self.pad
         self.position = [math.floor(self.x), math.floor(self.y)]
 
@@ -694,9 +694,9 @@ class Politie(Sprite):
         if self.politie_pad:
             if self.achtervolgen:
                 if speler.in_auto:
-                    speed = abs(speler.car.speed - 0.002)
+                    speed = max(speler.car.speed, self.speed)
                 else:
-                    speed = 0.01
+                    speed = self.speed
 
                 if len(self.politie_pad) > 1:
 

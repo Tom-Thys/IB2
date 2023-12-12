@@ -17,7 +17,6 @@ from Classes import Voertuig, Player, PostBus, Politie
 from rendering import *
 from configparser import ConfigParser
 
-
 config = ConfigParser()
 
 logging.basicConfig(level=logging.DEBUG, filename="log.log", filemode="w",
@@ -108,6 +107,7 @@ selected_car = int(config.get("gameplay", "selected_car"))
 # echte sensitivity gaat van 100 - 300, 300 traagst, 100 snelst. Raw sensitivity gaat van 0 tot 100
 sensitivity = -2 * sensitivity_rw + 300
 
+
 # wordt op True gezet als het spel afgesloten moet worden
 moet_afsluiten = False
 
@@ -179,7 +179,7 @@ gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "ca
 def verwerk_input(delta, events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
     global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie
-    global afstand_map, quiting, game_over, game_over_index, money,highscore,pakjes_aantal, garage_index
+    global afstand_map, quiting, game_over, game_over_index, money, highscore, pakjes_aantal, garage_index
     global selected_car, gekocht, prijzen, lijst_postbussen
 
     move_speed = delta * 2
@@ -194,7 +194,7 @@ def verwerk_input(delta, events=0):
         events = sdl2.ext.get_events()
 
     key_states = sdl2.SDL_GetKeyboardState(None)
-    if game_state in [2,4] and not paused and not show_map and not game_over:
+    if game_state in [2, 4] and not paused and not show_map and not game_over:
         if key_states[20]:
             print("a")
         if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
@@ -260,7 +260,8 @@ def verwerk_input(delta, events=0):
                 for coord in coords:
                     positie = (y + coord[1], x + coord[0])  # huidige node x en y + "verschuiving" x en y
                     # kijken of deze nodes binnen de wereldmap vallen
-                    if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[1] < 0:
+                    if positie[0] > world_map.shape[1] or positie[0] < 0 or positie[1] > world_map.shape[0] or positie[
+                        1] < 0:
                         continue
                     if world_map[positie] < -2:
                         deur = [world_map[positie]]
@@ -268,7 +269,6 @@ def verwerk_input(delta, events=0):
 
             elif key == sdl2.SDLK_g:
                 game_state = 3 if game_state == 2 else 2
-
 
             if game_state == 0:
                 if key == sdl2.SDLK_DOWN:
@@ -446,7 +446,7 @@ def verwerk_input(delta, events=0):
                         sprites_autos.append(speler.car)
                         muziek_spelen("main menu select", channel=7)
                     else:
-                        if money-prijzen[garage_index] >= 0:
+                        if money - prijzen[garage_index] >= 0:
                             money -= prijzen[garage_index]
                             muziek_spelen("cash register", channel=7)
                             selected_car = garage_index
@@ -492,7 +492,8 @@ def verwerk_input(delta, events=0):
                         muziek_spelen("car start", channel=7)
             if key == sdl2.SDLK_y or key == sdl2.SDLK_r:
                 if speler.car.versnelling != speler.car.max_versnelling and (
-                        speler.car.versnelling == 0 or speler.car.speed > (speler.car.versnelling - 0.5) * speler.car.snelheid_incr):
+                        speler.car.versnelling == 0 or speler.car.speed > (
+                        speler.car.versnelling - 0.5) * speler.car.snelheid_incr):
                     speler.car.versnelling += 1
             elif key == sdl2.SDLK_h or key == sdl2.SDLK_z:
                 if speler.car.versnelling != 0:
@@ -533,7 +534,8 @@ def verwerk_input(delta, events=0):
         # Wordt afgeleverd als de gebruiker de muis heeft bewogen.
         # Aangezien we relative motion gebruiken zijn alle coordinaten
         # relatief tegenover de laatst gerapporteerde positie van de muis.
-        elif event.type == sdl2.SDL_MOUSEMOTION and game_state in [2, 4] and not paused and not show_map and not game_over:
+        elif event.type == sdl2.SDL_MOUSEMOTION and game_state in [2,
+                                                                   4] and not paused and not show_map and not game_over:
             # Aangezien we in onze game maar 1 as hebben waarover de camera
             # kan roteren zijn we enkel geinteresseerd in bewegingen over de
             # X-as
@@ -603,7 +605,7 @@ def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
                   srcrect=(0, 0, BREEDTE, HOOGTE),
                   dstrect=(0, 0, BREEDTE, HOOGTE))
     renderer.rcopy(image,
-                   loc=(BREEDTE//2, 350),
+                   loc=(BREEDTE // 2, 350),
                    size=(image.size[0], image.size[1]),
                    align=(0.5, 0.5))
     renderer.copy(prijs,
@@ -623,7 +625,7 @@ def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
 
 
 def render_sprites(renderer, sprites, player, d, delta, update):
-    global world_map, sprites_autos,sprites_bomen
+    global world_map, sprites_autos, sprites_bomen
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player.p_x, player.p_y))  # Sorteren op afstand
 
     max_dist = 80
@@ -684,7 +686,8 @@ def render_sprites(renderer, sprites, player, d, delta, update):
         if not (-interval < a < interval):
             continue
 
-        screen_y = int((sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
+        screen_y = int((
+                                   sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
 
         kolomen = np.arange(sprite_size_breedte) / sprite_size_breedte - 1 / 2
@@ -719,7 +722,8 @@ def render_sprites(renderer, sprites, player, d, delta, update):
         renderer.copy(image, srcrect=(
             initieel / sprite_size_breedte * spriteBreedte, 0, spriteBreedte * breedte / sprite_size_breedte,
             sprite_size_hoogte * sprite.afstand),
-                      dstrect=(kolom, screen_y+1000*(time.time()-sprite.fall)/sprite_distance, breedte, sprite_size_hoogte),angle= 400*(time.time()-sprite.fall))
+                      dstrect=(kolom, screen_y + 1000 * (time.time() - sprite.fall) / sprite_distance, breedte,
+                               sprite_size_hoogte), angle=400 * (time.time() - sprite.fall))
         if time.time() - sprite.fall >= 0.2:
             sprites_bomen.remove(sprite)
 
@@ -727,7 +731,7 @@ def render_sprites(renderer, sprites, player, d, delta, update):
 
 
 def collision_auto(zichtbare_sprites):
-    global  sprites_autos
+    global sprites_autos
     place_array = np.array([[sprite.x, sprite.y] for sprite in zichtbare_sprites])
     lenght = len(zichtbare_sprites)
 
@@ -758,7 +762,7 @@ def collision_auto(zichtbare_sprites):
                         warnings.warn("Not implemented")
                         check[index] = False
                         continue
-                        #raise NotImplementedError("Politie tegengekomen")
+                        # raise NotImplementedError("Politie tegengekomen")
                     else:
                         raise NotImplementedError(soort)
                     zichtbare_sprites.remove(check_sprite)
@@ -767,8 +771,8 @@ def collision_auto(zichtbare_sprites):
                 lenght = len(place_array)
 
 
-def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_voertuig):
-    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over,politie_tijd,spawn_x,spawn_y, balkje_tijd,pakjes_aantal,politie_wagen
+def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_voertuig):
+    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over, politie_tijd, spawn_x, spawn_y, balkje_tijd, pakjes_aantal, politie_wagen
     for sprite in sprites:
 
         if sprite.soort == "Doos":
@@ -841,10 +845,11 @@ def collision_detection(renderer, speler, sprites, hartje,polities, tree, map_vo
             spawn_x = speler.p_x
             spawn_y = speler.p_y
 
-        if time.time()-politie_tijd >= 5 and politie_wagen == 0 and spawn_x != 0:
-            politie_wagen = genereer_politie(spawn_x, spawn_y, polities, tree, map_voertuig, HOOGTE,speler,politie_pad,world_map)
+        if time.time() - politie_tijd >= 5 and politie_wagen == 0 and spawn_x != 0:
+            politie_wagen = genereer_politie(spawn_x, spawn_y, polities, tree, map_voertuig, HOOGTE, speler,
+                                             politie_pad, world_map)
             sprites_autos.append(politie_wagen)
-        elif spawn_x != 0 and time.time()-politie_tijd<=5:
+        elif spawn_x != 0 and time.time() - politie_tijd <= 5:
             render_tijd(renderer, time.time() - politie_tijd)
         i = 1
         while i <= hartjes:
@@ -986,7 +991,8 @@ def bestemming_selector(mode=""):
                          and (m[0] >= range_te_dicht_max[0] and m[1] >= range_te_dicht_max[1] or m[0] <=
                               range_te_dicht_min[0] and m[1] <= range_te_dicht_min[1] \
                               ), lijst_mogelijke_bestemmingen))
-    rnd = randint(0, len(dichte_locaties) - 1)  # len(dichte_locaties) kan 0 zijn indien er geen dichte locaties zijn: vermijden door groot genoeg gebied te zoeken
+    rnd = randint(0,
+                  len(dichte_locaties) - 1)  # len(dichte_locaties) kan 0 zijn indien er geen dichte locaties zijn: vermijden door groot genoeg gebied te zoeken
     lijst_mogelijke_bestemmingen.remove(dichte_locaties[rnd])
     bestemming = (dichte_locaties[rnd][1], dichte_locaties[rnd][0])
     return bestemming
@@ -1013,8 +1019,8 @@ def quit(button, event):
 # @profile
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites
-    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos,politie_wagen
-    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen,politie_tijd,spawn_x,spawn_y
+    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos, politie_wagen
+    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen, politie_tijd, spawn_x, spawn_y
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites, politie_wagen
     global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos
     global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen
@@ -1091,11 +1097,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     arrow = factory.from_image(resources.get_path("arrow.png"))
     logo = factory.from_image(resources.get_path("police.png"))
 
-
     time_bar = []
     Time = sdl2.ext.Resources(__file__, "resources/Time")
-    for i in range (11):
-        afbeelding_naam =  str(i) + ".png"
+    for i in range(11):
+        afbeelding_naam = str(i) + ".png"
 
         time_bar.append(factory.from_image(Time.get_path(afbeelding_naam)))
 
@@ -1224,8 +1229,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             renderer.copy(restore_txt, dstrect=(10, 260, restore_txt.size[0], restore_txt.size[1]))
             renderer.copy(reset_txt, dstrect=(10, 290, reset_txt.size[0], reset_txt.size[1]))
             renderer.copy(highscore_txt,
-                              srcrect=(0, 0, highscore_txt.size[0], highscore_txt.size[1]),
-                              dstrect=(BREEDTE-250, 70, highscore_txt.size[0], highscore_txt.size[1]))
+                          srcrect=(0, 0, highscore_txt.size[0], highscore_txt.size[1]),
+                          dstrect=(BREEDTE - 250, 70, highscore_txt.size[0], highscore_txt.size[1]))
             if 3 > settings_menu_index > 0:
                 text = sdl2.ext.renderer.Texture(renderer, font.render_text("<>"))
                 renderer.copy(text,
@@ -1239,7 +1244,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                               srcrect=(0, 0, menu_pointer.size[0], menu_pointer.size[1]),
                               dstrect=(settings_menu_positie[0], settings_menu_positie[1], 80, 50))
             renderer.present()
-
 
         # All settings going into the game
         sdl2.SDL_SetRelativeMouseMode(True)
@@ -1256,10 +1260,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             with open("config.ini", "w") as f:
                 config.write(f)
 
-        if starting_game: # only runs once --> no changes als je terugkeert van garage
+        if starting_game:  # only runs once --> no changes als je terugkeert van garage
             starting_game = False
             # Setup voor de game
-            sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree, world_map,
+            sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree,
+                                                   world_map,
                                                    sprites_bomen, aantalbomen=50)
             # sprites_autos
             for i in range(100):
@@ -1280,8 +1285,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 Doos.map_grootte = 3
                 undeletable_sprites.append(Doos)
 
-
-
         t0 = 0
         start_tijd = time.time()
         speler.reset()
@@ -1295,8 +1298,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             if politie_wagen:
                 shared_politiepositie[:] = politie_wagen.position[:]
                 politie_wagen.pad[:] = shared_poltie_pad[:]
-                pad[:] = shared_poltie_pad[:]
-
+                # pad[:] = shared_poltie_pad[:]
 
             speler.idle()
 
@@ -1317,7 +1319,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             # Render de huidige frame
             (d, d_v, kl), _ = (speler.n_raycasting(world_map))
 
-
             renderen(renderer, d, d_v, kl, muren_info, angle)
             sprites_autos = sprites_auto_update(speler.tile[0], speler.tile[1], kleuren_autos, tree, map_voertuig,
                                                 world_map, HOOGTE, sprites_autos, aantalautos=100)
@@ -1328,11 +1329,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             updatable = not (show_map or paused or game_over)
             zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable)
 
-            collision_detection(renderer, speler, sprites, hartje,polities, tree, map_voertuig)
+            collision_detection(renderer, speler, sprites, hartje, polities, tree, map_voertuig)
 
             collision_auto(zichtbare_sprites)
 
-            #pakjes_aantal += 1
+            # pakjes_aantal += 1
             # t.append(time.time()-t1)
             verwerk_input(delta)
             menu_nav()
@@ -1362,8 +1363,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 muziek_spelen("politie sirene", channel=9, distance=int(politie_wagen.afstand),
                               angle=int(grond_hoek_verschil), looped=True)
 
-
-
             if paused:
                 renderer.copy(pauze_menu,
                               srcrect=(0, 0, pauze_menu.size[0], pauze_menu.size[1]),
@@ -1392,7 +1391,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                               dstrect=(game_over_positie[0], game_over_positie[1], 80, 50))
                 renderer.copy(highscore_txt,
                               srcrect=(0, 0, highscore_txt.size[0], highscore_txt.size[1]),
-                              dstrect=(BREEDTE//2-highscore_txt.size[0]//2, 140, highscore_txt.size[0], highscore_txt.size[1]))
+                              dstrect=(BREEDTE // 2 - highscore_txt.size[0] // 2, 140, highscore_txt.size[0],
+                                       highscore_txt.size[1]))
                 verwerk_input(delta)
                 menu_nav()
             else:
@@ -1409,7 +1409,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 elif speler.car.speed < 0:
                     pass
                     # reversing beep ofz
-
 
             if quiting > 0:
                 quiting -= 1
@@ -1436,7 +1435,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             world_map = kantoor_map
             kantoor_sprites = []
             if speler.car != 0:
-                Auto = Sprite(speler.car.image,speler.car.images,speler.car.map_png, 5, 15, HOOGTE, "PostBus")
+                Auto = Sprite(speler.car.image, speler.car.images, speler.car.map_png, 5, 15, HOOGTE, "PostBus")
                 Auto.schadelijk = False
                 kantoor_sprites.append(Auto)
             else:
@@ -1446,6 +1445,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 speler.car.x = speler.initial[0]
                 speler.car.y = speler.initial[1]
         while game_state == 4 and not moet_afsluiten:
+            muziek_spelen(0, channel=9)
             start_time = time.time()
             speler.idle()
             speler.update_kantoor_deuren()
@@ -1455,7 +1455,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             (d, d_v, kl), _ = (speler.n_raycasting(world_map))
             renderen(renderer, d, d_v, kl, muren_info, 0)
             if speler.car.dozen < speler.car.max_dozen:
-                for i,sprite in enumerate(kantoor_sprites[1:]):
+                for i, sprite in enumerate(kantoor_sprites[1:]):
                     if abs(Auto.x - sprite.x) < 0.7 and abs(Auto.y - sprite.y) < 0.7:
                         speler.car.dozen += 1
                         kantoor_sprites.remove(sprite)
@@ -1465,11 +1465,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             render_sprites(renderer, kantoor_sprites, speler, d, delta, True)
             if speler.doos_vast:
                 handen_sprite(renderer, handen_doos)
-            text = "Momenteel " + str(speler.car.dozen) + " dozen van de maximale " + str(speler.car.max_dozen) + " dozen in de auto"
-            renderText(font, renderer, text, BREEDTE, HOOGTE -100)
-
-
-
+            text = "Momenteel " + str(speler.car.dozen) + " dozen van de maximale " + str(
+                speler.car.max_dozen) + " dozen in de auto"
+            renderText(font, renderer, text, BREEDTE, HOOGTE - 100)
 
             delta = time.time() - start_time
             verwerk_input(delta)
@@ -1478,7 +1476,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             renderer.present()
         world_map = inf_world.world_map
 
-
     # Sluit SDL2 af
     sdl2.ext.quit()
 
@@ -1486,7 +1483,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 if __name__ == '__main__':
     # Speler aanmaken
     speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
-    politie_postie = [450,450]
+    politie_postie = [450, 450]
     politie_pad = []
     with Manager() as manager:
         shared_eindbestemming = manager.list(eindbestemming)
@@ -1506,7 +1503,7 @@ if __name__ == '__main__':
                                                     shared_eindbestemming, shared_spelerpositie), daemon=True)
 
         p3 = Process(target=politie_pathfinding, args=(shared_world_map, shared_poltie_pad,
-                                                    shared_politiepositie, shared_spelerpositie), daemon=True)
+                                                       shared_politiepositie, shared_spelerpositie), daemon=True)
         p2.start()
         p3.start()
         main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie)

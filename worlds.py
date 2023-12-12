@@ -11,7 +11,7 @@ from PIL import Image
 postkantoor = (434, 452)
 garage = ()
 
-# random.seed(20)
+random.seed(6)
 
 # de "wereldkaart". Dit is een 2d matrix waarin elke cel een type van muur voorstelt
 # Een 0 betekent dat op deze plaats in de game wereld geen muren aanwezig zijn

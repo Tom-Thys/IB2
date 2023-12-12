@@ -35,6 +35,8 @@
 - Gebruik <kbd>m</kbd> om de volledige map te kunnen bekijken
 - Gebruik <kbd>L SHIFT</kbd>/<kbd>L CTRL</kbd> om in en uit te zoomen op de map
 - Gebruik <kbd>p</kbd> om de game te pauzeren en instellingen aan te passen
+- Gebruik <kbd>g</kbd> om naar de garage te gaan
+- Gebruik <kbd>k</kbd> om naar het kantoor te gaan
 
 ### Close game
 - Gebruik <kbd>q</kbd> of <kbd>esc</kbd>
