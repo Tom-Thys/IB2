@@ -1,6 +1,7 @@
 import numpy as np
 import sdl2.ext
 import math
+from line_profiler_pycharm import profile
 from IB2 import kleuren, HOOGTE, BREEDTE
 
 """ALLES RELATED AAN DRAWING OP HET SCHERM"""
@@ -112,7 +113,7 @@ def render_kolom(renderer, window, kolom, d_muur, k_muur):
                         window.size[1] / 2 + [1] * (1 / d_muur)), kleuren[k_muur])
     return
 
-
+#@profile
 def renderen(renderer, d, d_v, k, muren_info, angle):
     d = 1 / d
     d_v = d_v % 1
@@ -120,16 +121,18 @@ def renderen(renderer, d, d_v, k, muren_info, angle):
     scherm_y = HOOGTE / 2
     if angle == 0:
         for kolom, (d_muur, unit_d, k_muur) in enumerate(zip(d, d_v, k)):
+            if kolom % 2:
+                continue
             if k_muur >= 0:
                 wall_texture, breedte, hoogte = muren_info[k_muur]
                 hoogte *= d_muur
-                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, 890),
-                        dstrect=(kolom, scherm_y - hoogte / 2, 1, hoogte))
-            elif k_muur < 0:
+                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 2, 890),
+                        dstrect=(kolom, scherm_y - hoogte / 2, 2, hoogte))
+            elif k_muur < -1:
                 wall_texture, breedte, hoogte = muren_info[0]
                 hoogte *= d_muur
-                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 1, 890),
-                              dstrect=(kolom, scherm_y - hoogte / 2, 1, hoogte))
+                renderer.copy(wall_texture, srcrect=(breedte * unit_d, 0, 2, 890),
+                              dstrect=(kolom, scherm_y - hoogte / 2, 2, hoogte))
     else:
         for kolom, (d_muur, unit_d, k_muur) in enumerate(zip(d, d_v, k)):
             if k_muur >= 0:

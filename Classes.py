@@ -2,8 +2,6 @@ import math
 import time
 import random
 import numpy as np
-import warnings
-import sdl2
 
 
 

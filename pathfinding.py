@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 
-def pathfinding_gps2(world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
+def pathfinding_gps2(inf_world, world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     y_size, x_size = np.shape(world_map)
     time.sleep(1)  # wachten tot game volledig gestart en eindbestemming besloten is
     oud_speler_positie = [0, 0]

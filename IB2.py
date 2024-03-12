@@ -1,6 +1,6 @@
 # import cProfile
 # import pstats
-# from line_profiler_pycharm import profile
+from line_profiler_pycharm import profile
 
 import serial
 import time
@@ -15,161 +15,12 @@ import sdl2.sdlmixer
 from worlds import *
 from Classes import Voertuig, Player, PostBus, Politie
 from rendering import *
-from configparser import ConfigParser
-
-
-global dramcontroller
-
-config = ConfigParser()
+from variabelen import *
 
 logging.basicConfig(level=logging.DEBUG, filename="log.log", filemode="w",
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
-# Constanten
-BREEDTE = 1000
-HOOGTE = int(BREEDTE / 10 * 7)
-POSITIE_MAIN_MENU = [
-    [365, 253],  # 0: Start Game
-    [300, 401],  # 1: Settings
-    [420, 572]  # 2: Quit Game
-]
-POSITIE_SETTINGS_MENU = [
-    [170, 55],  # 0: Back
-    [150, 200],  # 1: volume
-    [200, 230],  # 2: sensitivity
-    [350, 260],  # 3: restore
-    [220, 290]  # 4: reset
-]
-POSITIE_PAUZE = [
-    [540, 175],  # 0: Continue
-    [520, 310],  # 1: Settings
-    [595, 450],  # 2: Main Menu
-    [590, 585]  # 3: Quit Game
-]
-POSITIE_GAME_OVER = [
-    [600, 210],  # 0: Play Again
-    [600, 388],  # 1: Main Menu
-    [600, 563]  # 2: Quit Game
-]
-POSITIE_GARAGE = [
-    [520, 24],  # 0: Prijs
-    [160, 444],  # 1: #pakjes
-    [163, 495],  # 2: snelheid
-    [190, 540],  # 3: versnelling
-    [85, 588],  # 4: HP
-    [145, 635],  # 5: Gears
-    [900, 24]  # 6: Geld
-]
-#
-# Globale variabelen
-#
-game_state = 0  # 0: main menu, 1: settings menu, 2: game actief, 3: garage, 4: kantoor
-prijzen = [0, 20, 100]
-lijst_postbussen = []
-balkje_tijd = 0
-pakjes_aantal = 0
-politie_wagen = 0
-sound = True
-paused = False
-show_map = False
-game_over = False
-starting_game = True
-politie_tijd = 0
-spawn_x = 0
-spawn_y = 0
-game_over_index = 0
-game_over_positie = [0, 0]
-quiting = 0
-verandering = 1
-main_menu_index = 0
-settings_menu_index = 0
-main_menu_positie = [0, 0]
-settings_menu_positie = [0, 0]
-map_positie = [0, 0]
-afstand_map = 50
-pauze_index = 0
-eindbestemming = (50 * 9, 50 * 9)
-pad = []
-pauze_positie = POSITIE_PAUZE[0]
-sprites = []
-lijst_mogelijke_bestemmingen = []
-sprites_dozen = []
-sprites_bomen = []
-sprites_autos = []
-kantoor_sprites = []
-garage_index = 0
-# verwerking van config file: ook globale variabelen
-config.read("config.ini")
-volume = int(config.get("settings", "volume"))
-sensitivity_rw = int(config.get("settings", "sensitivity"))
-highscore = int(config.get("gameplay", "highscore"))
-money = int(config.get("gameplay", "money"))
-gekocht_str = config.get("gameplay", "gekocht")
-gekocht = [eval(i) for i in gekocht_str.split(" ")]
-selected_car = int(config.get("gameplay", "selected_car"))
-# echte sensitivity gaat van 100 - 300, 300 traagst, 100 snelst. Raw sensitivity gaat van 0 tot 100
-sensitivity = -2 * sensitivity_rw + 300
 
-
-# wordt op True gezet als het spel afgesloten moet worden
-moet_afsluiten = False
-
-# Speler
-p_speler_x, p_speler_y = 50.4 * 9, 49 * 9
-r_speler_hoek = math.pi / 4
-d_camera = 1
-
-# Kantoor postbode
-pakjesx, pakjesy = 451, 433
-
-# world
-world_map = np.zeros((10, 10))
-
-# Vooraf gedefinieerde kleuren
-kleuren = [
-    sdl2.ext.Color(0, 0, 0),  # 0 = Zwart
-    sdl2.ext.Color(255, 0, 20),  # 1 = Rood
-    sdl2.ext.Color(0, 255, 0),  # 2 = Groen
-    sdl2.ext.Color(0, 0, 255),  # 3 = Blauw
-    sdl2.ext.Color(225, 165, 0),  # 4 = oranje
-    sdl2.ext.Color(64, 64, 64),  # 5 = Donker grijs
-    sdl2.ext.Color(128, 128, 128),  # 6 = Grijs
-    sdl2.ext.Color(192, 192, 192),  # 7 = Licht grijs
-    sdl2.ext.Color(255, 255, 255),  # 8 = Wit
-    sdl2.ext.Color(120, 200, 250),  # 9 = Blauw_lucht
-    sdl2.ext.Color(106, 13, 173),  # 10 = Purple
-    sdl2.ext.Color(255, 200, 0)  # 11 = Geel
-]
-kleuren_textures = []
-
-# Start Audio
-sdl2.sdlmixer.Mix_Init(0)
-sdl2.sdlmixer.Mix_OpenAudio(44100, sdl2.sdlmixer.MIX_DEFAULT_FORMAT, 4, 1024)  # 44100 = 16 bit, cd kwaliteit
-sdl2.sdlmixer.Mix_AllocateChannels(10)  # 9: ENKEL POLITIEWAGEN
-sdl2.sdlmixer.Mix_MasterVolume(volume)
-geluiden = [
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/8-Bit Postman Pat.wav", "UTF-8")),  # 0
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_select.wav", "UTF-8")),  # 1
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/arcade_start.wav", "UTF-8")),  # 2
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/concrete-footsteps.wav", "UTF-8")),  # 3
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/throw sound effect.wav", "UTF-8")),  # 4
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/cartoon_doorbell.wav", "UTF-8")),  # 5
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/regular_doorbell.wav", "UTF-8")),  # 6
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/door_knocking.wav", "UTF-8")),  # 7
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/dogs_barking.wav", "UTF-8")),  # 8
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_start.wav", "UTF-8")),  # 9
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_1.wav", "UTF-8")),  # 10
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_2.wav", "UTF-8")),  # 11
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_3.wav", "UTF-8")),  # 12
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_gear_4.wav", "UTF-8")),  # 13
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car_loop.wav", "UTF-8")),  # 14
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/car crash.wav", "UTF-8")),  # 15
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/hit sound.wav", "UTF-8")),  # 16
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/cash register.wav", "UTF-8")),  # 17
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/fail.wav", "UTF-8")),  # 18
-    sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/politie sirene.wav", "UTF-8"))  # 19
-]
-gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "car gear 4", "car gear 4"]
 
 
 #
@@ -471,7 +322,6 @@ def verwerk_input(delta, events=0):
                 if key == sdl2.SDLK_SPACE:
                     if not speler.doos_vast:
                         speler.doos_vast = True
-
                     elif speler.laatste_doos < time.time() - 0.5:
                         if kantoor_sprites[0].afstand < 2 and speler.car.dozen < speler.car.max_dozen:
                             speler.car.dozen += 1
@@ -704,10 +554,10 @@ def render_sprites(renderer, sprites, player, d, delta, update):
                                    sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
 
-        kolomen = np.arange(sprite_size_breedte) / sprite_size_breedte - 1 / 2
+        """kolomen = np.arange(sprite_size_breedte) / sprite_size_breedte - 1 / 2
         x = abs(kolomen * math.sin(hoek_sprite) + abs(rx))
         y = abs(kolomen * math.cos(hoek_sprite) + abs(ry))
-        afstand = (x ** 2 + y ** 2) ** (1 / 2)
+        afstand = (x ** 2 + y ** 2) ** (1 / 2)"""
 
         kolom, breedte, initieel = -1, 0, 0
         for i in range(sprite_size_breedte):
@@ -990,10 +840,10 @@ def positie_check():
 
 def bestemming_selector(mode=""):
     global world_map, lijst_mogelijke_bestemmingen
-    """if mode == "start":
-        lijst_mogelijke_bestemmingen = world.mogelijke_bestemmingen
-        print(lijst_mogelijke_bestemmingen,"\n",'tekst')
-        return"""
+    if mode == "start":
+        lijst_mogelijke_bestemmingen = np.transpose((world_map == -1).nonzero()).tolist()
+        #print(lijst_mogelijke_bestemmingen,"\n",'tekst')
+        return
     x, y = speler.position
     spelerpositie = list(speler.position)
     range_min = [spelerpositie[1] - 30, spelerpositie[0] - 30]  # "linkerbovenhoek" v/d de matrix
@@ -1030,7 +880,7 @@ def quit(button, event):
     moet_afsluiten = True
 
 
-# @profile
+#@profile
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites
     global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos, politie_wagen
@@ -1043,11 +893,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
 
-    # bestemming_selector("start")
-    lijst_mogelijke_bestemmingen = inf_world.mogelijke_bestemmingen
-    eindbestemming = bestemming_selector()
-
-    shared_eindbestemming[:] = eindbestemming[:]
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
     window.show()
@@ -1068,6 +913,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     achtergrond = factory.from_image(resources.get_path("game_main_menu_wh_tekst.png"))
     renderer.copy(achtergrond)
     renderer.present()
+
 
     soort_muren = [
         factory.from_image(resources.get_path("muur_test.png")),  # 1
@@ -1145,15 +991,25 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     for i in range(361):
         afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
-        rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
+        """rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
         blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
         groene_autos.append(factory.from_image(Groene_auto.get_path(afbeelding_naam)))
         witte_autos.append(factory.from_image(Witte_auto.get_path(afbeelding_naam)))
         grijze_autos.append(factory.from_image(Grijze_auto.get_path(afbeelding_naam)))
         humvee.append(factory.from_image(humvee_map.get_path(afbeelding_naam)))
         polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
-        van.append(factory.from_image(van_file.get_path(afbeelding_naam)))
-    kleuren_autos = [rode_autos, groene_autos, witte_autos, grijze_autos]
+        van.append(factory.from_image(van_file.get_path(afbeelding_naam)))"""
+        rode_autos = bomen
+        blauwe_auto = bomen
+        groene_autos = bomen
+        witte_autos = bomen
+        grijze_autos = bomen
+        humvee = bomen
+        polities = bomen
+        #politie = bomen
+        van = bomen
+
+    kleuren_autos = [rode_autos, groene_autos, witte_autos, grijze_autos, blauwe_auto]
     # Eerste Auto aanmaken
     lijst_postbussen = [PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, schaal=0.4),
                         PostBus(tree, humvee, map_auto, 452, 440, HOOGTE, type=1, schaal=0.4),
@@ -1162,6 +1018,17 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     auto.draai_sprites(125)
     speler.car = auto
     sprites_autos.append(auto)
+
+    while False:
+        if np.shape(shared_world_map)[0] != np.shape(world_map[:, :])[0]:
+            world_map[:, :] = shared_world_map[:, :]
+            break
+
+    bestemming_selector("start")
+    #lijst_mogelijke_bestemmingen = inf_world.mogelijke_bestemmingen
+    eindbestemming = bestemming_selector()
+
+    shared_eindbestemming[:] = eindbestemming[:]
 
     # Initialiseer font voor de fps counter
     font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
@@ -1469,7 +1336,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             (d, d_v, kl), _ = (speler.n_raycasting(world_map))
             renderen(renderer, d, d_v, kl, muren_info, 0)
             if speler.car.dozen < speler.car.max_dozen:
-                for i, sprite in enumerate(kantoor_sprites[1:]):
+                for i, sprite in enumerate(kantoor_sprites):
+                    if sprite == Auto:
+                        continue
                     if abs(Auto.x - sprite.x) < 0.7 and abs(Auto.y - sprite.y) < 0.7:
                         speler.car.dozen += 1
                         kantoor_sprites.remove(sprite)
@@ -1479,8 +1348,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             render_sprites(renderer, kantoor_sprites, speler, d, delta, True)
             if speler.doos_vast:
                 handen_sprite(renderer, handen_doos)
-            text = "Momenteel " + str(speler.car.dozen) + " dozen van de maximale " + str(
-                speler.car.max_dozen) + " dozen in de auto"
+            text = "Momenteel " + str(speler.car.dozen) + " dozen van de maximale " + str(speler.car.max_dozen) + " dozen in de auto"
             renderText(font, renderer, text, BREEDTE, HOOGTE - 100)
 
             delta = time.time() - start_time
@@ -1497,7 +1365,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 if __name__ == '__main__':
     global dramcontroller
     # Dramcontroller aanmaken
-    dramcontroller = serial.Serial(port='COM13', baudrate=115200, timeout=.1)
+    dramcontroller = serial.Serial(port=poort, baudrate=baudrate, timeout=.1)
     # Speler aanmaken
     speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
     politie_postie = [450, 450]
@@ -1511,12 +1379,13 @@ if __name__ == '__main__':
 
         inf_world = Map()
         inf_world.start()
+        world_map = inf_world.world_map
         # inf_world.map_making(speler)
-        shared_world_map = inf_world.world_map
+        shared_world_map = world_map#manager.list(world_map)
 
         # profiler = cProfile.Profile()
         # profiler.enable()
-        p2 = Process(target=pathfinding_gps2, args=(shared_world_map, shared_pad,
+        p2 = Process(target=pathfinding_gps2, args=(inf_world, shared_world_map, shared_pad,
                                                     shared_eindbestemming, shared_spelerpositie), daemon=True)
 
         p3 = Process(target=politie_pathfinding, args=(shared_world_map, shared_poltie_pad,
