@@ -2,7 +2,7 @@
 # import pstats
 # from line_profiler_pycharm import profile
 
-
+import serial
 import time
 import warnings
 
@@ -16,6 +16,9 @@ from worlds import *
 from Classes import Voertuig, Player, PostBus, Politie
 from rendering import *
 from configparser import ConfigParser
+
+
+global dramcontroller
 
 config = ConfigParser()
 
@@ -431,6 +434,9 @@ def verwerk_input(delta, events=0):
                             geworpen_doos = speler.trow(world_map)
                             sprites_dozen.append(geworpen_doos)
                             muziek_spelen("throwing", channel=2)
+                            #IB2 sem2
+                            dramcontroller.write("1".encode(encoding='ascii'))
+
                             speler.doos_vast = False
             elif game_state == 3:
                 if key == sdl2.SDLK_RIGHT:
@@ -573,6 +579,14 @@ def handen_sprite(renderer, handen_doos):
             verandering = 1
         else:
             verandering = 1
+    #IB2
+    """
+    uitkomst = 200 + 8 * math.sin(((2 * math.pi) / 36) * verandering)
+    if uitkomst < 193:
+        dramcontroller.write("3".encode(encoding='ascii'))
+    elif uitkomst > 206:
+        dramcontroller.write("2".encode(encoding='ascii'))
+    """
     renderer.copy(handen_doos,
                   srcrect=(0, 0, handen_doos.size[0], handen_doos.size[1]),
                   dstrect=(200 + 8 * math.sin(((2 * math.pi) / 36) * verandering), 230, BREEDTE - 400, HOOGTE))
@@ -1481,6 +1495,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
 
 if __name__ == '__main__':
+    global dramcontroller
+    # Dramcontroller aanmaken
+    dramcontroller = serial.Serial(port='COM13', baudrate=115200, timeout=.1)
     # Speler aanmaken
     speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
     politie_postie = [450, 450]
@@ -1517,3 +1534,4 @@ if __name__ == '__main__':
             config.set("gameplay", "highscore", f"{pakjes_aantal}")
             with open("config.ini", "w") as f:
                 config.write(f)
+    dramcontroller.close()
