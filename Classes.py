@@ -149,7 +149,7 @@ class Player:
         y_dim, x_dim = np.shape(world_map)
         self.oude_pos = (self.p_x, self.p_y)
         if self.in_auto:
-            if richting == 1 and stap > 0:
+            if richting > 0.1 and stap > 0:
                 self.car.accelerate(self)
             else:
                 self.car.brake()

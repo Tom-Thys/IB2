@@ -22,6 +22,52 @@ logging.basicConfig(level=logging.DEBUG, filename="log.log", filemode="w",
 
 
 
+def sign(x):
+    if abs(x) < 3:
+        return 0
+    elif abs(x) == x:
+        return 1
+    else:
+        return -1
+
+
+def verwerk_arduino_input(delta):
+    if not dramco_active:
+        return
+    global dramcontroller
+
+    in_menu = paused or game_over or game_state in [0, 1]
+
+    move_speed = delta / 3 # NEEDS RECALCULATING
+    if speler.in_auto:
+        move_speed *= 4
+    elif game_state == 4:
+        move_speed *= 3
+
+
+    while dramcontroller.in_waiting:
+        lijn = str(dramcontroller.readline())[2:-5]
+        data = lijn.split(" ")
+        if data[0] == "Roll" and not in_menu and not show_map:
+            speler.move(int(data[1]), move_speed, world_map)
+            if not speler.in_auto:
+                muziek_spelen("footsteps", channel=4)
+            elif speler.car.speed < speler.car.versnelling * 0.0499:
+                muziek_spelen(gears[speler.car.versnelling], channel=4)
+        elif data[0] == "Pitch" and not in_menu and not show_map:
+            if not speler.in_auto:
+                speler.draaien(-math.pi * int(data[1])/ (sensitivity * 5))
+            else:
+                speler.sideways_move(int(data[1]), move_speed, world_map)
+
+
+        elif data[0] == "Roll" and show_map and not in_menu:
+            map_positie[1] += sign(int(data[1]))
+        elif data[0] == "Pitch" and show_map and not in_menu:
+            map_positie[0] += sign(int(data[1]))
+
+
+
 
 #
 # Verwerkt alle input van het toetsenbord en de muis
@@ -29,12 +75,13 @@ logging.basicConfig(level=logging.DEBUG, filename="log.log", filemode="w",
 # Argumenten:
 # @delta       Tijd in milliseconden sinds de vorige oproep van deze functie
 #
-
 def verwerk_input(delta, events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
     global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie
     global afstand_map, quiting, game_over, game_over_index, money, highscore, pakjes_aantal, garage_index
     global selected_car, gekocht, prijzen, lijst_postbussen
+
+    verwerk_arduino_input(delta)
 
     move_speed = delta * 2
     if speler.in_auto:
@@ -67,13 +114,13 @@ def verwerk_input(delta, events=0):
             speler.sideways_move(1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
-        elif key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
+        elif key_states[sdl2.SDL_SCANCODE_S]:
             speler.sideways_move(-1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
-        if key_states[sdl2.SDL_SCANCODE_W] and not speler.in_auto:
+        if (key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_W]) and not speler.in_auto:
             speler.draaien(math.pi / sensitivity)
-        elif key_states[sdl2.SDL_SCANCODE_R] and not speler.in_auto:
+        elif (key_states[sdl2.SDL_SCANCODE_RIGHT] or key_states[sdl2.SDL_SCANCODE_R]) and not speler.in_auto:
             speler.draaien(-math.pi / sensitivity)
 
     if game_state == 2 and show_map:
@@ -286,7 +333,8 @@ def verwerk_input(delta, events=0):
                             sprites_dozen.append(geworpen_doos)
                             muziek_spelen("throwing", channel=2)
                             #IB2 sem2
-                            dramcontroller.write("1".encode(encoding='ascii'))
+                            if dramco_active:
+                                dramcontroller.write("1".encode(encoding='ascii'))
 
                             speler.doos_vast = False
             elif game_state == 3:
@@ -1363,9 +1411,14 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
 
 if __name__ == '__main__':
-    global dramcontroller
-    # Dramcontroller aanmaken
-    dramcontroller = serial.Serial(port=poort, baudrate=baudrate, timeout=.1)
+    global dramcontroller, dramco_active
+    try:
+        # Dramcontroller aanmaken
+        dramcontroller = serial.Serial(port=poort, baudrate=baudrate, timeout=.1)
+    except:
+        dramco_active = False
+        warnings.warn("Dramcontroller not found")
+
     # Speler aanmaken
     speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
     politie_postie = [450, 450]
@@ -1403,4 +1456,5 @@ if __name__ == '__main__':
             config.set("gameplay", "highscore", f"{pakjes_aantal}")
             with open("config.ini", "w") as f:
                 config.write(f)
-    dramcontroller.close()
+    if dramco_active:
+        dramcontroller.close()

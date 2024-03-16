@@ -5,8 +5,9 @@ from configparser import ConfigParser
 
 
 #dramcontroller
-poort = 'com13'
+poort = 'com16'
 baudrate = 115200
+dramco_active = True
 
 
 config = ConfigParser()
