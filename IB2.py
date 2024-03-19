@@ -694,6 +694,19 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
                 muziek_spelen(lijst_objective_complete[rnd], channel=5)
                 balkje_tijd -= 30
                 pakjes_aantal += 1
+
+                # IB2
+                if dramco_active:
+                    doorsturen_pakjes = pakjes_aantal
+                    if len(str(doorsturen_pakjes)) == 1:
+                        doorsturen_pakjes = "0"+str(doorsturen_pakjes)
+                    elif len(str(doorsturen_pakjes)) == 2:
+                        doorsturen_pakjes = str(doorsturen_pakjes)
+                    else:
+                        doorsturen_pakjes = doorsturen_pakjes % 100
+
+                    dramcontroller.write(("S"+str(doorsturen_pakjes)).encode(encoding='ascii'))
+
                 if randint(0, 10) <= 1:
                     muziek_spelen("dogs barking", channel=6)
                 if not speler.doos_vast and speler.car.dozen == 0:
@@ -723,6 +736,10 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
             if speler.in_auto:
                 speler.car.hp -= 1
                 speler.car.crashed = True
+
+                # IB2
+                # dramcontroller.write("2".encode(encoding="ascii"))
+
                 speler.car.crash_time = time.time()
                 if speler.car.hp == 0:
                     speler.aantal_hartjes -= 1
@@ -738,6 +755,11 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
         if speler.car.crashed:
             speler.car.crashed = False
             muziek_spelen("car crash", channel=5)
+
+            # IB2
+            if dramco_active:
+                dramcontroller.write("2".encode(encoding="ascii"))
+
         rijen = (speler.car.hp - 1) // 4
         for i in range(rijen + 1):
             kolom = 4
@@ -890,7 +912,7 @@ def bestemming_selector(mode=""):
     global world_map, lijst_mogelijke_bestemmingen
     if mode == "start":
         lijst_mogelijke_bestemmingen = np.transpose((world_map == -1).nonzero()).tolist()
-        #print(lijst_mogelijke_bestemmingen,"\n",'tekst')
+        # print(lijst_mogelijke_bestemmingen,"\n",'tekst')
         return
     x, y = speler.position
     spelerpositie = list(speler.position)
@@ -935,7 +957,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen, politie_tijd, spawn_x, spawn_y
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites, politie_wagen
     global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos
-    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen
     map_positie = [50, world_map.shape[0] - 50]
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
@@ -1457,4 +1478,5 @@ if __name__ == '__main__':
             with open("config.ini", "w") as f:
                 config.write(f)
     if dramco_active:
+        dramcontroller.write("S00".encode(encoding='ascii'))
         dramcontroller.close()
