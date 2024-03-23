@@ -279,20 +279,6 @@ def verwerk_input(delta, events=0):
                 elif show_map:
                     pass
                 elif game_over:
-                    print(
-                        "game_over, money = " + str(money) + " highscore :" + str(highscore) + " aantal pakjes: " + str(
-                            pakjes_aantal))
-                    if pakjes_aantal > highscore:
-                        config.set("gameplay", "highscore", f"{pakjes_aantal}")
-                        highscore = pakjes_aantal
-                    money += pakjes_aantal * 5
-                    pakjes_aantal = 0
-                    politie_tijd = 0
-                    spawn_x = 0
-                    spawn_y = 0
-                    config.set("gameplay", "money", f"{money}")
-                    with open("config.ini", "w") as f:
-                        config.write(f)
                     if key == sdl2.SDLK_UP or key == sdl2.SDLK_e:
                         game_over_index -= 1
                         muziek_spelen("main menu select", channel=2)
@@ -327,6 +313,10 @@ def verwerk_input(delta, events=0):
                             if speler.car.afstand < 2 and afstand_back < 2.5:
                                 speler.doos_vast = True
                                 speler.car.dozen -= 1
+                                # IB2
+                                if dramco_active:
+                                    # dramcontroller
+                                    pass
                                 continue
                         elif speler.laatste_doos < time.time() - 0.5:
                             geworpen_doos = speler.trow(world_map)
@@ -334,7 +324,8 @@ def verwerk_input(delta, events=0):
                             muziek_spelen("throwing", channel=2)
                             #IB2 sem2
                             if dramco_active:
-                                dramcontroller.write("1".encode(encoding='ascii'))
+                                #dramcontroller.write("1".encode(encoding='ascii'))
+                                pass
 
                             speler.doos_vast = False
             elif game_state == 3:
@@ -783,6 +774,10 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
             politie_wagen = genereer_politie(spawn_x, spawn_y, polities, tree, map_voertuig, HOOGTE, speler,
                                              politie_pad, world_map)
             sprites_autos.append(politie_wagen)
+            # IB2
+            if dramco_active:
+                dramcontroller.write("BT".encode(encoding='ascii')) # BT: Buzzer True (voor politie)
+
         elif spawn_x != 0 and time.time() - politie_tijd <= 5:
             render_tijd(renderer, time.time() - politie_tijd)
         i = 1
@@ -956,7 +951,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos, politie_wagen
     global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen, politie_tijd, spawn_x, spawn_y
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites, politie_wagen
-    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos
+    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos, opgeslaan_na_game_over
     map_positie = [50, world_map.shape[0] - 50]
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
@@ -1087,11 +1082,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     auto.draai_sprites(125)
     speler.car = auto
     sprites_autos.append(auto)
-
-    while False:
-        if np.shape(shared_world_map)[0] != np.shape(world_map[:, :])[0]:
-            world_map[:, :] = shared_world_map[:, :]
-            break
 
     bestemming_selector("start")
     #lijst_mogelijke_bestemmingen = inf_world.mogelijke_bestemmingen
@@ -1332,6 +1322,26 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 spawn_x = 0
                 spawn_y = 0
                 politie_wagen = 0
+                if not opgeslaan_na_game_over:
+                    # IB2
+                    if dramco_active:
+                        dramcontroller.write("BF".encode(encoding='ascii'))  # Buzzer False
+                    print(
+                        "game_over, money = " + str(money) + " highscore :" + str(highscore) + " aantal pakjes: " + str(
+                            pakjes_aantal))
+                    if pakjes_aantal > highscore:
+                        config.set("gameplay", "highscore", f"{pakjes_aantal}")
+                        highscore = pakjes_aantal
+                    money += pakjes_aantal * 5
+                    pakjes_aantal = 0
+                    politie_tijd = 0
+                    spawn_x = 0
+                    spawn_y = 0
+                    config.set("gameplay", "money", f"{money}")
+                    with open("config.ini", "w") as f:
+                        config.write(f)
+                    opgeslaan_na_game_over = True
+
                 highscore_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"High score: {highscore}"))
                 renderer.copy(game_over_menu,
                               srcrect=(0, 0, game_over_menu.size[0], game_over_menu.size[1]),

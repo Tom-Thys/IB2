@@ -5,7 +5,7 @@ from configparser import ConfigParser
 
 
 #dramcontroller
-poort = 'com16'
+poort = 'com15'
 baudrate = 115200
 dramco_active = True
 
@@ -85,6 +85,7 @@ sprites_bomen = []
 sprites_autos = []
 kantoor_sprites = []
 garage_index = 0
+opgeslaan_na_game_over = False
 # verwerking van config file: ook globale variabelen
 config.read("config.ini")
 volume = int(config.get("settings", "volume"))
