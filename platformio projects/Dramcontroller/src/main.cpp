@@ -4,7 +4,7 @@
 #include "Segmentdriver.h"
 #include "LedArray.h"
 #include "DramController.h"
-
+#include "SparkFun_VCNL4040_Arduino_Library.h"
 #include "HID-Project.h"
 #include "Adafruit_MPR121.h"
 
@@ -19,6 +19,7 @@ DramController *dramController = new DramController();
 Adafruit_MPR121 cap = Adafruit_MPR121();
 uint16_t lasttouched = 0;
 uint16_t currtouched = 0;
+VCNL4040 proximitySensor;
 
 char ingelezen;
 
@@ -55,6 +56,10 @@ void setup() {
       delay(250);
     }
   } SerialUSB.println("MPR121 found");
+  if (proximitySensor.begin() == false) {
+    SerialUSB.println("Device not found. Please check wiring.");
+    while (1);
+  }
 }
 
 void loop() {
@@ -78,6 +83,20 @@ void loop() {
     Keyboard.press('e');
   } else {
     Keyboard.release('e');
+  }
+  unsigned int proxValue = proximitySensor.getProximity();
+
+  if (proxValue >= 0 && proxValue <= 22000) {
+    if (proxValue <= 100) {
+      int interval = 0;
+      SerialUSB.print("Proximity ");
+      SerialUSB.println(interval);
+    }
+    else {
+      int interval = map(log(proxValue + 1), log(101 + 1), log(22000 + 1), 1, 5);
+      SerialUSB.print("Proximity ");
+      SerialUSB.println(interval);
+    }
   }
 
   // read serial input
