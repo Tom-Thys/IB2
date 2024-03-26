@@ -48,7 +48,7 @@ def verwerk_arduino_input(delta):
     while dramcontroller.in_waiting:
         lijn = str(dramcontroller.readline())[2:-5]
         data = lijn.split(" ")
-        if data[0] == "Roll" and not in_menu and not show_map:
+        if data[0] == "Roll - now not active" and not in_menu and not show_map:
             speler.move(int(data[1]), move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
@@ -59,9 +59,12 @@ def verwerk_arduino_input(delta):
                 speler.draaien(-math.pi * int(data[1])/ (sensitivity * 5))
             else:
                 speler.sideways_move(int(data[1]), move_speed, world_map)
+        elif data[0] == "Proximity" and not in_menu and not show_map and speler.in_auto:
+            speler.move(int(data[1]), move_speed, world_map)
+            muziek_spelen(gears[speler.car.versnelling], channel=4)
 
 
-        elif data[0] == "Roll" and show_map and not in_menu:
+        elif data[0] == "Roll - now not active" and show_map and not in_menu:
             map_positie[1] += sign(int(data[1]))
         elif data[0] == "Pitch" and show_map and not in_menu:
             map_positie[0] += sign(int(data[1]))
@@ -638,7 +641,9 @@ def collision_auto(zichtbare_sprites):
     place_array = np.array([[sprite.x, sprite.y] for sprite in zichtbare_sprites])
     lenght = len(zichtbare_sprites)
 
-    for i, sprite in enumerate(zichtbare_sprites):
+    sprite_iter = iter(zichtbare_sprites)
+
+    for i, sprite in enumerate(sprite_iter):
         if sprite.soort == "Auto":
             wh_self_array_x = place_array[:, 0] - sprite.x
             wh_self_array_y = place_array[:, 1] - sprite.y
@@ -1055,14 +1060,15 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     for i in range(361):
         afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
-        """rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
+        rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
         blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
         groene_autos.append(factory.from_image(Groene_auto.get_path(afbeelding_naam)))
         witte_autos.append(factory.from_image(Witte_auto.get_path(afbeelding_naam)))
         grijze_autos.append(factory.from_image(Grijze_auto.get_path(afbeelding_naam)))
         humvee.append(factory.from_image(humvee_map.get_path(afbeelding_naam)))
         polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
-        van.append(factory.from_image(van_file.get_path(afbeelding_naam)))"""
+        van.append(factory.from_image(van_file.get_path(afbeelding_naam)))
+        """
         rode_autos = bomen
         blauwe_auto = bomen
         groene_autos = bomen
@@ -1071,7 +1077,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         humvee = bomen
         polities = bomen
         #politie = bomen
-        van = bomen
+        van = bomen"""
 
     kleuren_autos = [rode_autos, groene_autos, witte_autos, grijze_autos, blauwe_auto]
     # Eerste Auto aanmaken
