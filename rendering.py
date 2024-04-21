@@ -163,6 +163,7 @@ def renderText(font, renderer, text, x, y):
     text = sdl2.ext.renderer.Texture(renderer, font.render_text(text))
     x_s, y_s = text.size
     renderer.copy(text, dstrect=(int((x - x_s) / 2), y, x_s, y_s))
+
 def render_police(logo,renderer):
     renderer.copy(logo, dstrect=(405, 56, 180, 180))
 
@@ -178,13 +179,6 @@ def render_balkje(Tijd,Time_bar,renderer):
         return False
 
 
-def render_pakjes_aantal(pakjes_aantal,renderer):
-    font_2 = sdl2.ext.FontTTF(font='counter.ttf', size=60, color=kleuren[5])
-    renderText(font_2, renderer, str(pakjes_aantal), 1910, 10)
-def render_tijd(renderer,tijd):
-    font_2 = sdl2.ext.FontTTF(font='counter.ttf', size=60, color=kleuren[5])
-    tijd = round(tijd)
-    renderText(font_2, renderer, str(tijd), 1000, 200)
 
 def render_floor_and_sky(renderer, kleuren_textures):
     """Rendert achtergrond top half blauw bottom grijs"""

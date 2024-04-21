@@ -679,8 +679,10 @@ def collision_auto(zichtbare_sprites):
                 lenght = len(place_array)
 
 
-def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_voertuig):
-    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over, politie_tijd, spawn_x, spawn_y, balkje_tijd, pakjes_aantal, politie_wagen
+def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_voertuig, font_2):
+    global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over, politie_tijd
+    global balkje_tijd, pakjes_aantal, politie_wagen, politie_active
+
     for sprite in sprites:
 
         if sprite.soort == "Doos":
@@ -770,21 +772,26 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
             muziek_spelen("hit sound", channel=5)
             speler.hit = False
         hartjes = speler.aantal_hartjes
-        if hartjes <= 0 and politie_tijd == 0:
-            politie_tijd = time.time()
-            spawn_x = speler.p_x
-            spawn_y = speler.p_y
 
-        if time.time() - politie_tijd >= 5 and politie_wagen == 0 and spawn_x != 0:
-            politie_wagen = genereer_politie(spawn_x, spawn_y, polities, tree, map_voertuig, HOOGTE, speler,
-                                             politie_pad, world_map)
-            sprites_autos.append(politie_wagen)
-            # IB2
-            if dramco_active:
-                dramcontroller.write("BT".encode(encoding='ascii')) # BT: Buzzer True (voor politie)
+        if hartjes <= 0:  # Politie logica
+            if not politie_active:
+                politie_tijd = time.time()
+                politie_active = True
 
-        elif spawn_x != 0 and time.time() - politie_tijd <= 5:
-            render_tijd(renderer, time.time() - politie_tijd)
+            elif time.time() - politie_tijd <= 5:
+                # Renders remaining Time
+                renderText(font_2, renderer, str(round(time.time() - politie_tijd)), 1000, 200)
+
+            elif politie_wagen == 0:
+                # Time bigger then 5 seconds --> Politie starten
+                politie_wagen = genereer_politie(speler.p_x, speler.p_y, polities, tree, map_voertuig, HOOGTE, speler,
+                                                 politie_pad, world_map)
+                sprites_autos.append(politie_wagen)
+
+                # IB2
+                if dramco_active:
+                    dramcontroller.write("BT".encode(encoding='ascii'))  # BT: Buzzer True (voor politie)
+
         i = 1
         while i <= hartjes:
             x_pos = BREEDTE - 50 - 50 * i
@@ -954,23 +961,25 @@ def quit(button, event):
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites
     global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos, politie_wagen
-    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen, politie_tijd, spawn_x, spawn_y
-    global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites, politie_wagen
-    global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos, opgeslaan_na_game_over
-    map_positie = [50, world_map.shape[0] - 50]
+    global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen
+    global politie_tijd, opgeslaan_na_game_over, politie_active
+
+    map_positie = [50, world_map.shape[0] - 50] #This is needed for initialisation
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
 
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
-    window.show()
+    #window.show()
+    #window.minimize()
     # screen = sdl2.ext.surface("Test",size=(BREEDTE,HOOGTE))
     # Begin met het uitlezen van input van de muis en vraag om relatieve coordinaten
     sdl2.SDL_SetRelativeMouseMode(True)
+    sdl2.ext.renderer.set_texture_scale_quality('nearest')
 
     # Maak een renderer aan zodat we in ons venster kunnen renderen
-    renderer = sdl2.ext.Renderer(window, flags=sdl2.render.SDL_RENDERER_ACCELERATED)
+    renderer = sdl2.ext.Renderer(window, flags=sdl2.render.SDL_RENDERER_ACCELERATED | sdl2.render.SDL_RENDERER_PRESENTVSYNC)
 
     # resources inladen
     resources = sdl2.ext.Resources(__file__, "resources")
@@ -980,9 +989,14 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # soorten muren opslaan in sdl2 textures
 
     achtergrond = factory.from_image(resources.get_path("game_main_menu_wh_tekst.png"))
-    renderer.copy(achtergrond)
-    renderer.present()
+    window.show()
 
+    # Initialiseer font voor de fps counter
+    font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
+    font_2 = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=60, color=kleuren[0])
+    dash_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=60, color=kleuren[8])
+    garage_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=40, color=kleuren[11])
+    fps_generator = show_fps(font, renderer)# Initialiseer font voor de fps counter
 
     soort_muren = [
         factory.from_image(resources.get_path("muur_test.png")),  # 1
@@ -1057,8 +1071,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     humvee = []
     polities = []
     van = []
+
+
     for i in range(361):
-        afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
         rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
         blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
@@ -1068,6 +1083,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
         humvee.append(factory.from_image(humvee_map.get_path(afbeelding_naam)))
         polities.append(factory.from_image(politie.get_path(afbeelding_naam)))
         van.append(factory.from_image(van_file.get_path(afbeelding_naam)))
+
         """
         rode_autos = bomen
         blauwe_auto = bomen
@@ -1095,12 +1111,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
     shared_eindbestemming[:] = eindbestemming[:]
 
-    # Initialiseer font voor de fps counter
-    font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=20, color=kleuren[8])
-    font_2 = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=60, color=kleuren[0])
-    dash_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=60, color=kleuren[8])
-    garage_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=40, color=kleuren[11])
-    fps_generator = show_fps(font, renderer)
+
 
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
@@ -1263,9 +1274,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             render_floor_and_sky(renderer, kleuren_textures)
             draw_bestemming(renderer, eindbestemming, speler, kleuren_textures[4])
             # Render de huidige frame
-            (d, d_v, kl), _ = (speler.n_raycasting(world_map))
+            (d, d_v, kl), _ = (speler.n_raycasting(world_map)) # 10% of the time
 
-            renderen(renderer, d, d_v, kl, muren_info, angle)
+            renderen(renderer, d, d_v, kl, muren_info, angle) # 41% of the time
             sprites_autos = sprites_auto_update(speler.tile[0], speler.tile[1], kleuren_autos, tree, map_voertuig,
                                                 world_map, HOOGTE, sprites_autos, aantalautos=100)
 
@@ -1273,9 +1284,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                                                    world_map, sprites_bomen)
             sprites = sprites_bomen + sprites_autos + sprites_dozen + undeletable_sprites
             updatable = not (show_map or paused or game_over)
-            zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable)
+            zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable) # 8% of the time
 
-            collision_detection(renderer, speler, sprites, hartje, polities, tree, map_voertuig)
+            collision_detection(renderer, speler, sprites, hartje, polities, tree, map_voertuig, font_2)
 
             collision_auto(zichtbare_sprites)
 
@@ -1290,9 +1301,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
             draw_nav(renderer, kleuren_textures, arrow, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
-            if updatable:
+            if updatable and not debugging:
                 balkje_tijd += (time.time() - start_tijd)
-            render_pakjes_aantal(pakjes_aantal, renderer)
+
+            # Renders aantal pakjes
+            renderText(font_2, renderer, str(pakjes_aantal), 1910, 10)
             straf = render_balkje(balkje_tijd, time_bar, renderer)
             start_tijd = time.time()
             if straf:
@@ -1325,8 +1338,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 muziek_spelen(0, channel=9)
                 balkje_tijd = 0
                 politie_tijd = 0
-                spawn_x = 0
-                spawn_y = 0
+                politie_active = False
                 politie_wagen = 0
                 if not opgeslaan_na_game_over:
                     # IB2
@@ -1340,9 +1352,6 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                         highscore = pakjes_aantal
                     money += pakjes_aantal * 5
                     pakjes_aantal = 0
-                    politie_tijd = 0
-                    spawn_x = 0
-                    spawn_y = 0
                     config.set("gameplay", "money", f"{money}")
                     with open("config.ini", "w") as f:
                         config.write(f)

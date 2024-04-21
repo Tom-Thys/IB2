@@ -548,9 +548,9 @@ class PostBus(Sprite):
                 self.speed -= self.afrem
         else:
             if self.speed > 0:
-                self.speed -= self.optrek
+                self.speed -= self.optrek / 1.5
             elif self.speed > -0.01:
-                self.speed -= self.optrek / 2
+                self.speed = 0
 
     def speed_update(self):
         if self.speed > self.snelheid_incr * self.versnelling:

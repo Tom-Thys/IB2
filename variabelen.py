@@ -9,6 +9,11 @@ poort = 'com15'
 baudrate = 115200
 dramco_active = True
 
+politie_active = False
+
+debugging = False
+
+
 
 config = ConfigParser()
 
