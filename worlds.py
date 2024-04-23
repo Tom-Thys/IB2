@@ -117,8 +117,9 @@ def main():
     # Maak png van wereldmap
     make_world_png(worldlijst)
 
-def genereer_politie(spelerp_x, spelerp_y, polities, tree, map_voertuig, HOOGTE,speler,politie_pad,worldmap):
+def genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,politie_pad,world):
     voertuig = 0
+    worldmap = world.world_map
     x_max = speler.p_x + 5
     x_min = speler.p_x - 5
     y_max = speler.p_y + 5
@@ -141,7 +142,7 @@ def genereer_politie(spelerp_x, spelerp_y, polities, tree, map_voertuig, HOOGTE,
                 and worldmap[math.floor(y + 1), math.floor(x)] <= 0
                 and worldmap[math.floor(y), math.floor(x - 1)] <= 0
                 and worldmap[math.floor(y - 1), math.floor(x)] <= 0):
-            voertuig = Politie(tree, polities, map_voertuig, spelerp_x, spelerp_y, HOOGTE,speler,politie_pad)
+            voertuig = Politie(tree, polities, map_voertuig, speler.p_x, speler.p_y, HOOGTE,speler,politie_pad)
     print(voertuig.position)
     return voertuig
 

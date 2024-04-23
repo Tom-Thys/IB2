@@ -64,7 +64,7 @@ def verwerk_arduino_input(delta):
             muziek_spelen(gears[speler.car.versnelling], channel=4)
 
 
-        elif data[0] == "Roll - now not active" and show_map and not in_menu:
+        elif data[0] == "Roll" and show_map and not in_menu:
             map_positie[1] += sign(int(data[1]))
         elif data[0] == "Pitch" and show_map and not in_menu:
             map_positie[0] += sign(int(data[1]))
@@ -173,12 +173,14 @@ def verwerk_input(delta, events=0):
 
             elif key == sdl2.SDLK_g:
                 game_state = 3 if game_state == 2 else 2
+            if key == sdl2.SDLK_t and game_state in [3,4]:
+                game_state = 2
 
             if game_state == 0:
-                if key == sdl2.SDLK_DOWN:
+                if key == sdl2.SDLK_DOWN or key == sdl2.SDLK_d:
                     main_menu_index += 1
                     muziek_spelen("main menu select", channel=2)
-                if key == sdl2.SDLK_UP:
+                if key == sdl2.SDLK_UP or key == sdl2.SDLK_e:
                     main_menu_index -= 1
                     muziek_spelen("main menu select", channel=2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
@@ -199,10 +201,10 @@ def verwerk_input(delta, events=0):
                             config.write(f)
                         break
             elif game_state == 1:
-                if key == sdl2.SDLK_DOWN:
+                if key == sdl2.SDLK_DOWN or key == sdl2.SDLK_d:
                     settings_menu_index += 1
                     muziek_spelen("main menu select", channel=2)
-                if key == sdl2.SDLK_UP:
+                if key == sdl2.SDLK_UP or key == sdl2.SDLK_e:
                     settings_menu_index -= 1
                     muziek_spelen("main menu select", channel=2)
                 if key == sdl2.SDLK_SPACE or key == sdl2.SDLK_KP_ENTER or key == sdl2.SDLK_RETURN:
@@ -332,9 +334,9 @@ def verwerk_input(delta, events=0):
 
                             speler.doos_vast = False
             elif game_state == 3:
-                if key == sdl2.SDLK_RIGHT:
+                if key == sdl2.SDLK_RIGHT or key == sdl2.SDLK_f:
                     garage_index += 1
-                if key == sdl2.SDLK_LEFT:
+                if key == sdl2.SDLK_LEFT or key == sdl2.SDLK_s:
                     garage_index -= 1
                 if key == sdl2.SDLK_SPACE:
                     if garage_index in gekocht:
@@ -736,7 +738,8 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
                 speler.car.crashed = True
 
                 # IB2
-                # dramcontroller.write("2".encode(encoding="ascii"))
+                if dramco_active:
+                    dramcontroller.write("2".encode(encoding="ascii"))
 
                 speler.car.crash_time = time.time()
                 if speler.car.hp == 0:
@@ -784,8 +787,8 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
 
             elif politie_wagen == 0:
                 # Time bigger then 5 seconds --> Politie starten
-                politie_wagen = genereer_politie(speler.p_x, speler.p_y, polities, tree, map_voertuig, HOOGTE, speler,
-                                                 politie_pad, world_map)
+                politie_wagen = genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,
+                                                 politie_pad, inf_world)
                 sprites_autos.append(politie_wagen)
 
                 # IB2
@@ -1074,6 +1077,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
 
     for i in range(361):
+        afbeelding_naam = "map"+str(i+1)+".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
         rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
         blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))

@@ -683,7 +683,7 @@ class Politie(Sprite):
         self.prev_playerpos = [-1, -1]
         self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
-        self.speed = 0.05
+        self.speed = 0.01
         self.politie_pad = self.pad
         self.position = [math.floor(self.x), math.floor(self.y)]
 
