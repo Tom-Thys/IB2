@@ -16,6 +16,7 @@ from worlds import *
 from Classes import Voertuig, Player, PostBus, Politie
 from rendering import *
 from variabelen import *
+import serial.tools.list_ports
 
 logging.basicConfig(level=logging.DEBUG, filename="log.log", filemode="w",
                     format="%(asctime)s - %(levelname)s - %(message)s")
@@ -56,7 +57,7 @@ def verwerk_arduino_input(delta):
                 muziek_spelen(gears[speler.car.versnelling], channel=4)
         elif data[0] == "Pitch" and not in_menu and not show_map:
             if not speler.in_auto:
-                speler.draaien(-math.pi * int(data[1])/ (sensitivity * 5))
+                speler.draaien(-math.pi * int(data[1]) / (sensitivity * 5))
             else:
                 speler.sideways_move(int(data[1]), move_speed, world_map)
         elif data[0] == "Proximity" and not in_menu and not show_map and speler.in_auto:
@@ -235,13 +236,13 @@ def verwerk_input(delta, events=0):
                         speler.car = lijst_postbussen[selected_car]
                         with open("config.ini", "w") as f:
                             config.write(f)
-                if key == sdl2.SDLK_LEFT:
+                if key == sdl2.SDLK_LEFT or key == sdl2.SDLK_s:
                     if settings_menu_index == 1:
                         volume -= 1
                         sdl2.sdlmixer.Mix_MasterVolume(volume)
                     if settings_menu_index == 2:
                         sensitivity_rw -= 1
-                if key == sdl2.SDLK_RIGHT:
+                if key == sdl2.SDLK_RIGHT or key == sdl2.SDLK_f:
                     if settings_menu_index == 1:
                         volume += 1
                         sdl2.sdlmixer.Mix_MasterVolume(volume)
@@ -320,8 +321,7 @@ def verwerk_input(delta, events=0):
                                 speler.car.dozen -= 1
                                 # IB2
                                 if dramco_active:
-                                    # dramcontroller
-                                    pass
+                                    dramcontroller.write(("L"+str(min(5, speler.car.dozen))).encode(encoding='ascii'))
                                 continue
                         elif speler.laatste_doos < time.time() - 0.5:
                             geworpen_doos = speler.trow(world_map)
@@ -329,7 +329,7 @@ def verwerk_input(delta, events=0):
                             muziek_spelen("throwing", channel=2)
                             #IB2 sem2
                             if dramco_active:
-                                #dramcontroller.write("1".encode(encoding='ascii'))
+                                dramcontroller.write("1".encode(encoding='ascii'))
                                 pass
 
                             speler.doos_vast = False
@@ -697,15 +697,15 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
 
                 # IB2
                 if dramco_active:
-                    doorsturen_pakjes = pakjes_aantal
-                    if len(str(doorsturen_pakjes)) == 1:
-                        doorsturen_pakjes = "0"+str(doorsturen_pakjes)
-                    elif len(str(doorsturen_pakjes)) == 2:
-                        doorsturen_pakjes = str(doorsturen_pakjes)
+                    doorsturen_score = pakjes_aantal
+                    if len(str(doorsturen_score)) == 1:
+                        doorsturen_score = "0"+str(doorsturen_score)
+                    elif len(str(doorsturen_score)) == 2:
+                        doorsturen_score = str(doorsturen_score)
                     else:
-                        doorsturen_pakjes = doorsturen_pakjes % 100
+                        doorsturen_score = doorsturen_score % 100
 
-                    dramcontroller.write(("S"+str(doorsturen_pakjes)).encode(encoding='ascii'))
+                    dramcontroller.write(("S"+str(doorsturen_score)).encode(encoding='ascii'))
 
                 if randint(0, 10) <= 1:
                     muziek_spelen("dogs barking", channel=6)
@@ -1147,6 +1147,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     spriterenderer = factory.create_sprite_render_system(window)
     uiprocessor = sdl2.ext.UIProcessor()
     garage_auto_index = 0
+
+    # IB2
+    if dramco_active:
+        dramcontroller.write(("L" + str(min(5, speler.car.dozen))).encode(encoding='ascii'))
+
     while not moet_afsluiten:
         muziek_spelen("main menu", True)
         sdl2.SDL_SetRelativeMouseMode(False)
@@ -1462,12 +1467,13 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
 if __name__ == '__main__':
     global dramcontroller, dramco_active
-    try:
-        # Dramcontroller aanmaken
-        dramcontroller = serial.Serial(port=poort, baudrate=baudrate, timeout=.1)
-    except:
-        dramco_active = False
-        warnings.warn("Dramcontroller not found")
+    for device in serial.tools.list_ports.comports():
+        try:
+            # Dramcontroller aanmaken
+            dramcontroller = serial.Serial(port=device.device, baudrate=baudrate, timeout=.1)
+        except:
+            dramco_active = False
+            warnings.warn("Dramcontroller not found")
 
     # Speler aanmaken
     speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
