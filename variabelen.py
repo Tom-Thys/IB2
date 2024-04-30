@@ -7,7 +7,7 @@ from configparser import ConfigParser
 #dramcontroller
 poort = 'com15'
 baudrate = 115200
-dramco_active = True
+dramco_active = False
 
 politie_active = False
 
@@ -163,3 +163,4 @@ geluiden = [
     sdl2.sdlmixer.Mix_LoadWAV(bytes("muziek/politie sirene.wav", "UTF-8"))  # 19
 ]
 gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "car gear 4", "car gear 4"]
+last_car_sound_played = 0

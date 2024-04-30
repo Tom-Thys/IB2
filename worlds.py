@@ -142,7 +142,7 @@ def genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,politie_pad,wo
                 and worldmap[math.floor(y + 1), math.floor(x)] <= 0
                 and worldmap[math.floor(y), math.floor(x - 1)] <= 0
                 and worldmap[math.floor(y - 1), math.floor(x)] <= 0):
-            voertuig = Politie(tree, polities, map_voertuig, speler.p_x, speler.p_y, HOOGTE,speler,politie_pad)
+            voertuig = Politie(tree, polities, map_voertuig, x, y, HOOGTE,speler,politie_pad)
     print(voertuig.position)
     return voertuig
 

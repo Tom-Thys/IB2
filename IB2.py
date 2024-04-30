@@ -322,7 +322,6 @@ def verwerk_input(delta, events=0):
                                 # IB2
                                 if dramco_active:
                                     dramcontroller.write(("L"+str(min(5, speler.car.dozen))).encode(encoding='ascii'))
-                                continue
                         elif speler.laatste_doos < time.time() - 0.5:
                             geworpen_doos = speler.trow(world_map)
                             sprites_dozen.append(geworpen_doos)
@@ -821,7 +820,7 @@ def show_fps(font, renderer):
 
 
 def muziek_spelen(geluid, looped=False, channel=1, distance=0, angle=0):
-    global volume, geluiden
+    global volume, geluiden, last_car_sound_played
     if not sound:
         return
     if geluid == 0:
@@ -834,6 +833,8 @@ def muziek_spelen(geluid, looped=False, channel=1, distance=0, angle=0):
         elif type(geluid) != str:
             chunk = sdl2.sdlmixer.Mix_QuickLoad_RAW(geluid, len(geluid))
             sdl2.sdlmixer.Mix_PlayChannel(channel, chunk, 0)
+            return
+        if geluid == last_car_sound_played:
             return
         liedjes = {
             "main menu": geluiden[0],
@@ -857,6 +858,11 @@ def muziek_spelen(geluid, looped=False, channel=1, distance=0, angle=0):
             "fail": geluiden[18],
             "politie sirene": geluiden[19]
         }
+        if geluid in gears:
+            if geluid != "car loop":
+                last_car_sound_played = geluid
+            else:
+                pass
         if not looped:
             sdl2.sdlmixer.Mix_PlayChannel(channel, liedjes[geluid], 0)
         else:
@@ -1469,11 +1475,16 @@ if __name__ == '__main__':
     global dramcontroller, dramco_active
     for device in serial.tools.list_ports.comports():
         try:
+            print(device)
             # Dramcontroller aanmaken
             dramcontroller = serial.Serial(port=device.device, baudrate=baudrate, timeout=.1)
+            # dramcontroller.write(5)
+            dramco_active = True
+            break
         except:
-            dramco_active = False
-            warnings.warn("Dramcontroller not found")
+            warnings.warn("Dramcontroller had issues")
+    if not dramco_active:
+        warnings.warn("Dramcontroller not found")
 
     # Speler aanmaken
     speler = Player(p_speler_x, p_speler_y, r_speler_hoek, BREEDTE)
@@ -1514,4 +1525,5 @@ if __name__ == '__main__':
                 config.write(f)
     if dramco_active:
         dramcontroller.write("S00".encode(encoding='ascii'))
+        dramcontroller.write("L0".encode(encoding='ascii'))
         dramcontroller.close()
