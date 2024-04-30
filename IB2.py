@@ -1525,5 +1525,6 @@ if __name__ == '__main__':
                 config.write(f)
     if dramco_active:
         dramcontroller.write("S00".encode(encoding='ascii'))
+        time.sleep(0.05) # wachten tot dramcontroller S00 verwerkt heeft, anders segmentdisplay niet juist gereset
         dramcontroller.write("L0".encode(encoding='ascii'))
         dramcontroller.close()
