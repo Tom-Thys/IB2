@@ -392,8 +392,8 @@ class Player:
             draaihoek = self.car.hoek - self.hoek
             self.car.draai_sprites(round(draaihoek * 180 / math.pi))
             self.car.hoek = self.hoek
-            self.car.x = self.p_x
-            self.car.y = self.p_y
+            # self.car.x = self.p_x
+            # self.car.y = self.p_y
             self.car.speed = 0
 
     def update_kantoor_deuren(self):
@@ -451,6 +451,7 @@ class PostBus(Sprite):
         self.max_versnelling = auto_gegeven[type][5]
         self.info = auto_gegeven[type]
         self.render_text = []
+        self.kleur = [178, 0, 0]
 
     def update(self, world_map, speler, delta):
         """Update positie auto"""

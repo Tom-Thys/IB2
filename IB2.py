@@ -49,6 +49,10 @@ def verwerk_arduino_input(delta):
     while dramcontroller.in_waiting:
         lijn = str(dramcontroller.readline())[2:-5]
         data = lijn.split(" ")
+        try:
+            data[1] = int(data[1])
+        except:
+            break
         if data[0] == "Roll - now not active" and not in_menu and not show_map:
             speler.move(int(data[1]), move_speed, world_map)
             if not speler.in_auto:
@@ -514,7 +518,7 @@ def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
     renderer.rcopy(image,
                    loc=(BREEDTE // 2, 350),
                    size=(image.size[0], image.size[1]),
-                   align=(0.5, 0.5))
+                   align=(0.5, 0.5)) # Auto image
     renderer.copy(prijs,
                   dstrect=(POSITIE_GARAGE[0][0], POSITIE_GARAGE[0][1], prijs.size[0], y_size))
     renderer.copy(pakjes,
@@ -702,7 +706,12 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
                     elif len(str(doorsturen_score)) == 2:
                         doorsturen_score = str(doorsturen_score)
                     else:
-                        doorsturen_score = doorsturen_score % 100
+                        doorsturen_pakjes = doorsturen_pakjes % 100
+                        if len(str(doorsturen_pakjes)) == 1:
+                            doorsturen_pakjes = "0" + str(doorsturen_pakjes)
+                        elif len(str(doorsturen_pakjes)) == 2:
+                            doorsturen_pakjes = str(doorsturen_pakjes)
+
 
                     dramcontroller.write(("S"+str(doorsturen_score)).encode(encoding='ascii'))
 
@@ -1110,10 +1119,12 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     lijst_postbussen = [PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, schaal=0.4),
                         PostBus(tree, humvee, map_auto, 452, 440, HOOGTE, type=1, schaal=0.4),
                         PostBus(tree, van, map_auto, 452, 440, HOOGTE, type=2, schaal=0.4)]
-    auto = lijst_postbussen[selected_car]
+    speler.car = lijst_postbussen[selected_car]
+    auto = speler.car
     auto.draai_sprites(125)
-    speler.car = auto
     sprites_autos.append(auto)
+
+    change_color(factory, lijst_postbussen, 1, (255, 130, 203))
 
     bestemming_selector("start")
     #lijst_mogelijke_bestemmingen = inf_world.mogelijke_bestemmingen
@@ -1416,7 +1427,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             renderer.clear()
             menu_nav()
             garage(renderer, garage_font, garage_auto_index, garage_menu, lijst_postbussen)
-            garage_auto_index += 0.01
+            garage_auto_index += 0.6
             if garage_auto_index > 360:
                 garage_auto_index = 0
             renderer.present()
@@ -1476,6 +1487,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 if __name__ == '__main__':
     global dramcontroller, dramco_active
     for device in serial.tools.list_ports.comports():
+        if "Bluetooth" in device.description:
+            continue
         try:
             print(device)
             # Dramcontroller aanmaken

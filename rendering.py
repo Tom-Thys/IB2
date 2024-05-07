@@ -1,8 +1,13 @@
 import numpy as np
 import sdl2.ext
 import math
+
+from PIL import Image
+
+import Classes
 from line_profiler_pycharm import profile
 from IB2 import kleuren, HOOGTE, BREEDTE
+import os
 
 """ALLES RELATED AAN DRAWING OP HET SCHERM"""
 
@@ -177,6 +182,48 @@ def render_balkje(Tijd,Time_bar,renderer):
     else:
         renderer.copy(Time_bar[index], dstrect=(10, 192, 180, 80))
         return False
+
+
+def change_color(factory, autos, index, rgb):
+    if index == 0:
+        input_map = "resources/Auto/"
+        output_map = "resources/Tijdelijke_kleur_0/"
+    elif index == 1:
+        input_map = "resources/Humvee/"
+        output_map = "resources/Tijdelijke_kleur_1/"
+    else:
+        input_map = "resources/Van/"
+        output_map = "resources/Tijdelijke_kleur_2/"
+
+    for bestandsnaam in os.listdir(input_map):
+        if bestandsnaam.endswith(('.png', '.jpg', '.jpeg')):
+            pad_naar_afbeelding = os.path.join(input_map, bestandsnaam)
+            afbeelding = Image.open(pad_naar_afbeelding)
+
+            array = np.asarray(afbeelding)
+            copy = np.ndarray(array.shape, array.dtype)
+            r, g, b, a = array[:, :, 0], array[:, :, 1], array[:, :, 2], array[:, :, 3]
+            if index == 0:
+                get_places = (r > g) & (r > b)
+            elif index == 1:
+                get_places = (g < r) & (b < g)
+            else:
+                get_places = (r < 15) & (5 < g) & (g < 40) & (25 < b) & (b < 70)
+
+            r = np.where(get_places, rgb[0], r)
+            g = np.where(get_places, rgb[1], g)
+            b = np.where(get_places, rgb[2], b)
+            copy[:, :, 0], copy[:, :, 1], copy[:, :, 2], copy[:, :, 3] = r, g, b, a
+
+            afbeelding = Image.fromarray(copy, 'RGBA')
+            afbeelding.save(output_map+bestandsnaam)
+    im = []
+    for i in range(361):
+        afbeelding_naam = "map" + str(i + 1) + ".png"
+        afb = factory.from_image(output_map+afbeelding_naam)
+        im.append(afb)
+    autos[index].images = im
+
 
 
 
