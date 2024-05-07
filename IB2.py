@@ -82,11 +82,11 @@ def verwerk_arduino_input(delta):
 # Argumenten:
 # @delta       Tijd in milliseconden sinds de vorige oproep van deze functie
 #
-def verwerk_input(delta, events=0):
+def verwerk_input(delta, events=0, factory=None):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
     global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie
     global afstand_map, quiting, game_over, game_over_index, money, highscore, pakjes_aantal, garage_index
-    global selected_car, gekocht, prijzen, lijst_postbussen, sprites_autos
+    global selected_car, gekocht, prijzen, lijst_postbussen, sprites_autos, RGB
 
     verwerk_arduino_input(delta)
 
@@ -365,6 +365,9 @@ def verwerk_input(delta, events=0):
                     config.set("gameplay", "selected_car", f"{selected_car}")
                     with open("config.ini", "w") as f:
                         config.write(f)
+                if key == sdl2.SDLK_x:
+                    # IB2
+                    change_color(factory, lijst_postbussen, garage_index, RGB)
             elif game_state == 4:
                 if key == sdl2.SDLK_SPACE:
                     if not speler.doos_vast:
@@ -509,6 +512,7 @@ def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
         postbus.render_text = (prijs, pakjes, snelheid, versnelling, hp, gears)
     else:
         (prijs, pakjes, snelheid, versnelling, hp, gears) = postbus.render_text
+    kleur_grootte = (100, 150)
 
     y_size = prijs.size[1]
 
@@ -533,7 +537,8 @@ def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
                   dstrect=(POSITIE_GARAGE[5][0], POSITIE_GARAGE[5][1], gears.size[0], y_size))
     renderer.copy(money_txt,
                   dstrect=(POSITIE_GARAGE[6][0], POSITIE_GARAGE[6][1], money_txt.size[0], y_size))
-
+    renderer.fill(color=postbus.kleur,
+                  rects=(POSITIE_GARAGE[7][0], POSITIE_GARAGE[7][1], kleur_grootte[0], kleur_grootte[1]))
     renderText(font, renderer, str(postbus.kleur[0]), 1800, 520)
     renderText(font, renderer, str(postbus.kleur[1]), 1800, 570)
     renderText(font, renderer, str(postbus.kleur[2]), 1800, 620)
@@ -1438,7 +1443,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 garage_auto_index = 0
             renderer.present()
             delta = time.time() - start_time
-            verwerk_input(delta)
+            verwerk_input(delta, factory=factory)
         if game_state == 4:
             speler.kantoor_set()
             world_map = kantoor_map

@@ -50,7 +50,8 @@ POSITIE_GARAGE = [
     [190, 540],  # 3: versnelling
     [85, 588],  # 4: HP
     [145, 635],  # 5: Gears
-    [900, 24]  # 6: Geld
+    [900, 24],  # 6: Geld
+    [750, 510]  # 7: kleur
 ]
 #
 # Globale variabelen
@@ -164,3 +165,4 @@ geluiden = [
 ]
 gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "car gear 4", "car gear 4"]
 last_car_sound_played = 0
+RGB = (255,160,160)
