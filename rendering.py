@@ -208,9 +208,9 @@ def change_color(factory, autos, index, rgb):
 
             if index == 0:
                 get_places = (r > g) & (r > b)
-                r = np.where(get_places, r / 120 * rgb[0], r)
-                g = np.where(get_places, r / 120 * rgb[1], g)
-                b = np.where(get_places, r / 120 * rgb[2], b)
+                r = np.where(get_places, r / 255 * rgb[0], r)
+                g = np.where(get_places, r / 255 * rgb[1], g)
+                b = np.where(get_places, r / 255 * rgb[2], b)
             elif index == 1:
                 get_places = (g < r) & (b < g)
                 r = np.where(get_places, combi / 255 * rgb[0], r)
@@ -282,7 +282,7 @@ def draw_path(renderer, kleuren_textures, path, speler, packet):
                           dstrect=(x, y, unit_d / 1.5, unit_d / 1.5))
 
 
-def render_map(renderer,kleuren_textures, pngs_mappen, map_settings,speler,pad, sprites):
+def render_map(renderer, kleuren_textures, pngs_mappen, map_settings, speler, pad, sprites):
 
     map_png, gps_grote_map = pngs_mappen
     map_positie, afstand_map, worldshape = map_settings

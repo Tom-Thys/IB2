@@ -117,13 +117,14 @@ def main():
     # Maak png van wereldmap
     make_world_png(worldlijst)
 
-def genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,politie_pad,world):
+
+def genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,politie_pad,world, politie_x, politie_y):
     voertuig = 0
     worldmap = world.world_map
-    x_max = speler.p_x + 5
-    x_min = speler.p_x - 5
-    y_max = speler.p_y + 5
-    y_min = speler.p_y - 5
+    x_max = politie_x + 5
+    x_min = politie_x - 5
+    y_max = politie_y + 5
+    y_min = politie_y - 5
     # Checken of de coordinaten in het veld liggen
     if x_max >= 1000:
         x_max = 999

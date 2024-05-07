@@ -110,6 +110,9 @@ moet_afsluiten = False
 
 # Speler
 p_speler_x, p_speler_y = 50.4 * 9, 49 * 9
+auto_x, auto_y = p_speler_x + 3, p_speler_y + 3
+politie_cord = []
+
 r_speler_hoek = math.pi / 4
 d_camera = 1
 
@@ -165,4 +168,5 @@ geluiden = [
 ]
 gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "car gear 4", "car gear 4"]
 last_car_sound_played = 0
-RGB = (255,160,160)
+
+RGB = (255, 160, 160)

@@ -2,7 +2,7 @@ import math
 import time
 import random
 import numpy as np
-
+from variabelen import auto_x, auto_y
 
 
 postkantoor = (434, 452)
@@ -371,6 +371,9 @@ class Player:
             self.car.x = self.p_x
             self.car.y = self.p_y
             self.car.speed = 0
+        else:
+            self.car.x = auto_x
+            self.car.y = auto_y
 
     def check_postition(self, game_state):
         if postkantoor[0] - 3 < self.p_y < postkantoor[0] and postkantoor[1] - 3 < self.p_x < postkantoor[1]:

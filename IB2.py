@@ -365,8 +365,13 @@ def verwerk_input(delta, events=0, factory=None):
                     config.set("gameplay", "selected_car", f"{selected_car}")
                     with open("config.ini", "w") as f:
                         config.write(f)
+
+                    speler.car.x = auto_x
+                    speler.car.y = auto_y
+
                 if key == sdl2.SDLK_x:
                     # IB2
+                    lijst_postbussen[garage_index].kleur = RGB
                     change_color(factory, lijst_postbussen, garage_index, RGB)
             elif game_state == 4:
                 if key == sdl2.SDLK_SPACE:
@@ -675,7 +680,7 @@ def collision_auto(zichtbare_sprites):
                         check[index] = False
                         continue
                     soort = check_sprite.soort
-                    if soort in ["Doos", "PostBus", "Auto"]:
+                    if soort in ["Doos", "PostBus", "Auto", "Doosje"]:  # This is too long ago but i think this will error without Doosje at some point
                         check[index] = False
                         continue
                     elif soort == "Boom":
@@ -695,9 +700,11 @@ def collision_auto(zichtbare_sprites):
 
 def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_voertuig, font_2):
     global eindbestemming, pad, world_map, sprites_bomen, sprites_autos, sprites_dozen, game_over, politie_tijd
-    global balkje_tijd, pakjes_aantal, politie_wagen, politie_active
+    global balkje_tijd, pakjes_aantal, politie_wagen, politie_active, politie_x, politie_y
 
     for sprite in sprites:
+        if sprite.afstand > 75:
+            continue
 
         if sprite.soort == "Doos":
             if abs(sprite.position[0] - eindbestemming[0]) <= 1 and abs(sprite.position[1] - eindbestemming[1]) <= 1:
@@ -797,6 +804,7 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
             if not politie_active:
                 politie_tijd = time.time()
                 politie_active = True
+                politie_x, politie_y = speler.p_x, speler.p_y
 
             elif time.time() - politie_tijd <= 5:
                 # Renders remaining Time
@@ -805,7 +813,7 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
             elif politie_wagen == 0:
                 # Time bigger then 5 seconds --> Politie starten
                 politie_wagen = genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,
-                                                 politie_pad, inf_world)
+                                                 politie_pad, inf_world, politie_x, politie_y)
                 sprites_autos.append(politie_wagen)
 
                 # IB2
@@ -935,11 +943,6 @@ def menu_nav():
         if game_over_index < 0:
             game_over_index = 2
         game_over_positie = POSITIE_GAME_OVER[game_over_index]
-
-
-def positie_check():
-    if speler.position == (450, 450):
-        pass
 
 
 def bestemming_selector(mode=""):
@@ -1124,9 +1127,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
     kleuren_autos = [rode_autos, groene_autos, witte_autos, grijze_autos, blauwe_auto]
     # Eerste Auto aanmaken
-    lijst_postbussen = [PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, schaal=0.4),
-                        PostBus(tree, humvee, map_auto, 452, 440, HOOGTE, type=1, schaal=0.4),
-                        PostBus(tree, van, map_auto, 452, 440, HOOGTE, type=2, schaal=0.4)]
+    lijst_postbussen = [PostBus(tree, blauwe_autos, map_auto, auto_x, auto_y, HOOGTE, type=0, schaal=0.4),
+                        PostBus(tree, humvee, map_auto, auto_x, auto_y, HOOGTE, type=1, schaal=0.4),
+                        PostBus(tree, van, map_auto, auto_x, auto_y, HOOGTE, type=2, schaal=0.4)]
 
     lijst_postbussen[0].kleur = [44, 59, 118]
     lijst_postbussen[1].kleur = [105, 78, 34]
@@ -1379,6 +1382,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 politie_tijd = 0
                 politie_active = False
                 politie_wagen = 0
+                speler.reset()
                 if not opgeslaan_na_game_over:
                     # IB2
                     if dramco_active:
@@ -1454,10 +1458,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 kantoor_sprites.append(Auto)
             else:
                 game_state = 3
-            if speler.in_auto:
+            if speler.in_auto:  # This block is executed in Verwerk_input
                 speler.in_auto = False
-                speler.car.x = speler.initial[0]
-                speler.car.y = speler.initial[1]
+                speler.car.x = auto_x
+                speler.car.y = auto_y
         while game_state == 4 and not moet_afsluiten:
             muziek_spelen(0, channel=9)
             start_time = time.time()
