@@ -1157,6 +1157,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     # IB2
     if dramco_active:
         dramcontroller.write(("L" + str(min(5, speler.car.dozen))).encode(encoding='ascii'))
+        time.sleep(0.05)
+        dramcontroller.write("S00".encode(encoding='ascii'))
 
     while not moet_afsluiten:
         muziek_spelen("main menu", True)
@@ -1252,7 +1254,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             for i in range(15):
                 x = random.uniform(450, 452)
                 y = random.uniform(432, 434)
-                Doos = Sprite(doos, [], map_doos, x, y, HOOGTE, "Doos")
+                Doos = Sprite(doos, [], map_doos, x, y, HOOGTE, "Doosje")
                 Doos.schadelijk = False
                 Doos.map_grootte = 3
                 undeletable_sprites.append(Doos)
@@ -1524,7 +1526,7 @@ if __name__ == '__main__':
             with open("config.ini", "w") as f:
                 config.write(f)
     if dramco_active:
-        dramcontroller.write("S00".encode(encoding='ascii'))
-        time.sleep(0.05) # wachten tot dramcontroller S00 verwerkt heeft, anders segmentdisplay niet juist gereset
         dramcontroller.write("L0".encode(encoding='ascii'))
+        time.sleep(0.05)
+        dramcontroller.write("S00".encode(encoding='ascii'))
         dramcontroller.close()
