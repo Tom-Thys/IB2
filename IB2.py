@@ -534,6 +534,10 @@ def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
     renderer.copy(money_txt,
                   dstrect=(POSITIE_GARAGE[6][0], POSITIE_GARAGE[6][1], money_txt.size[0], y_size))
 
+    renderText(font, renderer, str(postbus.kleur[0]), 1800, 520)
+    renderText(font, renderer, str(postbus.kleur[1]), 1800, 570)
+    renderText(font, renderer, str(postbus.kleur[2]), 1800, 620)
+
 
 def render_sprites(renderer, sprites, player, d, delta, update):
     global world_map, sprites_autos, sprites_bomen
@@ -1119,12 +1123,13 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     lijst_postbussen = [PostBus(tree, blauwe_autos, map_auto, 452, 440, HOOGTE, type=0, schaal=0.4),
                         PostBus(tree, humvee, map_auto, 452, 440, HOOGTE, type=1, schaal=0.4),
                         PostBus(tree, van, map_auto, 452, 440, HOOGTE, type=2, schaal=0.4)]
+
+    lijst_postbussen[0].kleur = (255,255,255)
+
     speler.car = lijst_postbussen[selected_car]
     auto = speler.car
     auto.draai_sprites(125)
     sprites_autos.append(auto)
-
-    change_color(factory, lijst_postbussen, 1, (255, 130, 203))
 
     bestemming_selector("start")
     #lijst_mogelijke_bestemmingen = inf_world.mogelijke_bestemmingen
