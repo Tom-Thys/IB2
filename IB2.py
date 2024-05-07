@@ -352,6 +352,7 @@ def verwerk_input(delta, events=0):
                     else:
                         if money - prijzen[garage_index] >= 0:
                             money -= prijzen[garage_index]
+                            print(f"money: {money}")
                             muziek_spelen("cash register", channel=7)
                             selected_car = garage_index
                             speler.car = lijst_postbussen[selected_car]
@@ -361,7 +362,6 @@ def verwerk_input(delta, events=0):
                             config.set("gameplay", "gekocht", gekocht_str)
                         else:
                             muziek_spelen("fail", channel=7)
-                            pass
                     config.set("gameplay", "selected_car", f"{selected_car}")
                     with open("config.ini", "w") as f:
                         config.write(f)
@@ -497,18 +497,18 @@ def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
     info = postbus.info
 
     image = auto[math.floor(anim_index)]
+    money_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{money}"))
 
     if not postbus.render_text:
-        money_txt = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{money}"))
         prijs = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[0]}"))
         pakjes = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[1]}"))
         snelheid = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[2]}"))
         versnelling = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[3]}"))
         hp = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[4]}"))
         gears = sdl2.ext.renderer.Texture(renderer, font.render_text(f"{info[5]}"))
-        postbus.render_text = (money_txt, prijs, pakjes, snelheid, versnelling, hp, gears)
+        postbus.render_text = (prijs, pakjes, snelheid, versnelling, hp, gears)
     else:
-        (money_txt, prijs, pakjes, snelheid, versnelling, hp, gears) = postbus.render_text
+        (prijs, pakjes, snelheid, versnelling, hp, gears) = postbus.render_text
 
     y_size = prijs.size[1]
 
