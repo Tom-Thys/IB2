@@ -1,8 +1,7 @@
 # import cProfile
 # import pstats
-from line_profiler_pycharm import profile
+# from line_profiler_pycharm import profile
 
-import serial
 import time
 import warnings
 
@@ -13,7 +12,7 @@ import sdl2.ext
 import sdl2.sdlimage
 import sdl2.sdlmixer
 from worlds import *
-from Classes import Voertuig, Player, PostBus, Politie
+from Classes import Voertuig, Player, PostBus
 from rendering import *
 from variabelen import *
 import serial.tools.list_ports
@@ -87,7 +86,7 @@ def verwerk_input(delta, events=0):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
     global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie
     global afstand_map, quiting, game_over, game_over_index, money, highscore, pakjes_aantal, garage_index
-    global selected_car, gekocht, prijzen, lijst_postbussen
+    global selected_car, gekocht, prijzen, lijst_postbussen, sprites_autos
 
     verwerk_arduino_input(delta)
 
@@ -342,9 +341,9 @@ def verwerk_input(delta, events=0):
                 if key == sdl2.SDLK_LEFT or key == sdl2.SDLK_s:
                     garage_index -= 1
                 if key == sdl2.SDLK_SPACE:
+                    if speler.car in sprites_autos:
+                        sprites_autos.remove(speler.car)
                     if garage_index in gekocht:
-                        if speler.car in sprites_autos:
-                            sprites_autos.remove(speler.car)
                         selected_car = garage_index
                         speler.car = lijst_postbussen[selected_car]
                         sprites_autos.append(speler.car)
@@ -361,6 +360,7 @@ def verwerk_input(delta, events=0):
                             gekocht_str = "".join(f"{i} " for i in gekocht)
                             config.set("gameplay", "gekocht", gekocht_str)
                         else:
+                            sprites_autos.append(speler.car)
                             muziek_spelen("fail", channel=7)
                     config.set("gameplay", "selected_car", f"{selected_car}")
                     with open("config.ini", "w") as f:
@@ -952,8 +952,7 @@ def bestemming_selector(mode=""):
     dichte_locaties = list(
         filter(lambda m: m[0] >= range_min[0] and m[1] >= range_min[1] and m[0] <= range_max[0] and m[1] <= range_max[1] \
                          and (m[0] >= range_te_dicht_max[0] and m[1] >= range_te_dicht_max[1] or m[0] <=
-                              range_te_dicht_min[0] and m[1] <= range_te_dicht_min[1] \
-                              ), lijst_mogelijke_bestemmingen))
+                              range_te_dicht_min[0] and m[1] <= range_te_dicht_min[1]), lijst_mogelijke_bestemmingen))
     rnd = randint(0,
                   len(dichte_locaties) - 1)  # len(dichte_locaties) kan 0 zijn indien er geen dichte locaties zijn: vermijden door groot genoeg gebied te zoeken
     lijst_mogelijke_bestemmingen.remove(dichte_locaties[rnd])
@@ -1124,7 +1123,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                         PostBus(tree, humvee, map_auto, 452, 440, HOOGTE, type=1, schaal=0.4),
                         PostBus(tree, van, map_auto, 452, 440, HOOGTE, type=2, schaal=0.4)]
 
-    lijst_postbussen[0].kleur = (255,255,255)
+    lijst_postbussen[0].kleur = [44, 59, 118]
+    lijst_postbussen[1].kleur = [105, 78, 34]
+    lijst_postbussen[2].kleur = [7, 29, 50]
 
     speler.car = lijst_postbussen[selected_car]
     auto = speler.car

@@ -439,8 +439,8 @@ class PostBus(Sprite):
         self.versnelling = 1
         self.versnellingen = ["R", "1", "2", "3", "4", "5", "6", "7"]
         self.input_delay = 0
-        self.crash_time = time.time() + 2
-        self.dozen = 5 # Start hoeveelheid dozen
+        self.crash_time = 0
+        self.dozen = 5  # Start hoeveelheid dozen
         if not self.type:
             self.dozen = 3
         self.max_dozen = auto_gegeven[type][1]

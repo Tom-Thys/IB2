@@ -6,7 +6,8 @@ from PIL import Image
 
 import Classes
 from line_profiler_pycharm import profile
-from IB2 import kleuren, HOOGTE, BREEDTE
+from variabelen import HOOGTE, BREEDTE
+from IB2 import kleuren
 import os
 
 """ALLES RELATED AAN DRAWING OP HET SCHERM"""
@@ -203,16 +204,24 @@ def change_color(factory, autos, index, rgb):
             array = np.asarray(afbeelding)
             copy = np.ndarray(array.shape, array.dtype)
             r, g, b, a = array[:, :, 0], array[:, :, 1], array[:, :, 2], array[:, :, 3]
+            combi = r+g+b
+
             if index == 0:
                 get_places = (r > g) & (r > b)
+                r = np.where(get_places, r / 120 * rgb[0], r)
+                g = np.where(get_places, r / 120 * rgb[1], g)
+                b = np.where(get_places, r / 120 * rgb[2], b)
             elif index == 1:
                 get_places = (g < r) & (b < g)
+                r = np.where(get_places, combi / 255 * rgb[0], r)
+                g = np.where(get_places, combi / 255 * rgb[1], g)
+                b = np.where(get_places, combi / 255 * rgb[2], b)
             else:
                 get_places = (r < 15) & (5 < g) & (g < 40) & (25 < b) & (b < 70)
+                r = np.where(get_places, b / 70 * rgb[0], r)
+                g = np.where(get_places, b / 70 * rgb[1], g)
+                b = np.where(get_places, b / 70 * rgb[2], b)
 
-            r = np.where(get_places, rgb[0], r)
-            g = np.where(get_places, rgb[1], g)
-            b = np.where(get_places, rgb[2], b)
             copy[:, :, 0], copy[:, :, 1], copy[:, :, 2], copy[:, :, 3] = r, g, b, a
 
             afbeelding = Image.fromarray(copy, 'RGBA')
@@ -223,8 +232,6 @@ def change_color(factory, autos, index, rgb):
         afb = factory.from_image(output_map+afbeelding_naam)
         im.append(afb)
     autos[index].images = im
-
-
 
 
 def render_floor_and_sky(renderer, kleuren_textures):
