@@ -268,11 +268,11 @@ class Player:
         l = 80  # maximale lengte die geraycast wordt
         """AANPASSINGEN DOORTREKKEN NAAR SPRITES"""
 
-        kleuren = np.zeros(self.breedte, dtype="int")
+        kleuren = np.zeros(self.breedte, dtype="int8")
 
-        # z_kleuren = np.zeros(self.breedte, dtype="int")
-        z_d_muur = np.ones(self.breedte)
-        z_d_muur_vlak = np.zeros(self.breedte)
+        # z_kleuren = np.zeros(self.breedte, dtype="int8")
+        # z_d_muur = np.ones(self.breedte, dtype="int8")
+        # z_d_muur_vlak = np.zeros(self.breedte, dtype="int8")
 
         x = self.r_stralen[:, 0] != 0
         y = self.r_stralen[:, 1] != 0
@@ -353,7 +353,7 @@ class Player:
         d_muur_vlak = np.where(dist_cond, y, x)
         d_muur = np.where(valid_indices, least_distance * (
                 self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1]), 60)
-        z_d_muur *= (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1])
+        # z_d_muur *= (self.r_stralen[:, 0] * self.r_speler[0] + self.r_stralen[:, 1] * self.r_speler[1])
 
         return (d_muur, d_muur_vlak, kleuren), dist_cond
 
@@ -466,7 +466,7 @@ class PostBus(Sprite):
             self.turning_mult = 50
         else:
             self.turning_mult = (self.optrek / speed) ** 1.2 * 500
-        if self.player_inside == False:
+        if not self.player_inside:
             self.brake()
             self.brake()
 
@@ -551,10 +551,10 @@ class PostBus(Sprite):
                 speler.messages.append(("Shift", time.time()))
                 self.speed -= self.afrem
         else:
-            if self.speed > 0:
+            if self.speed > -(self.snelheid_incr/10):
                 self.speed -= self.optrek / 1.5
-            elif self.speed > -0.01:
-                self.speed = 0
+            else:
+                self.speed = -self.snelheid_incr/10
 
     def speed_update(self):
         if self.speed > self.snelheid_incr * self.versnelling:
@@ -608,7 +608,7 @@ class PostBus(Sprite):
 class Voertuig(Sprite):
     def __init__(self, image, images, map_png, x, y, height, world_map, schaal=0.2):
         super().__init__(image, images, map_png, int(x) + 0.5, int(y) + 0.5, height, "Auto", schaal)
-        self.speed = 0.05
+        self.speed = 5
         self.vector = [1, 0]
         self.hoek = 0
         self.nieuwe_pos = [0, 0]  # pos op wereldmap
@@ -632,8 +632,8 @@ class Voertuig(Sprite):
 
     def update(self, world_map, speler, delta, *args):
         if self.position != self.nieuwe_pos:
-            self.x += self.speed * self.vector[0]
-            self.y += self.speed * self.vector[1]
+            self.x += self.speed * self.vector[0] * delta
+            self.y += self.speed * self.vector[1] * delta
             self.position = [math.floor(self.x), math.floor(self.y)]
 
             return
@@ -677,7 +677,7 @@ class Voertuig(Sprite):
         self.draai_sprites(x - self.hoek)
         self.hoek = x
 
-        self.update(world_map, None, 0.1)
+        self.update(world_map, None, 0.01)
 
 
 class Politie(Sprite):
@@ -687,7 +687,7 @@ class Politie(Sprite):
         self.prev_playerpos = [-1, -1]
         self.achtervolgen = True
         self.hoek = 0  # set to initial of 3D SPRITE
-        self.speed = 0.01
+        self.speed = 0.0125
         self.politie_pad = self.pad
         self.position = [math.floor(self.x), math.floor(self.y)]
 
@@ -696,7 +696,7 @@ class Politie(Sprite):
         if self.politie_pad:
             if self.achtervolgen:
                 if speler.in_auto:
-                    speed = max(speler.car.speed, self.speed)
+                    speed = max(speler.car.speed / 2.998, self.speed)
                 else:
                     speed = self.speed
 
@@ -712,8 +712,7 @@ class Politie(Sprite):
                         self.x = speler.p_x
                         self.y = speler.p_y
 
-
-            if self.afstand <= 2:
+            if self.afstand <= 1.8:
                 self.x = speler.p_x
                 self.y = speler.p_y
             else:

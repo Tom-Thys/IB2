@@ -185,7 +185,8 @@ def render_balkje(Tijd,Time_bar,renderer):
         return False
 
 
-def change_color(factory, autos, index, rgb):
+def change_color(factory, autos, index):
+    rgb = autos[index].kleur
     if index == 0:
         input_map = "resources/Auto/"
         output_map = "resources/Tijdelijke_kleur_0/"
@@ -204,15 +205,15 @@ def change_color(factory, autos, index, rgb):
             array = np.asarray(afbeelding)
             copy = np.ndarray(array.shape, array.dtype)
             r, g, b, a = array[:, :, 0], array[:, :, 1], array[:, :, 2], array[:, :, 3]
-            combi = r+g+b
 
             if index == 0:
                 get_places = (r > g) & (r > b)
-                r = np.where(get_places, r / 255 * rgb[0], r)
                 g = np.where(get_places, r / 255 * rgb[1], g)
                 b = np.where(get_places, r / 255 * rgb[2], b)
+                r = np.where(get_places, r / 255 * rgb[0], r)
             elif index == 1:
                 get_places = (g < r) & (b < g)
+                combi = r + g + b
                 r = np.where(get_places, combi / 255 * rgb[0], r)
                 g = np.where(get_places, combi / 255 * rgb[1], g)
                 b = np.where(get_places, combi / 255 * rgb[2], b)

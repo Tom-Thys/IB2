@@ -21,7 +21,6 @@ logging.basicConfig(level=logging.DEBUG, filename="log.log", filemode="w",
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
 
-
 def sign(x):
     if abs(x) < 3:
         return 0
@@ -38,12 +37,14 @@ def verwerk_arduino_input(delta):
 
     in_menu = paused or game_over or game_state in [0, 1]
 
-    move_speed = delta / 3 # NEEDS RECALCULATING
+    move_speed = delta / 3  # NEEDS RECALCULATING
     if speler.in_auto:
         move_speed *= 4
     elif game_state == 4:
         move_speed *= 3
 
+    if godmode:
+        move_speed *= 1.5
 
     while dramcontroller.in_waiting:
         lijn = str(dramcontroller.readline())[2:-5]
@@ -74,8 +75,6 @@ def verwerk_arduino_input(delta):
             map_positie[0] += sign(int(data[1]))
 
 
-
-
 #
 # Verwerkt alle input van het toetsenbord en de muis
 #
@@ -86,7 +85,7 @@ def verwerk_input(delta, events=0, factory=None):
     global moet_afsluiten, index, world_map, game_state, main_menu_index, settings_menu_index, volume, sensitivity
     global sensitivity_rw, paused, pauze_index, sprites, show_map, map_positie
     global afstand_map, quiting, game_over, game_over_index, money, highscore, pakjes_aantal, garage_index
-    global selected_car, gekocht, prijzen, lijst_postbussen, sprites_autos, RGB
+    global selected_car, gekocht, prijzen, lijst_postbussen, sprites_autos, RGB, kleuren_index, godmode
 
     verwerk_arduino_input(delta)
 
@@ -96,13 +95,16 @@ def verwerk_input(delta, events=0, factory=None):
     elif game_state == 4:
         move_speed *= 3
 
+    if godmode:
+        move_speed *= 1.5
+
     # Handelt alle input events af die zich voorgedaan hebben sinds de vorige
     # keer dat we de sdl2.ext.get_events() functie hebben opgeroepen
     if events == 0:
         events = sdl2.ext.get_events()
 
     key_states = sdl2.SDL_GetKeyboardState(None)
-    if game_state in [2, 4] and not paused and not show_map and not game_over:
+    if game_state in [2, 4] and not paused and not show_map and not game_over and not (dramco_active and speler.in_auto):
         if key_states[20]:
             print("a")
         if key_states[sdl2.SDL_SCANCODE_UP] or key_states[sdl2.SDL_SCANCODE_E]:
@@ -177,7 +179,7 @@ def verwerk_input(delta, events=0, factory=None):
 
             elif key == sdl2.SDLK_g:
                 game_state = 3 if game_state == 2 else 2
-            if key == sdl2.SDLK_t and game_state in [3,4]:
+            if key == sdl2.SDLK_t and game_state in [3, 4]:
                 game_state = 2
 
             if game_state == 0:
@@ -266,6 +268,11 @@ def verwerk_input(delta, events=0, factory=None):
                     show_map = not show_map
                 if key == sdl2.SDLK_p:
                     paused = not paused
+
+                if key == sdl2.SDLK_j:
+                    godmode = not godmode
+                    print(f"Godmode: {godmode}")
+
                 if key == sdl2.SDLK_UP or key == sdl2.SDLK_DOWN or key == sdl2.SDLK_e or key == sdl2.SDLK_d:
                     pass
                 if paused:
@@ -324,12 +331,12 @@ def verwerk_input(delta, events=0, factory=None):
                                 speler.car.dozen -= 1
                                 # IB2
                                 if dramco_active:
-                                    dramcontroller.write(("L"+str(min(5, speler.car.dozen))).encode(encoding='ascii'))
+                                    dramcontroller.write(("L" + str(min(5, speler.car.dozen))).encode(encoding='ascii'))
                         elif speler.laatste_doos < time.time() - 0.5:
                             geworpen_doos = speler.trow(world_map)
                             sprites_dozen.append(geworpen_doos)
                             muziek_spelen("throwing", channel=2)
-                            #IB2 sem2
+                            # IB2 sem2
                             if dramco_active:
                                 dramcontroller.write("1".encode(encoding='ascii'))
                                 pass
@@ -371,8 +378,11 @@ def verwerk_input(delta, events=0, factory=None):
 
                 if key == sdl2.SDLK_x:
                     # IB2
-                    lijst_postbussen[garage_index].kleur = RGB
-                    change_color(factory, lijst_postbussen, garage_index, RGB)
+                    lijst_postbussen[garage_index].kleur = car_colors[kleuren_index]
+                    kleuren_index += 1
+                    if kleuren_index == len(car_colors):
+                        kleuren_index = 0
+                    change_color(factory, lijst_postbussen, garage_index)
             elif game_state == 4:
                 if key == sdl2.SDLK_SPACE:
                     if not speler.doos_vast:
@@ -484,7 +494,7 @@ def handen_sprite(renderer, handen_doos):
             verandering = 1
         else:
             verandering = 1
-    #IB2
+    # IB2
     """
     uitkomst = 200 + 8 * math.sin(((2 * math.pi) / 36) * verandering)
     if uitkomst < 193:
@@ -527,7 +537,7 @@ def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
     renderer.rcopy(image,
                    loc=(BREEDTE // 2, 350),
                    size=(image.size[0], image.size[1]),
-                   align=(0.5, 0.5)) # Auto image
+                   align=(0.5, 0.5))  # Auto image
     renderer.copy(prijs,
                   dstrect=(POSITIE_GARAGE[0][0], POSITIE_GARAGE[0][1], prijs.size[0], y_size))
     renderer.copy(pakjes,
@@ -550,7 +560,7 @@ def garage(renderer, font, anim_index, garage_menu, lijst_postbussen):
 
 
 def render_sprites(renderer, sprites, player, d, delta, update):
-    global world_map, sprites_autos, sprites_bomen
+    global world_map, sprites_autos, sprites_bomen, sprites_dozen
     sprites.sort(reverse=True, key=lambda sprite: sprite.afstanden(player.p_x, player.p_y))  # Sorteren op afstand
 
     max_dist = 80
@@ -565,9 +575,11 @@ def render_sprites(renderer, sprites, player, d, delta, update):
 
         if sprite.afstand >= max_dist: continue;
         if update:
-            if sprite.update(world_map, speler, delta):
-                sprites.pop(i)
-                continue
+            if sprite.update(world_map, speler, delta) and sprite.soort == "Doos":
+                for doos in sprites_dozen:
+                    if doos == sprite:
+                        sprites_dozen.remove(doos)
+                        break
         if sprite.afstand <= 0.001: continue;
 
         # hoek
@@ -578,15 +590,15 @@ def render_sprites(renderer, sprites, player, d, delta, update):
         # print("Player:" + str(player_hoek))
 
         hoek_verschil = abs(player.hoek - hoek_sprite)
-        if (player.hoek <= 1 and hoek_sprite >= math.pi * 7 / 4):
+        if player.hoek <= 1 and hoek_sprite >= math.pi * 7 / 4:
             hoek_verschil = math.pi * 2 - hoek_verschil
-        if (player.hoek >= math.pi * 7 / 4 and hoek_sprite <= 1):
+        if player.hoek >= math.pi * 7 / 4 and hoek_sprite <= 1:
             hoek_verschil = math.pi * 2 - hoek_verschil
 
         grond_hoek_verschil = abs(player_hoek - hoek_sprite)
         fout = False
 
-        if (player_hoek <= 0.85 and hoek_sprite <= 0.85):
+        if player_hoek <= 0.85 and hoek_sprite <= 0.85:
             fout = True
 
         if sprite.images == []:
@@ -611,8 +623,7 @@ def render_sprites(renderer, sprites, player, d, delta, update):
         if not (-interval < a < interval):
             continue
 
-        screen_y = int((
-                                   sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
+        screen_y = int((sprite.height - sprite_size_hoogte) / 2) + 0.4 / sprite_distance * 850 - 1 / sprite_distance * 40  # wordt in het midden gezet
         screen_x = int(BREEDTE / 2 - a - sprite_size_breedte / 2)
 
         """kolomen = np.arange(sprite_size_breedte) / sprite_size_breedte - 1 / 2
@@ -663,39 +674,42 @@ def collision_auto(zichtbare_sprites):
     sprite_iter = iter(zichtbare_sprites)
 
     for i, sprite in enumerate(sprite_iter):
-        if sprite.soort == "Auto":
-            wh_self_array_x = place_array[:, 0] - sprite.x
-            wh_self_array_y = place_array[:, 1] - sprite.y
-            distances = wh_self_array_y ** 2 + wh_self_array_x ** 2
-            distances[i] = 100
+        if sprite.soort != "Auto":
+            continue
 
-            check = distances < 1
-            if check.any():
-                pop_indexes = np.arange(0, lenght)[check]
+        wh_self_array_x = place_array[:, 0] - sprite.x
+        wh_self_array_y = place_array[:, 1] - sprite.y
+        distances = wh_self_array_y ** 2 + wh_self_array_x ** 2
+        distances[i] = 100
 
-                for index in pop_indexes:
-                    try:
-                        check_sprite = zichtbare_sprites[index]
-                    except:
-                        check[index] = False
-                        continue
-                    soort = check_sprite.soort
-                    if soort in ["Doos", "PostBus", "Auto", "Doosje"]:  # This is too long ago but i think this will error without Doosje at some point
-                        check[index] = False
-                        continue
-                    elif soort == "Boom":
-                        check_sprite.fall = time.time()
-                    elif soort == "Politie":
-                        warnings.warn("Not implemented")
-                        check[index] = False
-                        continue
-                        # raise NotImplementedError("Politie tegengekomen")
-                    else:
-                        raise NotImplementedError(soort)
-                    zichtbare_sprites.remove(check_sprite)
+        check = distances < 1
+        if check.any():
+            pop_indexes = np.arange(0, lenght)[check]
 
-                place_array = place_array[~check, :]
-                lenght = len(place_array)
+            for index in pop_indexes:
+                try:
+                    check_sprite = zichtbare_sprites[index]
+                except:
+                    check[index] = False
+                    continue
+                soort = check_sprite.soort
+                if soort in ["Doos", "PostBus", "Auto",
+                             "Doosje"]:  # This is too long ago but i think this will error without Doosje at some point
+                    check[index] = False
+                    continue
+                elif soort == "Boom":
+                    check_sprite.fall = time.time()
+                elif soort == "Politie":
+                    warnings.warn("Not implemented")
+                    check[index] = False
+                    continue
+                    # raise NotImplementedError("Politie tegengekomen")
+                else:
+                    warnings.warn("Not implemented for " + soort)
+                zichtbare_sprites.remove(check_sprite)
+
+            place_array = place_array[~check, :]
+            lenght = len(place_array)
 
 
 def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_voertuig, font_2):
@@ -718,7 +732,7 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
                 if dramco_active:
                     doorsturen_score = pakjes_aantal
                     if len(str(doorsturen_score)) == 1:
-                        doorsturen_score = "0"+str(doorsturen_score)
+                        doorsturen_score = "0" + str(doorsturen_score)
                     elif len(str(doorsturen_score)) == 2:
                         doorsturen_score = str(doorsturen_score)
                     else:
@@ -728,8 +742,7 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
                         elif len(str(doorsturen_pakjes)) == 2:
                             doorsturen_pakjes = str(doorsturen_pakjes)
 
-
-                    dramcontroller.write(("S"+str(doorsturen_score)).encode(encoding='ascii'))
+                    dramcontroller.write(("S" + str(doorsturen_score)).encode(encoding='ascii'))
 
                 if randint(0, 10) <= 1:
                     muziek_spelen("dogs barking", channel=6)
@@ -744,7 +757,8 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
             if sprite.soort == "Boom":
                 if speler.in_auto == False:
                     speler.aantal_hartjes -= 1
-                sprites_bomen.remove(sprite)
+                if sprite in sprites_bomen:
+                    sprites_bomen.remove(sprite)
             elif sprite.soort == "Auto":
                 if speler.in_auto == False:
                     speler.aantal_hartjes -= 2
@@ -798,30 +812,32 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
         if speler.hit:
             muziek_spelen("hit sound", channel=5)
             speler.hit = False
-        hartjes = speler.aantal_hartjes
 
-        if hartjes <= 0:  # Politie logica
-            if not politie_active:
-                politie_tijd = time.time()
-                politie_active = True
-                politie_x, politie_y = speler.p_x, speler.p_y
+        if speler.aantal_hartjes <= 0 and godmode:
+            speler.aantal_hartjes = 5
 
-            elif time.time() - politie_tijd <= 5:
-                # Renders remaining Time
-                renderText(font_2, renderer, str(round(time.time() - politie_tijd)), 1000, 200)
+    if speler.aantal_hartjes <= 0:  # Politie logica
+        if not politie_active:
+            politie_tijd = time.time()
+            politie_active = True
+            politie_x, politie_y = speler.p_x, speler.p_y
 
-            elif politie_wagen == 0:
-                # Time bigger then 5 seconds --> Politie starten
-                politie_wagen = genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,
-                                                 politie_pad, inf_world, politie_x, politie_y)
-                sprites_autos.append(politie_wagen)
+        elif time.time() - politie_tijd <= 5:
+            # Renders remaining Time
+            renderText(font_2, renderer, str(round(time.time() - politie_tijd)), 1000, 200)
 
-                # IB2
-                if dramco_active:
-                    dramcontroller.write("BT".encode(encoding='ascii'))  # BT: Buzzer True (voor politie)
+        elif politie_wagen == 0:
+            # Time bigger then 5 seconds --> Politie starten
+            politie_wagen = genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,
+                                             politie_pad, inf_world, politie_x, politie_y)
+            sprites_autos.append(politie_wagen)
+
+            # IB2
+            if dramco_active:
+                dramcontroller.write("BT".encode(encoding='ascii'))  # BT: Buzzer True (voor politie)
 
         i = 1
-        while i <= hartjes:
+        while i <= speler.aantal_hartjes:
             x_pos = BREEDTE - 50 - 50 * i
             y_pos = HOOGTE - 70
             renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
@@ -833,6 +849,7 @@ def show_fps(font, renderer):
     loop_time = 0
 
     while True:
+        """
         fps_list.append(1 / (time.time() - loop_time))
         loop_time = time.time()
 
@@ -842,7 +859,8 @@ def show_fps(font, renderer):
         text = sdl2.ext.renderer.Texture(renderer, font.render_text(f'{fps:.2f} fps'))
         renderer.copy(text, dstrect=(int((BREEDTE - text.size[0]) / 2), 20,
                                      text.size[0], text.size[1]))
-        yield fps
+        yield fps"""
+        yield 0
 
 
 def muziek_spelen(geluid, looped=False, channel=1, distance=0, angle=0):
@@ -986,29 +1004,30 @@ def quit(button, event):
     moet_afsluiten = True
 
 
-#@profile
+# @profile
 def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     global game_state, BREEDTE, volume, sensitivity_rw, sensitivity, world_map, kleuren_textures, sprites, map_positie, undeletable_sprites
     global eindbestemming, paused, show_map, quiting, lijst_mogelijke_bestemmingen, sprites_bomen, sprites_autos, politie_wagen
     global balkje_tijd, pakjes_aantal, game_over, kantoor_sprites, starting_game, money, highscore, lijst_postbussen
-    global politie_tijd, opgeslaan_na_game_over, politie_active
+    global politie_tijd, opgeslaan_na_game_over, politie_active, vorig_pakjes_aantal
 
-    map_positie = [50, world_map.shape[0] - 50] #This is needed for initialisation
+    map_positie = [50, world_map.shape[0] - 50]  # This is needed for initialisation
     world_map = shared_world_map
     # Initialiseer de SDL2 bibliotheek
     sdl2.ext.init()
 
     # Maak een venster aan om de game te renderen
     window = sdl2.ext.Window("Project Ingenieursbeleving 2", size=(BREEDTE, HOOGTE))
-    #window.show()
-    #window.minimize()
+    # window.show()
+    # window.minimize()
     # screen = sdl2.ext.surface("Test",size=(BREEDTE,HOOGTE))
     # Begin met het uitlezen van input van de muis en vraag om relatieve coordinaten
     sdl2.SDL_SetRelativeMouseMode(True)
     sdl2.ext.renderer.set_texture_scale_quality('nearest')
 
     # Maak een renderer aan zodat we in ons venster kunnen renderen
-    renderer = sdl2.ext.Renderer(window, flags=sdl2.render.SDL_RENDERER_ACCELERATED | sdl2.render.SDL_RENDERER_PRESENTVSYNC)
+    renderer = sdl2.ext.Renderer(window,
+                                 flags=sdl2.render.SDL_RENDERER_ACCELERATED | sdl2.render.SDL_RENDERER_PRESENTVSYNC)
 
     # resources inladen
     resources = sdl2.ext.Resources(__file__, "resources")
@@ -1025,7 +1044,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     font_2 = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=60, color=kleuren[0])
     dash_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=60, color=kleuren[8])
     garage_font = sdl2.ext.FontTTF(font='CourierPrime.ttf', size=40, color=kleuren[11])
-    fps_generator = show_fps(font, renderer)# Initialiseer font voor de fps counter
+    fps_generator = show_fps(font, renderer)  # Initialiseer font voor de fps counter
 
     soort_muren = [
         factory.from_image(resources.get_path("muur_test.png")),  # 1
@@ -1101,9 +1120,8 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     polities = []
     van = []
 
-
     for i in range(361):
-        afbeelding_naam = "map"+str(i+1)+".png"
+        afbeelding_naam = "map" + str(i + 1) + ".png"
         bomen.append(factory.from_image(boom.get_path(afbeelding_naam)))
         rode_autos.append(factory.from_image(rode_auto.get_path(afbeelding_naam)))
         blauwe_autos.append(factory.from_image(blauwe_auto.get_path(afbeelding_naam)))
@@ -1141,12 +1159,10 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
     sprites_autos.append(auto)
 
     bestemming_selector("start")
-    #lijst_mogelijke_bestemmingen = inf_world.mogelijke_bestemmingen
+    # lijst_mogelijke_bestemmingen = inf_world.mogelijke_bestemmingen
     eindbestemming = bestemming_selector()
 
     shared_eindbestemming[:] = eindbestemming[:]
-
-
 
     menu_pointer = factory.from_image(resources.get_path("game_main_menu_pointer.png"))
     settings_menu = factory.from_image(resources.get_path("settings_menu.png"))
@@ -1263,8 +1279,7 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             starting_game = False
             # Setup voor de game
             sprites_bomen = aanmaken_sprites_bomen(speler.p_x, speler.p_y, HOOGTE, bomen, sprite_map_png, tree,
-                                                   world_map,
-                                                   sprites_bomen, aantalbomen=50)
+                                                   world_map, sprites_bomen, aantalbomen=300)
             # sprites_autos
             for i in range(100):
                 omgeving = 20
@@ -1316,9 +1331,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
             render_floor_and_sky(renderer, kleuren_textures)
             draw_bestemming(renderer, eindbestemming, speler, kleuren_textures[4])
             # Render de huidige frame
-            (d, d_v, kl), _ = (speler.n_raycasting(world_map)) # 10% of the time
+            (d, d_v, kl), _ = (speler.n_raycasting(world_map))  # 10% of the time
 
-            renderen(renderer, d, d_v, kl, muren_info, angle) # 41% of the time
+            renderen(renderer, d, d_v, kl, muren_info, angle)  # 41% of the time
             sprites_autos = sprites_auto_update(speler.tile[0], speler.tile[1], kleuren_autos, tree, map_voertuig,
                                                 world_map, HOOGTE, sprites_autos, aantalautos=100)
 
@@ -1326,15 +1341,16 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                                                    world_map, sprites_bomen)
             sprites = sprites_bomen + sprites_autos + sprites_dozen + undeletable_sprites
             updatable = not (show_map or paused or game_over)
-            zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable) # 8% of the time
+            zichtbare_sprites = render_sprites(renderer, sprites, speler, d, delta, updatable)  # 8% of the time
 
             collision_detection(renderer, speler, sprites, hartje, polities, tree, map_voertuig, font_2)
+            if len(sprites_dozen) == 0 and not speler.doos_vast and speler.car.dozen == 0:
+                eindbestemming = (pakjesx, pakjesy)
 
             collision_auto(zichtbare_sprites)
 
             # pakjes_aantal += 1
             # t.append(time.time()-t1)
-            verwerk_input(delta)
             menu_nav()
             if pad is None:
                 print(f"EINDBESTEMMING NONE: {eindbestemming}")
@@ -1343,13 +1359,19 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
 
             draw_nav(renderer, kleuren_textures, arrow, inf_world, speler, pad, sprites)
             delta = time.time() - start_time
+
+            while delta < 0.005:  # This is a FPS limiter
+                delta = time.time() - start_time
+
+            verwerk_input(delta)
             if updatable and not debugging:
-                balkje_tijd += (time.time() - start_tijd)
+                balkje_tijd += delta
+                if godmode:
+                    balkje_tijd -= delta/1.8
 
             # Renders aantal pakjes
             renderText(font_2, renderer, str(pakjes_aantal), 1910, 10)
             straf = render_balkje(balkje_tijd, time_bar, renderer)
-            start_tijd = time.time()
             if straf:
                 game_over = True
 
@@ -1411,10 +1433,9 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                               srcrect=(0, 0, highscore_txt.size[0], highscore_txt.size[1]),
                               dstrect=(BREEDTE // 2 - highscore_txt.size[0] // 2, 140, highscore_txt.size[0],
                                        highscore_txt.size[1]))
-                verwerk_input(delta)
                 menu_nav()
-            else:
 
+            else:
                 next(fps_generator)
                 map_positie = list(speler.position)
                 if speler.in_auto:
@@ -1462,6 +1483,17 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 speler.in_auto = False
                 speler.car.x = auto_x
                 speler.car.y = auto_y
+        if pakjes_aantal > vorig_pakjes_aantal + speler.car.max_dozen//2:  # giving a time bonus if half of the boxes are delivered
+            if balkje_tijd > 15:
+                balkje_tijd -= 15
+            else:
+                balkje_tijd = 0
+
+            if speler.aantal_hartjes < 4:
+                speler.aantal_hartjes += 2
+            else:
+                speler.aantal_hartjes = 5
+
         while game_state == 4 and not moet_afsluiten:
             muziek_spelen(0, channel=9)
             start_time = time.time()
@@ -1482,10 +1514,17 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                         if speler.car.dozen < speler.car.max_dozen:
                             break
 
+            if eindbestemming == (pakjesx, pakjesy) and speler.car.dozen != 0:  # Making new destination for packaged
+                coords = speler.position
+                speler.position = [math.floor(speler.initial[0]), math.floor(speler.initial[0])]
+                eindbestemming = bestemming_selector()
+                speler.position = coords
+
             render_sprites(renderer, kantoor_sprites, speler, d, delta, True)
             if speler.doos_vast:
                 handen_sprite(renderer, handen_doos)
-            text = "Momenteel " + str(speler.car.dozen) + " dozen van de maximale " + str(speler.car.max_dozen) + " dozen in de auto"
+            text = "Momenteel " + str(speler.car.dozen) + " dozen van de maximale " + str(
+                speler.car.max_dozen) + " dozen in de auto"
             renderText(font, renderer, text, BREEDTE, HOOGTE - 100)
 
             delta = time.time() - start_time
@@ -1531,7 +1570,7 @@ if __name__ == '__main__':
         inf_world.start()
         world_map = inf_world.world_map
         # inf_world.map_making(speler)
-        shared_world_map = world_map#manager.list(world_map)
+        shared_world_map = world_map  # manager.list(world_map)
 
         # profiler = cProfile.Profile()
         # profiler.enable()

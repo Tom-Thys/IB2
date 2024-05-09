@@ -66,7 +66,7 @@ kleur_dict = {0: (0, 0, 0), 1: (170, 85, 85), 2: (170, 85, 85), 3: (141, 170, 12
 laatste_huis_pos = 8
 
 
-kantoor_map = np.zeros((20, 20), dtype='int32')
+kantoor_map = np.zeros((20, 20), dtype='int8')
 kantoor_map[:, 0] = laatste_huis_pos + 3
 kantoor_map[0, :] = laatste_huis_pos + 3
 kantoor_map[-1, :] = laatste_huis_pos + 3
@@ -144,7 +144,7 @@ def genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,politie_pad,wo
                 and worldmap[math.floor(y), math.floor(x - 1)] <= 0
                 and worldmap[math.floor(y - 1), math.floor(x)] <= 0):
             voertuig = Politie(tree, polities, map_voertuig, x, y, HOOGTE,speler,politie_pad)
-    print(voertuig.position)
+    #print(voertuig.position)
     return voertuig
 
 
@@ -179,7 +179,7 @@ def sprites_auto_update(speler_x, speler_y, kleuren_autos, tree, map_voertuig, w
 
 def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tree, worldmap, sprites, aantalbomen=1):
     if len(bomen) < 50 and aantalbomen == 1:
-        aantalbomen = 10
+        aantalbomen = 15
     x_max = speler_x + 100
     x_min = speler_x - 100
     y_max = speler_y + 100
@@ -196,7 +196,7 @@ def aanmaken_sprites_bomen(speler_x, speler_y, HOOGTE, bomen, sprite_map_png, tr
     for sprite in sprites:
         if sprite.afstand >= 80:
             sprites.remove(sprite)
-    if len(sprites) >= 100:
+    if len(sprites) >= 150:
         return sprites
 
     for teller in range(0, aantalbomen):
@@ -225,7 +225,7 @@ for i in range(9):
 
 
 def world_generation(openingen=list):
-    kaart = np.zeros((9, 9), dtype='int32')
+    kaart = np.zeros((9, 9), dtype='int8')
     pakjes_plekken = [(1, 3), (3, 1), (7, 3), (3, 7), (1, 5), (5, 1), (7, 5), (5, 7)]
     for plekx, pleky in pakjes_plekken:
         kaart[plekx, pleky] = -1
@@ -284,13 +284,9 @@ def world_generation(openingen=list):
             openingen.pop(randint(0, 1))
             if randint(0, 20) == 0:
                 openingen.pop(0)
-    else:
-        print(openingen)
-        openingen.pop(randint(0, 3))
-        if randint(0, 5) == 0:
-            openingen.pop(randint(0, 2))
-            if randint(0, 15) == 6:
-                openingen.pop(randint(0, 1))
+
+    #  Openingen == 4 is a 1 in 3 games chance
+
     for i in range(1, 5):
         if i not in openingen:
             if i == 1:
@@ -359,14 +355,14 @@ class Map():
         self.tiles_size = np.shape(self.tile_map)
         y, x = self.tiles_size
         self.world_size = (y * 9, x * 9)
-        self.world_map = np.zeros(self.world_size, dtype='int32')
+        self.world_map = np.zeros(self.world_size, dtype='int8')
         self.added = []
 
     def start(self):
         y, x = np.shape(self.tile_map)
         self.added = []
-        # map = np.ones((9, 9), dtype='int32')
-        map = np.full((9, 9), fill_value=laatste_huis_pos + 2, dtype='int32')
+        # map = np.ones((9, 9), dtype='int8')
+        map = np.full((9, 9), fill_value=laatste_huis_pos + 2, dtype='int8')
         openingen = []
         surrounding_tiles = Tile((map, openingen))
         self.tile_map[0, :] = surrounding_tiles
@@ -381,7 +377,7 @@ class Map():
             self.added.append((i, 0))
             self.added.append((i, y - 1))
 
-        kaart = np.zeros((9, 9), dtype='int32')
+        kaart = np.zeros((9, 9), dtype='int8')
         kaart[:, 4] = -2
         kaart[4, :] = -2
         intiele_tile = Tile((kaart, [1, 2, 3, 4]))
@@ -392,12 +388,8 @@ class Map():
         self.tile_map[49, 51] = tile_2
         self.tile_map[49, 49] = tile_2
         self.tile_map[50, 50] = intiele_tile
-        if False:
-            for i in range(5):
-                x = randint(1, self.tiles_size[1] - 1)
-                y = randint(1, self.tiles_size[0] - 1)
-                print(x, y)
-                self.tile_map[y, x] = Tile(world_generation([1, 2, 3, 4]))
+
+
         # self.world_map[450,450] = -5
         self.size = (np.shape(kaart))[0]
         for i in range(1, x - 1):
@@ -433,7 +425,7 @@ class Map():
     def direct_map_making(self, x_pos, y_pos):
         if self.tile_map[x_pos, y_pos] == 0:
             if randint(0, 65) == 0:
-                kaart = np.zeros((9, 9), dtype='int32')
+                kaart = np.zeros((9, 9), dtype='int8')
                 self.tile_map[x_pos, y_pos] = Tile((kaart, [1, 2, 3, 4]))
                 return
 

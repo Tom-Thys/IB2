@@ -12,7 +12,7 @@ dramco_active = False
 politie_active = False
 
 debugging = False
-
+godmode = False
 
 
 config = ConfigParser()
@@ -20,6 +20,8 @@ config = ConfigParser()
 # Constanten
 BREEDTE = 1000
 HOOGTE = int(BREEDTE / 10 * 7)
+
+
 POSITIE_MAIN_MENU = [
     [365, 253],  # 0: Start Game
     [300, 401],  # 1: Settings
@@ -61,6 +63,7 @@ prijzen = [0, 20, 100]
 lijst_postbussen = []
 balkje_tijd = 0
 pakjes_aantal = 0
+vorig_pakjes_aantal = 0
 politie_wagen = 0
 sound = True
 paused = False
@@ -170,3 +173,32 @@ gears = ["car loop", "car gear 1", "car gear 2", "car gear 3", "car gear 4", "ca
 last_car_sound_played = 0
 
 RGB = (255, 160, 160)
+
+kleuren_index = 0
+car_colors = [
+    (255, 0, 0),    # Red
+    (0, 255, 0),    # Green
+    (0, 0, 255),    # Blue
+    (255, 255, 0),  # Yellow
+    (255, 165, 0),  # Orange
+    (128, 0, 128),  # Purple
+    (255, 192, 203),# Pink
+    (0, 255, 255),  # Cyan
+    (255, 0, 255),  # Magenta
+    (128, 128, 128),# Gray
+    (255, 255, 255),# White
+    (0, 0, 0),      # Black
+    (128, 0, 0),    # Maroon
+    (0, 128, 0),    # Green
+    (0, 0, 128),    # Navy
+    (128, 128, 0),  # Olive
+    (0, 128, 128),  # Teal
+    (128, 0, 128),  # Fuchsia
+    (192, 192, 192),# Silver
+    (128, 128, 128),# Grey
+    (128, 0, 0),    # Maroon
+    (128, 128, 0),  # Olive
+    (0, 128, 0),    # Green
+    (0, 128, 128),  # Teal
+    (0, 0, 128)     # Navy
+]
