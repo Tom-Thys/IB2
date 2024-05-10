@@ -319,11 +319,11 @@ def render_map(renderer, kleuren_textures, pngs_mappen, map_settings, speler, pa
             if item == 0:
                 renderer.copy(kleuren_textures[1],
                               srcrect=(0, 0, 1, 1),
-                              dstrect=(locatie_x + node_grootte//2, locatie_y, node_grootte, node_grootte))
+                              dstrect=(locatie_x + node_grootte//2, locatie_y, node_grootte, node_grootte/1.2))
             elif item == len(pad)-1:
                 renderer.copy(kleuren_textures[2],
                               srcrect=(0, 0, 1, 1),
-                              dstrect=(locatie_x + node_grootte//2, locatie_y, node_grootte, node_grootte))
+                              dstrect=(locatie_x + node_grootte//2, locatie_y, node_grootte, node_grootte/1.2))
             else:
                 renderer.copy(kleuren_textures[7],
                               srcrect=(0, 0, 1, 1),
@@ -336,6 +336,15 @@ def render_map(renderer, kleuren_textures, pngs_mappen, map_settings, speler, pa
         renderer.copy(speler.png,
                     dstrect=(speler_png_x-speler_grootte//2, speler_png_y-speler_grootte//2, speler_grootte, speler_grootte),
                     angle=2 * math.pi - speler.hoek / math.pi * 180 + 40, flip=0)
+
+    for sprite in sprites:
+        if linker_bovenhoek_x < sprite.x < linker_bovenhoek_x+2*afstand_map and linker_bovenhoek_y < sprite.y < linker_bovenhoek_y+2*afstand_map:
+            locatie_x = int(160 + (sprite.x-linker_bovenhoek_x) / (2*afstand_map) * (BREEDTE-300))
+            locatie_y = int(112 + (-sprite.y + linker_bovenhoek_y+2*afstand_map) / (2 * afstand_map) * (HOOGTE-222)) - node_grootte
+            grootte = (1 + int(sprite.map_grootte / 10)) * node_grootte * 1.6
+            if sprite.soort == "Doosje":
+                grootte /= 2.5
+            renderer.copy(sprite.map_png, dstrect=(locatie_x, locatie_y, grootte, grootte))
 
 def auto_info_renderen(renderer, font, pngs, car):
     hoogte_dashboard = 150

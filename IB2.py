@@ -725,7 +725,10 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
                 lijst_objective_complete = ["cartoon doorbell", "doorbell", "door knocking"]
                 rnd = randint(0, len(lijst_objective_complete) - 1)
                 muziek_spelen(lijst_objective_complete[rnd], channel=5)
-                balkje_tijd -= 30
+                if balkje_tijd >= 15:
+                    balkje_tijd -= 30
+                else:
+                    balkje_tijd -= 15
                 pakjes_aantal += 1
 
                 # IB2
@@ -765,9 +768,6 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
                 if sprite in sprites_autos:
                     sprites_autos.remove(sprite)
             elif sprite.soort == "Politie":
-
-                sprites_autos.remove(sprite)
-                politie_wagen = 0
                 game_over = True
             else:
                 warnings.warn("Kan sprite niet verwijderen" + "  " + str(sprite.soort))
@@ -816,6 +816,13 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
         if speler.aantal_hartjes <= 0 and godmode:
             speler.aantal_hartjes = 5
 
+        i = 1
+        while i <= speler.aantal_hartjes:
+            x_pos = BREEDTE - 50 - 50 * i
+            y_pos = HOOGTE - 70
+            renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
+            i += 1
+
     if speler.aantal_hartjes <= 0:  # Politie logica
         if not politie_active:
             politie_tijd = time.time()
@@ -836,12 +843,7 @@ def collision_detection(renderer, speler, sprites, hartje, polities, tree, map_v
             if dramco_active:
                 dramcontroller.write("BT".encode(encoding='ascii'))  # BT: Buzzer True (voor politie)
 
-        i = 1
-        while i <= speler.aantal_hartjes:
-            x_pos = BREEDTE - 50 - 50 * i
-            y_pos = HOOGTE - 70
-            renderer.copy(hartje, dstrect=(x_pos, y_pos, 50, 50))
-            i += 1
+
 
 
 def show_fps(font, renderer):

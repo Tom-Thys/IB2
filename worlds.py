@@ -61,7 +61,9 @@ kleuren = [
 colors = [0, 0, 0, 102, 102, 102, 176, 176, 176, 255, 255, 255]
 kleur_dict = {0: (0, 0, 0), 1: (170, 85, 85), 2: (170, 85, 85), 3: (141, 170, 127), 4: (102, 127, 171),
               5: (205, 201, 201), 6: (180, 162, 200), 7: (218, 165, 32), 8: (204, 119, 102), 9: (0, 255, 0),
-              10: (255, 0, 20), 11: (255, 255, 255), 12: (255, 255, 255), 13: (255, 255, 255), 14: (255, 255, 255)}
+              10: (255, 0, 20), 11: (255, 255, 255), 12: (255, 255, 255), 13: (255, 255, 255), 14: (255, 255, 255),
+              15: (255, 255, 255), 16: (255, 255, 255), 17: (255, 255, 255), 18: (255, 255, 255), 19: (255, 255, 255),
+              20: (255, 255, 255), 21: (255, 255, 255)}
 
 laatste_huis_pos = 8
 
@@ -320,7 +322,7 @@ def converter(input_image):
     g_out = np.zeros((shape0, shape1))
     b_out = np.zeros((shape0, shape1))
 
-    for i in range(11):
+    for i in range(20):
         mask = r_in == i
 
         if np.any(mask):
@@ -408,12 +410,11 @@ class Map():
         self.world_map[postkantoor[0] - 2, postkantoor[1] + 7] = laatste_huis_pos + 8
         #self.world_map[postkantoor[0] - 3, postkantoor[1] - 3:postkantoor[1]] = laatste_huis_pos + 3
 
-        if True:
-            im = Image.fromarray(self.world_map)
-            rgbimg = Image.new("RGBA", im.size)
-            rgbimg.paste(im)
-            new_im = converter(rgbimg)
-            new_im.save('mappen\map.png')
+        im = Image.fromarray(self.world_map)
+        rgbimg = Image.new("RGBA", im.size)
+        rgbimg.paste(im)
+        new_im = converter(rgbimg)
+        new_im.save('mappen\map.png')
 
     def update(self):
         for x, y in self.added:

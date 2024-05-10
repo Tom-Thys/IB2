@@ -691,12 +691,12 @@ class Politie(Sprite):
         self.politie_pad = self.pad
         self.position = [math.floor(self.x), math.floor(self.y)]
 
-    def update(self, world_map, speler, *args):
+    def update(self, world_map, speler, delta, *args):
         self.politie_pad = self.pad
         if self.politie_pad:
             if self.achtervolgen:
                 if speler.in_auto:
-                    speed = max(speler.car.speed / 2.998, self.speed)
+                    speed = max(speler.car.speed * delta / 0.025, self.speed)
                 else:
                     speed = self.speed
 
