@@ -141,9 +141,9 @@ def verwerk_input(delta, events=0, factory=None):
             map_positie[0] += 1
         if key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
             map_positie[0] -= 1
-        if key_states[sdl2.SDL_SCANCODE_LSHIFT]:
+        if key_states[sdl2.SDL_SCANCODE_LSHIFT] or key_states[sdl2.SDL_SCANCODE_L]:
             afstand_map -= 1
-        if key_states[sdl2.SDL_SCANCODE_LCTRL]:
+        if key_states[sdl2.SDL_SCANCODE_LCTRL] or key_states[sdl2.SDL_SCANCODE_O]:
             afstand_map += 1
 
     for event in events:
@@ -376,7 +376,7 @@ def verwerk_input(delta, events=0, factory=None):
                     speler.car.x = auto_x
                     speler.car.y = auto_y
 
-                if key == sdl2.SDLK_x:
+                if key == sdl2.SDLK_l:
                     # IB2
                     lijst_postbussen[garage_index].kleur = car_colors[kleuren_index]
                     kleuren_index += 1
