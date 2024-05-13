@@ -123,7 +123,7 @@ def verwerk_input(delta, events=0, factory=None):
             speler.sideways_move(1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
-        elif key_states[sdl2.SDL_SCANCODE_S]:
+        elif key_states[sdl2.SDL_SCANCODE_LEFT] or key_states[sdl2.SDL_SCANCODE_S]:
             speler.sideways_move(-1, move_speed, world_map)
             if not speler.in_auto:
                 muziek_spelen("footsteps", channel=4)
@@ -303,13 +303,9 @@ def verwerk_input(delta, events=0, factory=None):
                         muziek_spelen("main menu select", channel=2)
                     if game_over_index == 0 and key == sdl2.SDLK_SPACE:
                         game_over = False
-                        speler.aantal_hartjes = 5
-                        speler.reset()
                     if game_over_index == 1 and key == sdl2.SDLK_SPACE:
                         game_over = False
                         game_state = 0
-                        speler.aantal_hartjes = 5
-                        speler.reset()
                     if game_over_index == 2 and key == sdl2.SDLK_SPACE:
                         moet_afsluiten = True
                 else:
@@ -700,7 +696,7 @@ def collision_auto(zichtbare_sprites):
                 elif soort == "Boom":
                     check_sprite.fall = time.time()
                 elif soort == "Politie":
-                    warnings.warn("Not implemented")
+                    #warnings.warn("Not implemented")
                     check[index] = False
                     continue
                     # raise NotImplementedError("Politie tegengekomen")
@@ -1405,8 +1401,11 @@ def main(inf_world, shared_world_map, shared_pad, shared_eindbestemming, shared_
                 balkje_tijd = 0
                 politie_tijd = 0
                 politie_active = False
-                politie_wagen = 0
+                if politie_wagen != 0 and politie_wagen in sprites_autos:
+                    sprites_autos.remove(politie_wagen)
+                    politie_wagen = 0
                 speler.reset()
+                speler.aantal_hartjes = 5
                 if not opgeslaan_na_game_over:
                     # IB2
                     if dramco_active:

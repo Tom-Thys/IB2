@@ -51,7 +51,8 @@ def pathfinding_gps2(inf_world, world_map, shared_pad, shared_eindbestemming, sh
                     # kijken of we op deze positie kunnen stappen
                     if world_map[buur[1]][buur[0]] > 0:
                         continue
-                    if buur in close_set and buur_g_score >= g_score.get(buur, 0):  # dictionary.get(): buur: de positie van waar we de g score van terug willen, 0 indien er geen buur bestaat
+                    if buur in close_set and buur_g_score >= g_score.get(buur,
+                                                                         0):  # dictionary.get(): buur: de positie van waar we de g score van terug willen, 0 indien er geen buur bestaat
                         continue  # kijken of de buur al behandeld is en ofdat de g score van de buur die we nu berekenen groter is als een vorige buur (indien kleiner kan dit wel een beter pad geven)
                     if buur_g_score < g_score.get(buur, 0) or buur not in [i[1] for i in
                                                                            oheap]:  # indien huidige buur g score lager is als een vorige buur of als de buur niet in de heap zit
@@ -67,11 +68,9 @@ def heuristiek(a, b):
     return 14 * y + 10 * (x - y) if y < x else 14 * x + 10 * (y - x)
 
 
-
-
 def politie_pathfinding(world_map, shared_pad, shared_eindbestemming, shared_spelerpositie):
     y_size, x_size = np.shape(world_map)
-    #time.sleep(0.2)  # wachten tot game volledig gestart en eindbestemming besloten is
+    # time.sleep(0.2)  # wachten tot game volledig gestart en eindbestemming besloten is
     oud_speler_positie = [0, 0]
     oud_eindbestemming = [0, 0]
     while True:
@@ -83,7 +82,8 @@ def politie_pathfinding(world_map, shared_pad, shared_eindbestemming, shared_spe
             oud_speler_positie[:] = spelerpos[:]
             eindpositie = eindbestemming
             start = spelerpos
-            buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # nu definieren, oogt beter bij de for loop
+            buren = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # , (1, 1), (1, -1), (-1, 1), (-1, -1)]
+            # nu definieren, oogt beter bij de for loop
             close_set = set()  # set is ongeorderd, onveranderbaar en niet geïndexeerd
             came_from = {}  # dictionary die "parents" van de node klasse vervangt, aangezien zelfgemaakte klassen niet zo goed meespelen met heaps
             g_score = {start: 0}  # dictionary die g scores bijhoudt van alle posities
@@ -100,19 +100,25 @@ def politie_pathfinding(world_map, shared_pad, shared_eindbestemming, shared_spe
                     while current in came_from:
                         pad.append(list(current))
                         current = came_from[current]
-                    #pad.append(list(eindbestemming))
+                    # pad.append(list(eindbestemming))
                     shared_pad[:] = pad[:]
                     break
-                close_set.add(current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
+                close_set.add(
+                    current)  # indien we geen pad gevonden hebben, zetten we de huidige positie op de closed set, aangezien we deze behandelen
 
-                for positie in buren:  # door alle buren gaan + hun g score berekenen
-                    buur = (current[0] + positie[0], current[1] + positie[1])
+                for x, y in buren:  # door alle buren gaan + hun g score berekenen
+                    buur = (current[0] + x, current[1] + y)
                     buur_g_score = g_score[current] + heuristiek(current, buur)
                     if buur[0] > x_size or buur[0] < 0 or buur[1] > y_size or buur[1] < 0:
                         continue  # gaat naar de volgende buur
                     # kijken of we op deze positie kunnen stappen
                     if world_map[buur[1]][buur[0]] > 0:
                         continue
+
+                    if x != 0 and y != 0:  # diagonaal - add them to buren
+                        if world_map[current[1] + y][current[0]] > 0 or world_map[current[1]][current[0] + x] > 0:
+                            continue
+
                     if buur in close_set and buur_g_score >= g_score.get(buur,
                                                                          0):  # dictionary.get(): buur: de positie van waar we de g score van terug willen, 0 indien er geen buur bestaat
                         continue  # kijken of de buur al behandeld is en ofdat de g score van de buur die we nu berekenen groter is als een vorige buur (indien kleiner kan dit wel een beter pad geven)
@@ -123,4 +129,4 @@ def politie_pathfinding(world_map, shared_pad, shared_eindbestemming, shared_spe
                         f_score[buur] = buur_g_score + heuristiek(buur, eindpositie)
                         heapq.heappush(oheap, (f_score[buur], buur))
         else:
-            time.sleep(0.0001)
+            time.sleep(0.001)

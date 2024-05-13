@@ -123,10 +123,11 @@ def main():
 def genereer_politie(speler, polities, tree, map_voertuig, HOOGTE,politie_pad,world, politie_x, politie_y):
     voertuig = 0
     worldmap = world.world_map
-    x_max = politie_x + 5
-    x_min = politie_x - 5
-    y_max = politie_y + 5
-    y_min = politie_y - 5
+    area = 2.8
+    x_max = politie_x + area
+    x_min = politie_x - area
+    y_max = politie_y + area
+    y_min = politie_y - area
     # Checken of de coordinaten in het veld liggen
     if x_max >= 1000:
         x_max = 999

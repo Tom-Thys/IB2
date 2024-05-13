@@ -690,6 +690,7 @@ class Politie(Sprite):
         self.speed = 0.0125
         self.politie_pad = self.pad
         self.position = [math.floor(self.x), math.floor(self.y)]
+        self.prev_vector = [0, 0]
 
     def update(self, world_map, speler, delta, *args):
         self.politie_pad = self.pad
@@ -704,15 +705,21 @@ class Politie(Sprite):
 
                     vector = (self.politie_pad[0][1] - self.politie_pad[1][1],
                             self.politie_pad[0][0] - self.politie_pad[1][0])  # Pad uses inverse x/y from normal so reverting here
+
+                    if self.prev_vector != vector and not speler.in_auto:
+                        vector, self.prev_vector = self.prev_vector, vector  # I love this cursed shit
+
+                    if vector[0] != 0 and vector[1] != 0:
+                        speed /= math.sqrt(2)
                     self.x -= speed * vector[1]
                     self.y -= speed * vector[0]
 
                 else:
-                    if self.afstand <= 2:
+                    if self.afstand <= 2.8:
                         self.x = speler.p_x
                         self.y = speler.p_y
 
-            if self.afstand <= 1.8:
+            if self.afstand <= 2.8:  # Some edge cases where police car won't move anymore but player cant too
                 self.x = speler.p_x
                 self.y = speler.p_y
             else:
