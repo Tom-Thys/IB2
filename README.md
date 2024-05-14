@@ -4,48 +4,54 @@
     <img src="resources/game_main_menu_wh_tekst.png" alt="Boris brief png" width="600">
 </h1>
 
-**Boris Brief** is een pseudo-3d game waar je als postbode pakjes rondbrengt naar tal van huisjes, maar pas op er is druk verkeer.
+**Boris Brief** is a pseude-3d game where you play a postman, your mission deliver as much packages as you can but be carefull there is a lot of traffic.
+
+This game was developed by Sander Haustraete, Daan Vercammen and Tom Thys, as a engineering experience in Software and Electronics during 2nd bachlor year.
+
+In the first part of the year we developed this game, in the second part we added an Dramcontroller - Arduino Zero, but the code runs fine without it.
 
 
 ## Keybindings
 
-### Tijdens het stappen
+### In the car
 
-- Gebruik <kbd>&uparrow;</kbd>/<kbd>e</kbd>/<kbd>muis</kbd> om vooruit te gaan
-- Gebruik <kbd>&downarrow;</kbd>/<kbd>d</kbd>/<kbd>muis</kbd> om achteruit te gaan
-- Gebruik <kbd>&leftarrow;</kbd>/<kbd>s</kbd> om naar links te gaan 
-- Gebruik <kbd>&rightarrow;</kbd>/<kbd>f</kbd> om naar rechts te gaan
-- Gebruik <kbd>r</kbd>/<kbd>muis</kbd> om naar rechts te draaien
-- Gebruik <kbd>z</kbd>/<kbd>muis</kbd> om naar links te draaien
-- Gebruik <kbd>t</kbd> om in de auto te stappen (afstand < 1.5)
-- Gebruik <kbd>g</kbd> om deuren te openen (momenteel geen deuren meer in de game)
-- Gebruik <kbd>space</kbd> om pakketjes af te vuren of de menu optie te selecteren
+- Use <kbd>&uparrow;</kbd>/<kbd>e</kbd> to accelerate
+- Use <kbd>&downarrow;</kbd>/<kbd>d</kbd> to brake
+- Use <kbd>&leftarrow;</kbd>/<kbd>s</kbd>/<kbd>muis</kbd> to go left
+- Use <kbd>&rightarrow;</kbd>/<kbd>f</kbd>/<kbd>muis</kbd> to go right
+- Use <kbd>r</kbd>/<kbd>y</kbd> to upshift
+- Use <kbd>z</kbd>/<kbd>y</kbd> to downshift
 
-### Tijdens het rijden
+### While moving
 
-- Gebruik <kbd>&uparrow;</kbd>/<kbd>e</kbd> om te versneller
-- Gebruik <kbd>&downarrow;</kbd>/<kbd>d</kbd> om te vertragen
-- Gebruik <kbd>&leftarrow;</kbd>/<kbd>s</kbd>/<kbd>muis</kbd> om naar links te draaien
-- Gebruik <kbd>&rightarrow;</kbd>/<kbd>f</kbd>/<kbd>muis</kbd> om naar rechts te draaien
-- Gebruik <kbd>r</kbd>/<kbd>y</kbd> om omhoog te shiften
-- Gebruik <kbd>z</kbd>/<kbd>y</kbd> om om omlaag te shiften
+- Use <kbd>&uparrow;</kbd>/<kbd>e</kbd>/<kbd>muis</kbd> to move forewards
+- Use <kbd>&downarrow;</kbd>/<kbd>d</kbd>/<kbd>muis</kbd> to move backwards
+- Use <kbd>&leftarrow;</kbd>/<kbd>s</kbd> to sidestep left
+- Use <kbd>&rightarrow;</kbd>/<kbd>f</kbd> to sidestep right
+- Use <kbd>r</kbd>/<kbd>mouse</kbd> to turn right
+- Use <kbd>z</kbd>/<kbd>mouse</kbd> to turn left
+- Use <kbd>t</kbd> to enter the car (less then 1.5 blocks)
+- Use <kbd>g</kbd> to open doors (they are hidden good luck if u want to find them)
+- Use <kbd>space</kbd> to trow pakkage or take one out the car
 
-### Andere keybindings
-- Gebruik <kbd>space</kbd> om de menu optie te selecteren
-- Gebruik <kbd>m</kbd> om de volledige map te kunnen bekijken
-- Gebruik <kbd>L SHIFT</kbd>/<kbd>L CTRL</kbd> om in en uit te zoomen op de map
-- Gebruik <kbd>p</kbd> om de game te pauzeren en instellingen aan te passen
-- Gebruik <kbd>g</kbd> om naar de garage te gaan
-- Gebruik <kbd>k</kbd> om naar het kantoor te gaan
+### Other keybindings
+- Use <kbd>space</kbd> to select menu option
+- Use <kbd>m</kbd> to view the map
+- Use <kbd>L SHIFT</kbd>/<kbd>L CTRL</kbd> to zoom in/out on the map
+- Use <kbd>p</kbd> to pauze the game
+- Use <kbd>g</kbd> to go to the garage
+- Use <kbd>x</kbd> to change to color of your car in the garage
+- Use <kbd>k</kbd> to go to the office
 
 ### Close game
-- Gebruik <kbd>q</kbd> of <kbd>esc</kbd>
+- Use <kbd>q</kbd> or <kbd>esc</kbd>
 
 ## Libraries
 - Pillow
 - PySDL2
 - pysdl2-dll
 - ctypes
+  
 ### Standard libraries
 - configparser
 - heapq
@@ -57,7 +63,6 @@
 - warnings
 
 
-
-
 #### Png's
 - <a href="https://www.freepik.com/icon/post-office_6550893">Icon by Nueng_wana</a>
+- Other used png's were free or edits
